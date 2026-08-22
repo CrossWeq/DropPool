@@ -687,17 +687,47 @@
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
             try {
-                // allorigins.win Türkiye'de engelli olabildiği için corsproxy.io kullanıyoruz
-                const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v1/channels/' + channelName)}`);
-                const channelData = await response.json();
+                // Kick'in Cloudflare korumasını ve bölgesel engelleri aşmak için birden fazla proxy deniyoruz
+                const proxies = [
+                    `https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
+                    `https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
+                    `https://api.codetabs.com/v1/proxy?quest=https://kick.com/api/v2/channels/${channelName}/chatroom`
+                ];
 
-                if (!channelData || !channelData.chatroom) {
-                    console.error("Kanal bilgileri alınamadı. Kanal adını doğru yazdığınızdan emin olun.");
-                    return;
+                let chatroomId = null;
+
+                for (const url of proxies) {
+                    try {
+                        console.log("Deneniyor:", url);
+                        // Timeout ekliyoruz ki sonsuza kadar beklemesin
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 6000);
+                        
+                        const response = await fetch(url, { signal: controller.signal });
+                        clearTimeout(timeoutId);
+                        
+                        const data = await response.json();
+                        
+                        let channelData = data;
+                        if (data.contents) {
+                            try { channelData = JSON.parse(data.contents); } catch(e) {}
+                        }
+
+                        // Kick v2 api/chatroom endpoint returns JSON with "id" directly
+                        if (channelData && channelData.id) {
+                            chatroomId = channelData.id;
+                            console.log("Sohbet Odası ID başarıyla bulundu!");
+                            break;
+                        }
+                    } catch (err) {
+                        console.log("Bu proxy başarısız oldu, diğerine geçiliyor...");
+                    }
                 }
 
-                const chatroomId = channelData.chatroom.id;
-                console.log("Başarılı! Sohbet Odası ID:", chatroomId);
+                if (!chatroomId) {
+                    console.error("Tüm proxyler Kick tarafından engellendi. Kanal adını doğru yazdığınızdan emin olun.");
+                    return;
+                }
 
                 // Kick'in kullandığı gerçek zamanlı altyapıya (Pusher) bağlanıyoruz
                 const pusher = new Pusher('eb1d5f283081a78b932c', {
