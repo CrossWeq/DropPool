@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropPool Ayar Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: '#0a0f1c', // Very deep rich blue/black
+                        panel: 'rgba(15, 23, 42, 0.75)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0f1c;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.08), transparent 40%),
+                radial-gradient(circle at 50% 100%, rgba(236, 72, 153, 0.05), transparent 50%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: rgba(20, 24, 34, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Dynamic Theme Colors for Parachutes */
+        .parachute-label input:checked ~ .p-card {
+            border-color: var(--p-color);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 4px 25px -5px var(--p-color);
+        }
+        .parachute-label input:checked ~ .p-card .toggle-bg {
+            background-color: var(--p-color);
+            border-color: var(--p-color);
+        }
+        .parachute-label input:checked ~ .p-card .toggle-knob {
+            transform: translateX(20px);
+            background-color: #fff;
+        }
+
+        /* Active styling for Themes */
+        .theme-label input:checked ~ .t-card {
+            border-color: var(--t-color);
+            box-shadow: 0 4px 30px -5px var(--t-color);
+        }
+        .theme-label input:checked ~ .t-card .toggle-bg {
+            background-color: var(--t-color);
+            border-color: var(--t-color);
+        }
+        .theme-label input:checked ~ .t-card .toggle-knob {
+            transform: translateX(20px);
+            background-color: #fff;
+        }
+
+        /* Falling Characters Animation */
+        @keyframes fallDown {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+            5% { opacity: var(--max-opacity, 0.9); }
+            95% { opacity: var(--max-opacity, 0.9); }
+            100% { transform: translateY(110vh) rotate(var(--end-rot, 360deg)); opacity: 0; }
+        }
+
+        .falling-char {
+            position: fixed;
+            top: -100px;
+            animation: fallDown linear forwards;
+            pointer-events: none;
+            z-index: 0;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+        }
+    </style>
+</head>
+<body class="p-6 md:p-12 flex items-center justify-center">
+
+    <div class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-10 relative z-10 overflow-hidden">
+        
+        <!-- Decorative Glow -->
+        <div class="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-[120px] opacity-20 pointer-events-none"></div>
+        <div class="absolute -bottom-32 -left-32 w-64 h-64 bg-cyan-500 rounded-full mix-blend-screen filter blur-[120px] opacity-10 pointer-events-none"></div>
+
+        <div class="mb-12 text-center relative z-10">
+            <h1 class="text-4xl font-bold mb-3 tracking-tight text-white">DropPool</h1>
+            <p class="text-gray-400 font-light" data-i18n="subtitle">OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.</p>
+        </div>
+        
+        <button type="button" id="langBtn" onclick="toggleLang()" class="absolute top-6 right-6 bg-black/40 border border-gray-700/50 text-white font-bold py-2 px-4 rounded-xl hover:bg-white/10 transition-colors z-20 shadow-lg">ENG</button>
+
+        <form id="settingsForm" class="space-y-8 relative z-10">
+            
+            <!-- Temel Ayarlar -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-300" data-i18n="channel">Kick Kanal Adı</label>
+                    <input type="text" id="channelInput" placeholder="Örn: crossweq" required
+                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-300" data-i18n="cmd">Tetikleyici Komut</label>
+                    <input type="text" id="cmdInput" value="!atla" required
+                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-300" data-i18n="cd">Kullanıcı Bekleme Süresi (Saniye)</label>
+                    <input type="number" id="cooldownInput" value="30" min="0" required
+                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white">
+                </div>
+            </div>
+
+            <!-- Temalar -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold" data-i18n="themes">Temalar</h2>
+                    <span class="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded" data-i18n="min1">En az 1 seçim zorunlu</span>
+                </div>
+                <div class="flex flex-col gap-3" id="themeContainer">
+                    <!-- Javascript ile doldurulacak -->
+                </div>
+            </div>
+
+            <!-- Paraşütler -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold" data-i18n="parachutes">Aktif Paraşütler</h2>
+                    <span class="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded" data-i18n="min1">En az 1 seçim zorunlu</span>
+                </div>
+                <div class="flex flex-col gap-3" id="parachuteContainer">
+                    <!-- Javascript ile doldurulacak -->
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-gray-800/50">
+                <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 text-lg flex items-center justify-center gap-2 group">
+                <span data-i18n="btnGen">Bağlantıları Oluştur</span>
+                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+                </button>
+            </div>
+
+        </form>
+
+        <!-- Sonuç Bölümü -->
+        <div id="resultSection" class="mt-8 space-y-6 hidden animate-[fadeIn_0.5s_ease-out] relative z-10">
+            <div class="bg-black/40 border border-indigo-500/30 rounded-2xl p-6 backdrop-blur-md">
+                <h3 class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 font-semibold mb-5 flex items-center gap-2 text-lg">
+                    <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    OBS Browser Source Bağlantıları
+                </h3>
+                
+                <div class="space-y-5">
+                    <!-- Main Overlay -->
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium" data-i18n="res1Title">1. Ana Oyun Ekranı</label>
+                        <p class="text-xs text-gray-500 mb-1" data-i18n="res1Desc">Bu linki OBS'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak ekleyin (Önerilen: 1920x1080).</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="overlayUrl" readonly class="flex-1 bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-cyan-400 font-mono text-sm focus:outline-none">
+                            <button type="button" onclick="copyToClipboard('overlayUrl')" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors whitespace-nowrap">
+                                <span data-i18n="copy">Kopyala</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium" data-i18n="res2Title">2. Atla Sıralaması</label>
+                        <p class="text-xs text-gray-500 mb-1" data-i18n="res2Desc">Bu linki OBS'te ekleyip ekranın uygun bir köşesine yerleştirin.</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="leaderboardUrl" readonly class="flex-1 bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-cyan-400 font-mono text-sm focus:outline-none">
+                            <button type="button" onclick="copyToClipboard('leaderboardUrl')" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors whitespace-nowrap">
+                                <span data-i18n="copy">Kopyala</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-xs text-white font-medium tracking-wide relative z-10 space-y-1">
+            <p><span data-i18n="contact">İletişim:</span> <a href="mailto:crosweq204@gmail.com" class="text-blue-400 hover:text-blue-300 underline transition-colors">crosweq204@gmail.com</a></p>
+            <p class="text-gray-500" data-i18n="dev">CrossWeq tarafından geliştirilmiştir.</p>
+        </div>
+
+    </div>
+
+    <script>
+        const i18n = {
+            subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
+            channel: { tr: "Kick Kanal Adı", en: "Kick Channel Name" },
+            cmd: { tr: "Tetikleyici Komut", en: "Trigger Command" },
+            cd: { tr: "Kullanıcı Bekleme Süresi (Saniye)", en: "User Cooldown (Seconds)" },
+            themes: { tr: "Temalar", en: "Themes" },
+            parachutes: { tr: "Aktif Paraşütler", en: "Active Parachutes" },
+            min1: { tr: "En az 1 seçim zorunlu", en: "Min 1 selection required" },
+            btnGen: { tr: "Bağlantıları Oluştur", en: "Generate Links" },
+            res1Title: { tr: "1. Ana Oyun Ekranı", en: "1. Main Overlay" },
+            res1Desc: { tr: 'Bu linki OBS\'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak ekleyin (Önerilen: 1920x1080).', en: 'Add this link to OBS as a new "Browser" source (Recommended: 1920x1080).' },
+            res2Title: { tr: "2. Sıralama Ekranı", en: "2. Leaderboard Screen" },
+            res2Desc: { tr: "Bu linki OBS'te ekleyip ekranın uygun bir köşesine yerleştirin.", en: "Add this link to OBS and place it in a suitable corner." },
+            copy: { tr: "Kopyala", en: "Copy" },
+            contact: { tr: "İletişim:", en: "Contact:" },
+            dev: { tr: "CrossWeq tarafından geliştirilmiştir.", en: "Developed by CrossWeq." },
+            copied: { tr: "Kopyalandı!", en: "Copied!" },
+            alert1: { tr: "Lütfen en az 1 tema seçin!", en: "Please select at least 1 theme!" },
+            alert2: { tr: "Lütfen en az 1 paraşüt seçin!", en: "Please select at least 1 parachute!" }
+        };
+
+        const themeNames = {
+            0: { tr: 'İlkbahar', en: 'Spring' },
+            1: { tr: 'Sonbahar', en: 'Autumn' },
+            2: { tr: 'Kış', en: 'Winter' },
+            3: { tr: 'Cehennem', en: 'Hell' }
+        };
+
+        const parachuteNames = {
+            11: { tr: 'Kırmızı Paraşüt', en: 'Red Parachute' },
+            12: { tr: 'Mavi Paraşüt', en: 'Blue Parachute' },
+            13: { tr: 'Yeşil Paraşüt', en: 'Green Parachute' },
+            14: { tr: 'Pembe Paraşüt', en: 'Pink Parachute' },
+            15: { tr: 'Mor Paraşüt', en: 'Purple Parachute' },
+            16: { tr: 'Sarı Paraşüt', en: 'Yellow Parachute' },
+            17: { tr: 'Turuncu Paraşüt', en: 'Orange Parachute' },
+            18: { tr: 'Turkuaz Paraşüt', en: 'Turquoise Parachute' }
+        };
+
+        let lang = 'tr';
+
+        function toggleLang() {
+            lang = lang === 'tr' ? 'en' : 'tr';
+            document.getElementById('langBtn').innerText = lang === 'tr' ? 'ENG' : 'TR';
+            
+            // Update static text
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[key]) {
+                    el.innerText = i18n[key][lang];
+                }
+            });
+
+            // Update placeholder
+            document.getElementById('channelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
+
+            // Update dynamically generated names without destroying checkbox state
+            themes.forEach(t => t.name = themeNames[t.id][lang]);
+            parachuteData.forEach(p => p.name = parachuteNames[p.id][lang]);
+            
+            document.querySelectorAll('.theme-label').forEach((label, idx) => {
+                const span = label.querySelector('.text-2xl');
+                if (span && span.lastChild) {
+                    span.lastChild.nodeValue = " " + themes[idx].name;
+                }
+            });
+
+            document.querySelectorAll('.parachute-label').forEach((label, idx) => {
+                const span = label.querySelector('.text-xl');
+                if (span && span.lastChild) {
+                    span.lastChild.nodeValue = " " + parachuteData[idx].name;
+                }
+            });
+            
+            // Update copied button states if visible
+            document.querySelectorAll('button[onclick^="copyToClipboard"]').forEach(btn => {
+                if (btn.innerText === i18n.copied.tr || btn.innerText === i18n.copied.en) {
+                    btn.innerText = i18n.copied[lang];
+                }
+            });
+
+            // Update HTML5 validation messages if currently invalid
+            document.querySelectorAll('input[required]').forEach(input => {
+                if (!input.validity.valid && input.validationMessage) {
+                    input.setCustomValidity(lang === 'tr' ? 'Lütfen bu alanı doldurun.' : 'Please fill out this field.');
+                }
+            });
+        }
+
+        // Setup custom validation messages for inputs on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('input[required]').forEach(input => {
+                input.addEventListener('invalid', function(e) {
+                    if (!e.target.validity.valid) {
+                        e.target.setCustomValidity(lang === 'tr' ? 'Lütfen bu alanı doldurun.' : 'Please fill out this field.');
+                    }
+                });
+                input.addEventListener('input', function(e) {
+                    e.target.setCustomValidity('');
+                });
+            });
+        });
+
+        const themes = [
+            { id: 0, name: 'İlkbahar', poolImg: 'pixelpool.png', bgImg: 'pixelgrass.png', bgPos: 'center calc(100% + 55px)', color: '#22c55e' }, // Yeşil
+            { id: 1, name: 'Sonbahar', poolImg: 'pixelpoolautumn.png', bgImg: 'pixelautumn.png', bgPos: 'center calc(100% + 95px)', color: '#d97706' }, // Turuncu/Kahve
+            { id: 2, name: 'Kış', poolImg: 'pixelpoolice.png', bgImg: 'pixelice.png', bgPos: 'center calc(100% + 32px)', color: '#38bdf8' }, // Buz Mavisi
+            { id: 3, name: 'Cehennem', poolImg: 'pixelpoolhell.png', bgImg: 'pixelhell.png', bgPos: 'center calc(100% + 79px)', color: '#ef4444' } // Kırmızı
+        ];
+
+        const parachuteData = [
+            { id: 11, name: 'Kırmızı Paraşüt', color: '#ef4444' }, // Red
+            { id: 12, name: 'Mavi Paraşüt', color: '#3b82f6' }, // Blue
+            { id: 13, name: 'Yeşil Paraşüt', color: '#22c55e' }, // Green
+            { id: 14, name: 'Pembe Paraşüt', color: '#ec4899' }, // Pink
+            { id: 15, name: 'Mor Paraşüt', color: '#a855f7' }, // Purple
+            { id: 16, name: 'Sarı Paraşüt', color: '#eab308' }, // Yellow
+            { id: 17, name: 'Turuncu Paraşüt', color: '#f97316' }, // Orange
+            { id: 18, name: 'Turkuaz Paraşüt', color: '#06b6d4' } // Turquoise
+        ];
+
+        function renderCheckboxes() {
+            const themeContainer = document.getElementById('themeContainer');
+            themes.forEach(theme => {
+                themeContainer.innerHTML += `
+                    <label class="custom-checkbox cursor-pointer block w-full group theme-label" style="--t-color: ${theme.color};">
+                        <input type="checkbox" name="themes" value="${theme.id}" checked class="peer sr-only">
+                        
+                        <div class="t-card relative overflow-hidden border border-gray-700/50 rounded-xl p-4 transition-all duration-300 opacity-60 grayscale-[20%] peer-checked:opacity-100 peer-checked:grayscale-0">
+                            
+                            <!-- Arka Plan Görseli (Zemin) -->
+                            <div class="absolute inset-0 z-0 transition-transform duration-700 group-hover:scale-105" 
+                                 style="background-image: url('${theme.bgImg}'); background-size: cover; background-position: ${theme.bgPos};">
+                            </div>
+                            
+                            <!-- Koyu Filtre (Yazı okunsun diye) - Kapalıyken daha aydınlık (60%), açıkken çok aydınlık (20%) -->
+                            <div class="absolute inset-0 bg-black/60 z-0 transition-colors duration-300 peer-checked:bg-black/20 group-hover:bg-black/30"></div>
+
+                            <!-- İçerik -->
+                            <div class="relative z-10 w-full flex items-center justify-between">
+                                <span class="text-2xl font-bold select-none flex items-center gap-5 text-gray-200 peer-checked:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] tracking-wide transition-colors">
+                                    <div class="w-24 h-24 rounded-2xl bg-black/40 border border-white/20 flex items-center justify-center backdrop-blur-md hidden sm:flex shadow-inner overflow-hidden">
+                                        <img src="${theme.poolImg}" alt="Havuz" class="w-20 h-20 object-contain drop-shadow-[0_8px_8px_rgba(0,0,0,0.8)] transition-transform duration-500 group-hover:scale-110"> 
+                                    </div>
+                                    ${theme.name}
+                                </span>
+                                
+                                <!-- Toggle Switch -->
+                                <div class="toggle-bg w-12 h-6 bg-gray-700 border border-gray-600 rounded-full relative transition-colors duration-300 shadow-lg">
+                                    <div class="toggle-knob absolute top-0.5 left-0.5 w-5 h-5 bg-gray-400 rounded-full shadow-md transition-transform duration-300"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </label>
+                `;
+            });
+
+            const parachuteContainer = document.getElementById('parachuteContainer');
+            parachuteData.forEach(p => {
+                parachuteContainer.innerHTML += `
+                    <label class="custom-checkbox cursor-pointer relative group block w-full parachute-label" style="--p-color: ${p.color};">
+                        <input type="checkbox" name="parachutes" value="${p.id}" checked class="peer sr-only">
+                        <div class="p-card border border-gray-700/50 rounded-xl p-4 flex items-center justify-between transition-all duration-300 bg-black/20 backdrop-blur-sm opacity-40 grayscale-[60%] peer-checked:opacity-100 peer-checked:grayscale-0">
+                            <span class="text-xl font-medium select-none flex items-center gap-4 text-gray-400 peer-checked:text-white transition-colors">
+                                <div class="w-16 h-16 rounded-lg bg-black/30 border border-gray-700/50 flex items-center justify-center hidden sm:flex shadow-inner overflow-hidden">
+                                    <img src="parasut${p.id}.png" alt="${p.name}" class="w-12 h-12 object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-110"> 
+                                </div>
+                                ${p.name}
+                            </span>
+                            
+                            <!-- Toggle Switch -->
+                            <div class="toggle-bg w-12 h-6 bg-gray-700 border border-gray-600 rounded-full relative transition-colors duration-300 shadow-md">
+                                <div class="toggle-knob absolute top-0.5 left-0.5 w-5 h-5 bg-gray-400 rounded-full shadow-sm transition-transform duration-300"></div>
+                            </div>
+                        </div>
+                    </label>
+                `;
+            });
+        }
+
+        renderCheckboxes();
+
+        // En az 1 tane seçili kalmasını sağlayan mantık
+        function enforceMinOneChecked(groupName) {
+            const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function(e) {
+                    const checkedCount = document.querySelectorAll(`input[name="${groupName}"]:checked`).length;
+                    if (checkedCount === 0) {
+                        this.checked = true; // Eğer hiç kalmadıysa bunu zorla tekrar seçili yap (kapatılmasını engelle)
+                    }
+                });
+            });
+        }
+
+        enforceMinOneChecked('themes');
+        enforceMinOneChecked('parachutes');
+
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const channel = document.getElementById('channelInput').value.trim();
+            const cmd = document.getElementById('cmdInput').value.trim();
+            const cooldown = document.getElementById('cooldownInput').value;
+
+            // Get selected themes
+            const selectedThemes = Array.from(document.querySelectorAll('input[name="themes"]:checked')).map(cb => cb.value);
+            if (selectedThemes.length === 0) {
+                alert(i18n.alert1[lang]);
+                return;
+            }
+
+            // Get selected parachutes
+            const selectedParachutes = Array.from(document.querySelectorAll('input[name="parachutes"]:checked')).map(cb => cb.value);
+            if (selectedParachutes.length === 0) {
+                alert(i18n.alert2[lang]);
+                return;
+            }
+
+            // Generate URLs
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            
+            const overlayParams = new URLSearchParams({
+                kanal: channel,
+                cmd: cmd,
+                cd: cooldown,
+                t: selectedThemes.join(','),
+                p: selectedParachutes.join(',')
+            });
+
+            const lbParams = new URLSearchParams({
+                kanal: channel
+            });
+
+            // Lokal dosya sisteminde çalışması için .html uzantıları gereklidir
+            document.getElementById('overlayUrl').value = `${baseUrl}/index.html?${overlayParams.toString()}`;
+            document.getElementById('leaderboardUrl').value = `${baseUrl}/siralama.html?${lbParams.toString()}`;
+
+            // Show results
+            document.getElementById('resultSection').classList.remove('hidden');
+            
+            // Scroll to results
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            el.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const btn = el.nextElementSibling;
+            const originalText = btn.innerText;
+            btn.innerText = i18n.copied[lang];
+            btn.classList.add('bg-gradient-to-r', 'from-cyan-500', 'to-blue-600', 'text-white');
+            btn.classList.remove('bg-gray-800');
+            
+            setTimeout(() => {
+                btn.innerText = i18n.copy[lang];
+                btn.classList.remove('bg-gradient-to-r', 'from-cyan-500', 'to-blue-600', 'text-white');
+                btn.classList.add('bg-gray-800', 'text-white');
+            }, 2000);
+        }
+
+        /* YUKARIDAN DÜŞEN KARAKTERLER SİSTEMİ */
+        const charImages = ['characterdog.png', 'characterhurt.png', 'chracteralien.png', 'chractercat.png', 'chracterchef.png'];
+
+        function spawnFallingChar() {
+            const char = document.createElement('img');
+            char.src = charImages[Math.floor(Math.random() * charImages.length)];
+            char.className = 'falling-char';
+            
+            // Konum: Çoğunlukla sağ/sol kenarlar, nadiren orta (panel arkası)
+            let pos;
+            const rand = Math.random();
+            if (rand < 0.4) {
+                pos = Math.random() * 18 + 2; // %40 ihtimalle sol (2vw - 20vw)
+            } else if (rand > 0.6) {
+                pos = Math.random() * 18 + 80; // %40 ihtimalle sağ (80vw - 98vw)
+            } else {
+                pos = Math.random() * 60 + 20; // %20 ihtimalle orta (20vw - 80vw)
+            }
+            char.style.left = pos + 'vw';
+            
+            // Boyut: 30px ile 75px arası
+            const size = Math.random() * 45 + 30;
+            char.style.width = size + 'px';
+            
+            // Animasyon süresi: 12s ile 25s arası (farklı hızlar)
+            const duration = Math.random() * 13 + 12;
+            char.style.animationDuration = duration + 's';
+            
+            // Dönme açısı
+            const rot = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 360 + 180);
+            char.style.setProperty('--end-rot', rot + 'deg');
+            
+            // Opaklık (Transparan olmasın, en fazla hafif soluk olsun: 0.6 ile 1.0 arası)
+            const opacity = (size - 30) / 45 * 0.4 + 0.6; 
+            char.style.setProperty('--max-opacity', opacity);
+            
+            document.body.appendChild(char);
+            
+            // Animasyon bitince sil
+            setTimeout(() => {
+                char.remove();
+            }, duration * 1000);
+        }
+
+        // Başlangıçta ekranın boş kalmaması için farklı zamanlarda 12 karakter fırlat
+        for(let i=0; i<12; i++) {
+            setTimeout(spawnFallingChar, Math.random() * 8000);
+        }
+
+        // Sürekli ve organik bir akış için rastgele aralıklarla (0.5s - 1.5s) tetikle
+        function scheduleNextSpawn() {
+            spawnFallingChar();
+            setTimeout(scheduleNextSpawn, Math.random() * 1000 + 500);
+        }
+        
+        setTimeout(scheduleNextSpawn, 1000);
+
+    </script>
+</body>
+</html>
