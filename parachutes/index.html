@@ -265,6 +265,7 @@
             // Eğer ekran kapalıysa aç ve yeni tema belirle
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
+                pool.render.visible = true; // Havuzu görünür yap
                 applyRandomTheme();
                 document.body.style.transition = 'none'; // Tak diye ekrana çıksın
                 document.body.style.opacity = '1';
@@ -668,6 +669,14 @@
                         Composite.remove(world, currentKing);
                         currentKing = null;
                     }
+
+                    // OBS veya tarayıcı takılmalarına karşı 1.5 saniye sonra arkaplanı ve havuzu tamamen yok et
+                    setTimeout(() => {
+                        if (!isOverlayVisible) {
+                            document.body.style.backgroundImage = 'none';
+                            pool.render.visible = false;
+                        }
+                    }, 1500);
                 }
             }
         }, 1000);
