@@ -687,10 +687,9 @@
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
             try {
-                // Cloudflare engellini aşmak için ücretsiz bir proxy ile kanal bilgilerini alıyoruz
-                const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v1/channels/' + channelName)}`);
-                const data = await response.json();
-                const channelData = JSON.parse(data.contents);
+                // allorigins.win Türkiye'de engelli olabildiği için corsproxy.io kullanıyoruz
+                const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v1/channels/' + channelName)}`);
+                const channelData = await response.json();
 
                 if (!channelData || !channelData.chatroom) {
                     console.error("Kanal bilgileri alınamadı. Kanal adını doğru yazdığınızdan emin olun.");
