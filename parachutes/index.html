@@ -39,6 +39,7 @@
         // --- 1. AYARLAR VE DEĞİŞKENLER ---
         const urlParams = new URLSearchParams(window.location.search);
         const channelName = urlParams.get('kanal') || 'testkanal';
+        const chatroomId = urlParams.get('cid'); // Panelden gelen kesin çözüm
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
 
@@ -684,52 +685,15 @@
                 return;
             }
 
-            console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
+            if (!chatroomId) {
+                console.error("Chatroom ID eksik! Lütfen ayar panelinden Chatroom ID'nizi girerek yeni bir link oluşturun.");
+                return;
+            }
+
+            console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName} | Chatroom ID: ${chatroomId}`);
 
             try {
-                // Kick'in Cloudflare korumasını ve bölgesel engelleri aşmak için birden fazla proxy deniyoruz
-                const proxies = [
-                    `https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
-                    `https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
-                    `https://api.codetabs.com/v1/proxy?quest=https://kick.com/api/v2/channels/${channelName}/chatroom`
-                ];
-
-                let chatroomId = null;
-
-                for (const url of proxies) {
-                    try {
-                        console.log("Deneniyor:", url);
-                        // Timeout ekliyoruz ki sonsuza kadar beklemesin
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 6000);
-                        
-                        const response = await fetch(url, { signal: controller.signal });
-                        clearTimeout(timeoutId);
-                        
-                        const data = await response.json();
-                        
-                        let channelData = data;
-                        if (data.contents) {
-                            try { channelData = JSON.parse(data.contents); } catch(e) {}
-                        }
-
-                        // Kick v2 api/chatroom endpoint returns JSON with "id" directly
-                        if (channelData && channelData.id) {
-                            chatroomId = channelData.id;
-                            console.log("Sohbet Odası ID başarıyla bulundu!");
-                            break;
-                        }
-                    } catch (err) {
-                        console.log("Bu proxy başarısız oldu, diğerine geçiliyor...");
-                    }
-                }
-
-                if (!chatroomId) {
-                    console.error("Tüm proxyler Kick tarafından engellendi. Kanal adını doğru yazdığınızdan emin olun.");
-                    return;
-                }
-
-                // Kick'in kullandığı gerçek zamanlı altyapıya (Pusher) bağlanıyoruz
+                // Kick'in kullandığı gerçek zamanlı altyapıya (Pusher) doğrudan Chatroom ID ile bağlanıyoruz (Proxy'leri devreden çıkarıyoruz)
                 // Kullanıcının sağladığı çalışan güncel Pusher key'i kullanılıyor
                 const pusher = new Pusher('32cbd69e4b950bf97679', {
                     cluster: 'us2',
