@@ -76,23 +76,8 @@
         document.body.style.transition = 'none'; // İlk başta geçiş yok
 
         let overlayIdleTimer = null;
+        // Idle timer'a artık gerek yok çünkü aktif karakter bittiğinde kapanıyor, ama fonksiyonu boş bırakıyoruz
         function resetIdleTimer() {
-            if (overlayIdleTimer) clearTimeout(overlayIdleTimer);
-            // Kimse atlamazsa 60 dakika (3600000 ms) sonra overlay'i kapat ve lideri sil
-            overlayIdleTimer = setTimeout(() => {
-                if (isOverlayVisible) {
-                    console.log("60 dakika boyunca kimse atlamadı. Overlay kapatılıyor.");
-                    document.body.style.transition = 'opacity 2s ease';
-                    document.body.style.opacity = '0';
-                    setTimeout(() => {
-                        isOverlayVisible = false;
-                        if (typeof currentKing !== 'undefined' && currentKing) {
-                            Composite.remove(world, currentKing);
-                            currentKing = null;
-                        }
-                    }, 2000);
-                }
-            }, 60 * 60 * 1000);
         }
 
         function applyRandomTheme() {
@@ -663,7 +648,31 @@
             }
         });
 
-        // --- 7.5 OVERLAY         // --- 8. KICK WEBSOCKET (GERÇEK ZAMANLI BAĞLANTI) ---
+        // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
+        // Saniyede bir kez ekranda aktif (kral olmayan) karakter var mı diye kontrol et
+        setInterval(() => {
+            if (typeof Composite !== 'undefined' && typeof world !== 'undefined') {
+                // Havada düşen veya skorunu gösterip silinmeyi bekleyen (kral olmayan) karakterler
+                const activeChars = Composite.allBodies(world).filter(b => b.label === 'karakter' && b !== currentKing).length;
+                
+                // Eğer sahnede hiç aktif karakter yoksa ve overlay açıksa
+                if (activeChars === 0 && isOverlayVisible) {
+                    isOverlayVisible = false;
+                    document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
+                    document.body.style.opacity = '0';
+                    console.log("Sahne tamamen boşaldı, overlay gizleniyor.");
+                    
+                    // Eski kralı ekrandan sil (çünkü bir sonraki açılışta havuzun yeri ve tema değişecek)
+                    // Not: Bu işlem sağdaki liderlik tablosunu (leaderboard) sıfırlamaz, sadece fiziksel objeyi siler.
+                    if (currentKing) {
+                        Composite.remove(world, currentKing);
+                        currentKing = null;
+                    }
+                }
+            }
+        }, 1000);
+
+        // --- 8. KICK WEBSOCKET (GERÇEK ZAMANLI BAĞLANTI) ---
         async function setupKickChatListener() {
             if (!channelName || channelName === 'testkanal') {
                 console.log("Test kanalı kullanılıyor.");
@@ -740,10 +749,10 @@
                         if (!message || !username) return;
                         console.log(`[Chat] ${username}: ${message}`);
 
-                        // Yayncı !reset yazarsa tüm bekleme süreleri sıfırlanır
-                        if (message.toLowerCase() === '!reset' && username.toLowerCase() === channelName.toLowerCase()) {
+                        // Yayıncı !resetdrop yazarsa tüm bekleme süreleri sıfırlanır
+                        if (message.toLowerCase() === '!resetdrop' && username.toLowerCase() === channelName.toLowerCase()) {
                             userCooldowns.clear();
-                            console.log('[DropPool] !reset komutu alındı — tüm bekleme süreleri sıfırlandı.');
+                            console.log('[DropPool] !resetdrop komutu alındı — tüm bekleme süreleri sıfırlandı.');
                             return;
                         }
 
