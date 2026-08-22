@@ -730,7 +730,8 @@
                 }
 
                 // Kick'in kullandığı gerçek zamanlı altyapıya (Pusher) bağlanıyoruz
-                const pusher = new Pusher('eb1d5f283081a78b932c', {
+                // Kullanıcının sağladığı çalışan güncel Pusher key'i kullanılıyor
+                const pusher = new Pusher('32cbd69e4b950bf97679', {
                     cluster: 'us2',
                     forceTLS: true
                 });
