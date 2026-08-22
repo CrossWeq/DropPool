@@ -108,18 +108,10 @@
         <form id="settingsForm" class="space-y-8 relative z-10">
             
             <!-- Temel Ayarlar -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-gray-300" data-i18n="channel">Kick Kanal Adı</label>
                     <input type="text" id="channelInput" placeholder="Örn: crossweq" required
-                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 flex items-center justify-between" data-i18n="chatroom">
-                        Chatroom ID
-                        <a href="https://kick.com/api/v2/channels/crossweq/chatroom" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 underline">(Nasıl Bulunur?)</a>
-                    </label>
-                    <input type="number" id="chatroomInput" placeholder="Örn: 4165684" required
                         class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
                 </div>
                 <div class="space-y-2">
@@ -128,7 +120,7 @@
                         class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300" data-i18n="cd">Bekleme (Saniye)</label>
+                    <label class="text-sm font-medium text-gray-300" data-i18n="cd">Kullanıcı Bekleme Süresi (Saniye)</label>
                     <input type="number" id="cooldownInput" value="30" min="0" required
                         class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white">
                 </div>
@@ -214,9 +206,8 @@
         const i18n = {
             subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
             channel: { tr: "Kick Kanal Adı", en: "Kick Channel Name" },
-            chatroom: { tr: 'Chatroom ID <a href="https://kick.com/api/v2/channels/crossweq/chatroom" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 underline ml-1">(Nasıl Bulunur?)</a>', en: 'Chatroom ID <a href="https://kick.com/api/v2/channels/crossweq/chatroom" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 underline ml-1">(How to find?)</a>' },
             cmd: { tr: "Tetikleyici Komut", en: "Trigger Command" },
-            cd: { tr: "Bekleme (Saniye)", en: "Cooldown (Sec)" },
+            cd: { tr: "Kullanıcı Bekleme Süresi (Saniye)", en: "User Cooldown (Seconds)" },
             themes: { tr: "Temalar", en: "Themes" },
             parachutes: { tr: "Aktif Paraşütler", en: "Active Parachutes" },
             min1: { tr: "En az 1 seçim zorunlu", en: "Min 1 selection required" },
@@ -265,9 +256,8 @@
                 }
             });
 
-            // Update placeholders
+            // Update placeholder
             document.getElementById('channelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
-            document.getElementById('chatroomInput').placeholder = lang === 'tr' ? 'Örn: 4165684' : 'e.g. 4165684';
 
             // Update dynamically generated names without destroying checkbox state
             themes.forEach(t => t.name = themeNames[t.id][lang]);
@@ -416,7 +406,6 @@
             e.preventDefault();
 
             const channel = document.getElementById('channelInput').value.trim();
-            const cid = document.getElementById('chatroomInput').value.trim();
             const cmd = document.getElementById('cmdInput').value.trim();
             const cooldown = document.getElementById('cooldownInput').value;
 
@@ -439,7 +428,6 @@
             
             const overlayParams = new URLSearchParams({
                 kanal: channel,
-                cid: cid,
                 cmd: cmd,
                 cd: cooldown,
                 t: selectedThemes.join(','),

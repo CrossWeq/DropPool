@@ -39,7 +39,6 @@
         // --- 1. AYARLAR VE DEĞİŞKENLER ---
         const urlParams = new URLSearchParams(window.location.search);
         const channelName = urlParams.get('kanal') || 'testkanal';
-        const chatroomId = urlParams.get('cid'); // Panelden gelen kesin çözüm
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
 
@@ -664,61 +663,102 @@
             }
         });
 
-        // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
-        // Saniyede bir kez ekranda düşen veya bekleyen karakter var mı diye kontrol et
-        setInterval(() => {
-            if (typeof Composite !== 'undefined' && typeof world !== 'undefined') {
-                const activeChars = Composite.allBodies(world).filter(b => b.label === 'karakter').length;
-                if (activeChars === 0 && isOverlayVisible) {
-                    isOverlayVisible = false;
-                    document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
-                    document.body.style.opacity = '0';
-                    console.log("Sahne tamamen boşaldı, overlay gizleniyor.");
-                }
-            }
-        }, 1000);
-
-        // --- 8. KICK WEBSOCKET (GERÇEK ZAMANLI BAĞLANTI) ---
+        // --- 7.5 OVERLAY         // --- 8. KICK WEBSOCKET (GERÇEK ZAMANLI BAĞLANTI) ---
         async function setupKickChatListener() {
             if (!channelName || channelName === 'testkanal') {
-                console.log("Test kanalı kullanılıyor. Gerçek chat bağlantısı için lütfen ayar panelinden kanal adınızı girin.");
+                console.log("Test kanalı kullanılıyor.");
                 return;
+            }
+
+            console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
+
+            // Chatroom ID'yi otomatik bulmak için sırayla deniyoruz
+            const apiTargets = [
+                `https://kick.com/api/v2/channels/${channelName}/chatroom`,
+                `https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
+                `https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
+                `https://api.codetabs.com/v1/proxy?quest=https://kick.com/api/v2/channels/${channelName}/chatroom`
+            ];
+
+            let chatroomId = null;
+            for (const url of apiTargets) {
+                try {
+                    console.log('Deneniyor:', url);
+                    const ctrl = new AbortController();
+                    const tid = setTimeout(() => ctrl.abort(), 7000);
+                    const res = await fetch(url, { signal: ctrl.signal });
+                    clearTimeout(tid);
+                    const raw = await res.json();
+                    // allorigins wrapper
+                    const data = raw.contents ? JSON.parse(raw.contents) : raw;
+                    if (data && data.id) {
+                        chatroomId = data.id;
+                        console.log('Chatroom ID bulundu:', chatroomId);
+                        break;
+                    }
+                } catch(e) {
+                    console.warn('Bu kaynak başarısız, diğerine geçiliyor...');
+                }
             }
 
             if (!chatroomId) {
-                console.error("Chatroom ID eksik! Lütfen ayar panelinden Chatroom ID'nizi girerek yeni bir link oluşturun.");
+                console.error('Chatroom ID bulunamadı. Tüm kaynaklar engellendi.');
                 return;
             }
 
-            console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName} | Chatroom ID: ${chatroomId}`);
-
             try {
-                // Kick'in kullandığı gerçek zamanlı altyapıya (Pusher) doğrudan Chatroom ID ile bağlanıyoruz (Proxy'leri devreden çıkarıyoruz)
-                // Kullanıcının sağladığı çalışan güncel Pusher key'i kullanılıyor
                 const pusher = new Pusher('32cbd69e4b950bf97679', {
                     cluster: 'us2',
                     forceTLS: true
                 });
 
-                const channel = pusher.subscribe(`chatrooms.${chatroomId}.v2`);
-                console.log("Kick sohbetine başarıyla bağlanıldı ve dinleniyor...");
+                const kickChannel = pusher.subscribe(`chatrooms.${chatroomId}.v2`);
+                console.log('Kick sohbetine başarıyla bağlanıldı ve dinleniyor...');
 
-                // Yeni mesaj event'i
-                channel.bind('App\\Events\\ChatMessageEvent', (eventData) => {
-                    if (!eventData || !eventData.content || !eventData.sender) return;
-                    
-                    const message = eventData.content.trim();
-                    const username = eventData.sender.username;
+                // Tüm eventleri logla (debug amaçlı)
+                kickChannel.bind_global((eventName, rawData) => {
+                    if (eventName.startsWith('pusher:')) return; // Pusher sistem eventlerini gizle
+                    console.log('[Pusher Event]', eventName, rawData);
+                });
 
-                    if (message.toLowerCase() === commandStr.toLowerCase()) {
-                        if (checkCooldown(username)) {
-                            spawnCharacter(username);
+                kickChannel.bind('App\\Events\\ChatMessageEvent', (rawData) => {
+                    try {
+                        // Bazen data string olarak gelir, bazen obje — ikisini de handle ediyoruz
+                        let eventData = rawData;
+                        if (typeof rawData === 'string') {
+                            eventData = JSON.parse(rawData);
                         }
+                        if (eventData && typeof eventData.data === 'string') {
+                            eventData = JSON.parse(eventData.data);
+                        }
+
+                        if (!eventData) return;
+
+                        const message = (eventData.content || '').trim();
+                        const username = eventData.sender ? eventData.sender.username : null;
+
+                        if (!message || !username) return;
+                        console.log(`[Chat] ${username}: ${message}`);
+
+                        // Yayncı !reset yazarsa tüm bekleme süreleri sıfırlanır
+                        if (message.toLowerCase() === '!reset' && username.toLowerCase() === channelName.toLowerCase()) {
+                            userCooldowns.clear();
+                            console.log('[DropPool] !reset komutu alındı — tüm bekleme süreleri sıfırlandı.');
+                            return;
+                        }
+
+                        if (message.toLowerCase() === commandStr.toLowerCase()) {
+                            if (checkCooldown(username)) {
+                                spawnCharacter(username);
+                            }
+                        }
+                    } catch(e) {
+                        console.error('Mesaj işlenirken hata:', e);
                     }
                 });
 
             } catch (error) {
-                console.error("Kick bağlantısı sırasında hata oluştu. Tarayıcınız proxy'yi engelliyor olabilir:", error);
+                console.error('Kick bağlantısı sırasında hata:', error);
             }
         }
 
