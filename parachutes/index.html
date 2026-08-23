@@ -109,6 +109,11 @@
         const syncChannel = new BroadcastChannel('droppool_channel');
         let leaderboard = []; // Her sayfa yenilendiğinde sıfırdan başlar
 
+        // --- TOPLU ATLAYIŞ (DROP TOGETHER) DURUM DEĞİŞKENLERİ ---
+        let isDropTogetherMode = false;
+        let dropTogetherQueue = [];
+        let isPlaneFlying = false;
+
         // Sayfa her açıldığında/yenilendiğinde sıralamayı sıfırla ve siralama.html'e bildir
         try {
             localStorage.removeItem('droppool_leaderboard');
@@ -272,7 +277,7 @@
         Composite.add(world, [leftWall, rightWall, ground, pool]);
 
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
-        function spawnCharacter(username, customEmoteUrl = null) {
+        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false) {
             // Eğer ekran kapalıysa aç ve yeni tema belirle
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -286,7 +291,7 @@
             resetIdleTimer();
 
             // Rastgele X pozisyonu (kenarlara çok yakın olmasın)
-            const randomX = Math.random() * (width - 100) + 50;
+            const randomX = spawnX !== null ? spawnX : (Math.random() * (width - 100) + 50);
 
             let randomChar;
             let customDomElement = null;
@@ -315,7 +320,7 @@
             }
 
             // Karakter objesini oluştururken görselin (resmin) boyutuna uygun bir fiziksel çap (radius) veriyoruz ki yere batmasın.
-            const character = Bodies.circle(randomX, -50, randomChar.radius, {
+            const character = Bodies.circle(randomX, spawnY, randomChar.radius, {
                 restitution: 0.9, // Sağa sola çarpınca daha çok seksin
                 frictionAir: 0, // Yatay hızını havada kaybetmemesi için
                 friction: 0, // Duvarlara sürttüğünde yavaşlamaması için
@@ -335,7 +340,8 @@
                     charYOffset: randomChar.yOffset || 0,
                     nameYOffset: randomChar.nameYOffset || 0,
                     isCustom: randomChar.isCustom || false,
-                    domElement: customDomElement
+                    domElement: customDomElement,
+                    isDive: isDive
                 }
             });
 
@@ -357,6 +363,17 @@
 
                 // Sadece bizim oluşturduğumuz 'karakter' etiketli objeler için işlem yap
                 if (body.label === 'karakter' && body.plugin) {
+                    
+                    // --- DIVE MODU İÇİN ÖZEL DAVRANIŞ (PARAŞÜT İPTALİ VE HAVADA SPIN) ---
+                    if (body.plugin.isDive) {
+                        if (!body.plugin.landed) {
+                            Matter.Body.setAngularVelocity(body, 0); // Dönme efektini tamamen kapattık
+                            Matter.Body.setAngle(body, 0); // Havadayken dümdüz (dik) durması için açıyı kilitledik
+                            Matter.Body.setVelocity(body, { x: 0, y: body.velocity.y }); // Sağa sola sapmayı (savrulmayı) tamamen engelle, dümdüz insin
+                        }
+                        continue; // Paraşüt açılma sınırlarını ve sarkaçları tamamen pas geç
+                    }
+
                     if (body.plugin.landed) {
                         // Topun görünürlüğünü yavaş yavaş %75'e düşür (tak diye inmesin)
                         if (body.plugin.ballOpacity === undefined) body.plugin.ballOpacity = 1;
@@ -392,8 +409,8 @@
                             canOpen = false;
                         }
 
-                        // Obje ekranın üst 1/15'ini geçti mi ve açılmaya hazır mı? (Açılma gecikmesi azaltıldı)
-                        if (canOpen && body.position.y > height / 15) {
+                        // Obje ekranın üst 1/4'ünü geçti mi ve açılmaya hazır mı?
+                        if (canOpen && body.position.y > height / 4) {
                             body.plugin.parachuteOpened = true;
                             body.plugin.parachuteOpening = true; // Açılış animasyonunu başlat
 
@@ -444,11 +461,11 @@
                                 }
                             }
                         } else if (body.plugin.parachuteOpening) {
-                            // İlk Açılma Animasyonu (Hızlandırıldı)
+                            // İlk Açılma Animasyonu (Hızlandırıldı - Daha anında patlar)
                             if (body.render.sprite && body.render.sprite.texture) {
-                                body.render.sprite.xScale += (0.1 * maxScale);
-                                body.render.sprite.yScale += (0.1 * maxScale);
-                                body.render.opacity += 0.1;
+                                body.render.sprite.xScale += (0.3 * maxScale);
+                                body.render.sprite.yScale += (0.3 * maxScale);
+                                body.render.opacity += 0.3;
 
                                 if (body.velocity.y > 1.5) Matter.Body.setVelocity(body, { x: body.velocity.x, y: 1.5 });
 
@@ -834,14 +851,34 @@
                         // Yayıncı !resetdrop yazarsa tüm bekleme süreleri sıfırlanır
                         if (message.toLowerCase() === '!resetdrop' && username.toLowerCase() === channelName.toLowerCase()) {
                             userCooldowns.clear();
-                            console.log('[DropPool] !resetdrop komutu alındı — tüm bekleme süreleri sıfırlandı.');
+                            isDropTogetherMode = false;
+                            dropTogetherQueue = [];
+                            console.log('[DropPool] !resetdrop komutu alındı — tüm bekleme süreleri sıfırlandı ve toplu atlama iptal edildi.');
+                            return;
+                        }
+
+                        // Yayıncı !droptogether yazarsa toplu atlayış moduna geç
+                        if (message.toLowerCase() === '!droptogether' && username.toLowerCase() === channelName.toLowerCase()) {
+                            isDropTogetherMode = true;
+                            dropTogetherQueue = [];
+                            console.log('[DropPool] Toplu atlayış (Drop Together) modu AKTİF! İzleyiciler sıraya alınıyor.');
                             return;
                         }
 
                         const msgLower = message.toLowerCase();
                         const cmdLower = commandStr.toLowerCase();
-                        // Sadece !atla (cmd) veya !atla[emote] veya !atla [emote] komutlarını tespit et
-                        if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
+                        
+                        // Dive komutu kontrolü: !atla dive veya !atladive
+                        let isDiveCommand = false;
+                        let isNormalDropCommand = false;
+
+                        if (msgLower === cmdLower + " dive" || msgLower === cmdLower + "dive" || msgLower.startsWith(cmdLower + " dive ") || msgLower.startsWith(cmdLower + "dive ") || msgLower.startsWith(cmdLower + " dive[") || msgLower.startsWith(cmdLower + "dive[")) {
+                            isDiveCommand = true;
+                        } else if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
+                            isNormalDropCommand = true;
+                        }
+
+                        if (isDiveCommand || isNormalDropCommand) {
                             if (checkCooldown(username)) {
                                 let customEmoteUrl = null;
                                 // Kick emote yapısını tespit et: [emote:12345:EmoteName]
@@ -850,7 +887,28 @@
                                     const emoteId = emoteMatch[1];
                                     customEmoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
                                 }
-                                spawnCharacter(username, customEmoteUrl);
+                                
+                                if (isDiveCommand) {
+                                    // Dalış modu (helikopter)
+                                    triggerHelicopterDrop(username, customEmoteUrl);
+                                } else {
+                                    // Normal atlama modu
+                                    if (isDropTogetherMode) {
+                                        if (username.toLowerCase() === channelName.toLowerCase()) {
+                                            // Yayıncı atlarsa uçağı tetikle ve modu kapat
+                                            isDropTogetherMode = false;
+                                            dropTogetherQueue.unshift({ username, customEmoteUrl });
+                                            triggerPlaneDrop();
+                                        } else {
+                                            // İzleyici atlarsa sıraya ekle (paraşüt açılmaz)
+                                            dropTogetherQueue.push({ username, customEmoteUrl });
+                                            console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
+                                        }
+                                    } else {
+                                        // Normal modda doğrudan düşür
+                                        spawnCharacter(username, customEmoteUrl);
+                                    }
+                                }
                             }
                         }
                     } catch(e) {
@@ -861,6 +919,127 @@
             } catch (error) {
                 console.error('Kick bağlantısı sırasında hata:', error);
             }
+        }
+
+        // --- HELİKOPTER (DIVE) ANİMASYONU ---
+        function triggerHelicopterDrop(username, customEmoteUrl, forcedHeliNo = null) {
+            // Eğer ekran kapalıysa arka planı uyandır
+            if (!isOverlayVisible) {
+                isOverlayVisible = true;
+                pool.render.visible = true;
+                applyRandomTheme();
+                document.body.style.transition = 'none';
+                document.body.style.opacity = '1';
+            }
+            resetIdleTimer();
+
+            // forcedHeliNo varsa onu kullan, yoksa 1-9 arası rastgele helikopter seç
+            const heliNo = forcedHeliNo !== null ? forcedHeliNo : Math.floor(Math.random() * 9) + 1;
+            
+            const heli = document.createElement('img');
+            heli.src = `Helicopter${heliNo}.png`;
+            heli.style.position = 'absolute';
+            heli.style.top = '20px'; // Biraz daha yukarı alındı (50px -> 20px)
+            heli.style.left = '-500px'; 
+            heli.style.width = '450px'; // İlk haline (300) göre 1.5x büyütüldü
+            heli.style.zIndex = '100';
+            heli.style.transition = 'left 5s linear';
+            document.body.appendChild(heli);
+
+            setTimeout(() => {
+                heli.style.left = (window.innerWidth + 500) + 'px';
+            }, 50);
+
+            const startDropX = window.innerWidth * 0.15;
+            const endDropX = window.innerWidth * 0.85;
+            
+            const totalDistance = window.innerWidth + 1000; // -500 to w+500
+            const speed = totalDistance / 5000; 
+
+            const timeToStart = (startDropX - (-500)) / speed;
+            const timeToEnd = (endDropX - (-500)) / speed;
+            const safeDuration = timeToEnd - timeToStart;
+
+            // Rastgele bir bırakma zamanı belirle (güvenli alan içinde)
+            const randomDropOffset = Math.random() * safeDuration;
+            const dropTime = timeToStart + randomDropOffset;
+            const expectedX = -500 + (speed * dropTime);
+
+            setTimeout(() => {
+                // Helikopterin (450px) alt merkezinden düşsün (expectedX + 225). Helikopter yukarı çıktığı için Y=120 oldu.
+                spawnCharacter(username, customEmoteUrl, expectedX + 225, 120, true);
+            }, dropTime);
+
+            setTimeout(() => {
+                if (heli.parentNode) heli.parentNode.removeChild(heli);
+            }, 5000);
+        }
+
+        // --- TOPLU ATLAYIŞ UÇAK ANİMASYONU ---
+        function triggerPlaneDrop() {
+            if (dropTogetherQueue.length === 0) return;
+            
+            isPlaneFlying = true;
+            
+            // Eğer ekran kapalıysa arka planı uyandır
+            if (!isOverlayVisible) {
+                isOverlayVisible = true;
+                pool.render.visible = true;
+                applyRandomTheme();
+                document.body.style.transition = 'none';
+                document.body.style.opacity = '1';
+            }
+            resetIdleTimer();
+
+            // Uçak görselini oluştur
+            const plane = document.createElement('img');
+            plane.src = 'plane1.png';
+            plane.style.position = 'absolute';
+            plane.style.top = '50px'; 
+            plane.style.left = '-550px'; // Uçak daha da büyük olduğu için daha soldan başlasın
+            plane.style.width = '500px'; // 250px'in 2 katı (2x büyütüldü)
+            plane.style.zIndex = '100';
+            plane.style.transition = 'left 5s linear';
+            // Havacılık hissi için sağa doğru ilerlerken düz durmasını sağla (Görsel yönüne göre değiştirebilirsiniz)
+            document.body.appendChild(plane);
+
+            // Frame güncellenmesi için ufacık bekleyip uçağı hareket ettiriyoruz
+            setTimeout(() => {
+                plane.style.left = (window.innerWidth + 550) + 'px';
+            }, 50);
+
+            // Uçak geçerken ekranın güvenli X alanında (örneğin %15 ile %85 arası) karakterleri bırakıcak
+            const startDropX = window.innerWidth * 0.15;
+            const endDropX = window.innerWidth * 0.85;
+            
+            const totalDistance = window.innerWidth + 1100; // -550'den w+550'e (5 saniyede)
+            const speed = totalDistance / 5000; // px per ms
+
+            const timeToStart = (startDropX - (-550)) / speed;
+            const timeToEnd = (endDropX - (-550)) / speed;
+            const safeDuration = timeToEnd - timeToStart;
+
+            const usersToDrop = [...dropTogetherQueue];
+            dropTogetherQueue = [];
+
+            const intervalTime = safeDuration / Math.max(1, usersToDrop.length);
+
+            // Tüm kullanıcıları uçağın o anki tahmini pozisyonunda spawn et
+            usersToDrop.forEach((user, index) => {
+                const dropTime = timeToStart + (intervalTime * index);
+                const expectedX = -550 + (speed * dropTime);
+
+                setTimeout(() => {
+                    // Uçağın gövde alt merkezinden düşsünler
+                    spawnCharacter(user.username, user.customEmoteUrl, expectedX + (500 / 2), 150);
+                }, dropTime);
+            });
+
+            // 5 saniye sonra uçağı domdan temizle
+            setTimeout(() => {
+                if (plane.parentNode) plane.parentNode.removeChild(plane);
+                isPlaneFlying = false;
+            }, 5000);
         }
 
         setupKickChatListener();
@@ -926,10 +1105,51 @@
             }, 800); // Her birini 0.8 saniye arayla atlat
         };
 
-        // Sayfa tarayıcıda açıldıktan 2 saniye sonra yeni karakterler otomatik olarak atlar. (Kapatıldı)
+        // --- UÇAK İLE TOPLU ATLAYIŞ (DROP TOGETHER) TEST SENARYOSU ---
+        window.testUcakAtlayisi = () => {
+            console.log("Uçak test senaryosu başlatılıyor... 15 kişi sıraya ekleniyor.");
+            
+            // Sırayı sahte izleyicilerle doldur
+            isDropTogetherMode = true;
+            dropTogetherQueue = [];
+            const testIsimleri = ["Ahmet", "Mehmet", "Ayşe", "Fatma", "Ali", "Veli", "Canan", "Ece", "Kaan", "Cem", "Nur", "Burak", "Selin", "Oğuz", "Zeynep"];
+            
+            testIsimleri.forEach(isim => {
+                dropTogetherQueue.push({ username: isim, customEmoteUrl: null });
+            });
+
+            // Uçağı çağır
+            isDropTogetherMode = false;
+            triggerPlaneDrop();
+        };
+
+        // --- HELİKOPTER DIVE TEST SENARYOSU ---
+        window.testHelikopterler = () => {
+            console.log("Helikopter test senaryosu başlatılıyor... 9 helikopter sırayla geçecek.");
+            let count = 1;
+            
+            const testLoop = () => {
+                if (count > 9) {
+                    console.log("Tüm helikopter testleri tamamlandı.");
+                    return;
+                }
+                
+                console.log(`Helikopter ${count} çağrılıyor...`);
+                // Helikopter numarasını (count) forcedHeliNo olarak gönder
+                triggerHelicopterDrop(`Diver${count}`, null, count);
+                count++;
+                
+                // Her helikopterin geçişi 5 sn sürüyor, diğeri 5.5 saniye sonra gelsin
+                setTimeout(testLoop, 5500);
+            };
+            
+            testLoop(); // Döngüyü başlat
+        };
+
+        // Sayfa tarayıcıda açıldıktan 2 saniye sonra helikopter testi otomatik olarak başlar. (Kapatıldı)
         /*
         setTimeout(() => {
-            window.testYeniler();
+            window.testHelikopterler();
         }, 2000);
         */
 

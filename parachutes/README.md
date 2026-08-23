@@ -36,6 +36,20 @@
 5. Paste the copied link into the URL field. (Set Width: 1920, Height: 1080).
 6. Type your command in the chat and watch the characters fall!
 
+## 🎮 Komutlar / Chat Commands
+
+**🇹🇷 Türkçe:**
+- `!atla` (veya panelden belirlediğiniz komut): Standart paraşütlü atlayış.
+- `!atla dive` / `!atladive`: Helikopterden paraşütsüz ve havada fırıl fırıl dönerek (spin) çılgın bir dalış yapar.
+- `!droptogether` *(Sadece Yayıncı)*: Toplu atlayış (Queue) modunu başlatır. İzleyiciler komut yazınca beklemeye (sıraya) alınır. Yayıncı komutu girdiğinde dev bir uçak geçer ve herkesi aynı anda uçaktan atar.
+- `!resetdrop` *(Sadece Yayıncı)*: Tüm izleyicilerin bekleme süresini (cooldown) sıfırlar ve varsa toplu atlayış sırasını iptal edip temizler.
+
+**🇬🇧 English:**
+- `!drop` (or your custom command): Standard parachute drop.
+- `!drop dive` / `!dropdive`: Drops from a helicopter without a parachute, spinning wildly in the air.
+- `!droptogether` *(Streamer Only)*: Starts "Queue Mode". Viewers who type the drop command are queued up. When the streamer types the drop command, a massive plane flies by and drops everyone at once.
+- `!resetdrop` *(Streamer Only)*: Resets all viewer cooldowns and clears the drop queue if active.
+
 ---
 
 ## 💻 Geliştirici / Developer
