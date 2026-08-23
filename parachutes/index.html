@@ -392,8 +392,8 @@
                             canOpen = false;
                         }
 
-                        // Obje ekranın üst 1/4'ünü geçti mi ve açılmaya hazır mı?
-                        if (canOpen && body.position.y > height / 4) {
+                        // Obje ekranın üst 1/15'ini geçti mi ve açılmaya hazır mı? (Açılma gecikmesi azaltıldı)
+                        if (canOpen && body.position.y > height / 15) {
                             body.plugin.parachuteOpened = true;
                             body.plugin.parachuteOpening = true; // Açılış animasyonunu başlat
 
