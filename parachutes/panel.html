@@ -92,11 +92,13 @@
 </head>
 <body class="p-6 md:p-12">
 
-    <div class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-10 relative z-10 overflow-hidden mx-auto">
+    <div class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-10 relative z-10 mx-auto">
         
-        <!-- Decorative Glow -->
-        <div class="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-[120px] opacity-20 pointer-events-none"></div>
-        <div class="absolute -bottom-32 -left-32 w-64 h-64 bg-cyan-500 rounded-full mix-blend-screen filter blur-[120px] opacity-10 pointer-events-none"></div>
+        <!-- Dekoratif Glow (kendi overflow-hidden kapsayıcısında) -->
+        <div class="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none z-0">
+            <div class="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-[120px] opacity-20"></div>
+            <div class="absolute -bottom-32 -left-32 w-64 h-64 bg-cyan-500 rounded-full mix-blend-screen filter blur-[120px] opacity-10"></div>
+        </div>
 
         <div class="mb-12 text-center relative z-10">
             <h1 class="text-4xl font-bold mb-3 tracking-tight text-white">DropPool</h1>
@@ -270,14 +272,14 @@
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
                     <li><strong>Paraşütlü Atlayış:</strong> <code>${cmd}</code> yazıldığında standart bir paraşüt atlayışı gerçekleşir.</li>
                     <li><strong>Animasyonlu Kick Emotları:</strong> Sohbette <code>${cmd} [emote]</code> yazıldığında, izleyicinin attığı Kick emote'u (GIF/WEBP dahil) ekranda düşen bir karakter olur!</li>
-                    <li><strong>Helikopter Dalışı (Dive):</strong> <code>${cmd} dive</code> veya <code>${cmd}dive</code> yazıldığında, izleyici paraşütsüz şekilde havada dönerek helikopterden atlar.</li>
+                    <li><strong>Helikopter Dalışı (Dive):</strong> <code>${cmd} dive</code> yazıldığında, izleyici paraşütsüz şekilde havada dönerek helikopterden atlar.</li>
                     <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler <code>${cmd}</code> yazdığında sıraya girer. Yayıncı atlama komutunu (<code>${cmd}</code>) tekrar yazdığında devasa bir uçak geçer ve herkes aynı anda uçağın altından atlar.</li>
+                    <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler <code>${cmd}</code> yazdığında sıraya girer. Yayıncı atlama komutunu (<code>${cmd}</code>) yazdığında hem kendisi de sıraya eklenir hem de devasa bir uçak anında kalkar, sıradaki herkes aynı anda uçağın altından atlar.</li>
                     <li><code>!resetdrop</code> - Chat'ten yazıldığında herkesin bekleme süresini (cooldown) sıfırlar ve varsa toplu atlayış sırasını temizler. Herkes anında tekrar atlayabilir.</li>
                 </ul>
             `;
@@ -295,14 +297,14 @@
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
                     <li><strong>Parachute Drop:</strong> Typing <code>${cmd}</code> triggers a standard parachute drop.</li>
                     <li><strong>Animated Kick Emotes:</strong> When <code>${cmd} [emote]</code> is typed in chat, the emote sent by the viewer (including GIF/WEBP) becomes the falling character!</li>
-                    <li><strong>Helicopter Dive:</strong> Typing <code>${cmd} dive</code> or <code>${cmd}dive</code> causes the viewer to drop from a helicopter without a parachute, spinning.</li>
+                    <li><strong>Helicopter Dive:</strong> Typing <code>${cmd} dive</code> causes the viewer to drop from a helicopter without a parachute, spinning.</li>
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!droptogether</code> - Starts the "Queue Mode". Viewers who type <code>${cmd}</code> are queued up. When the streamer types the jump command (<code>${cmd}</code>), a massive plane flies by and drops everyone at once.</li>
+                    <li><code>!droptogether</code> - Starts the "Queue Mode". Viewers who type <code>${cmd}</code> are queued up. When the streamer types <code>${cmd}</code>, they are added to the queue as well and the plane immediately takes off — everyone drops at once.</li>
                     <li><code>!resetdrop</code> - Resets the cooldown for everyone and clears the drop queue if active. Everyone can jump again immediately.</li>
                 </ul>
             `;
@@ -546,11 +548,8 @@
             document.getElementById('overlayUrl').value = `${baseUrl}/index.html?${overlayParams.toString()}`;
             document.getElementById('leaderboardUrl').value = `${baseUrl}/siralama.html?${lbParams.toString()}`;
 
-            // Show results
+            // Show results (otomatik scroll yok, kullanıcı isterse aşağı kayar)
             document.getElementById('resultSection').classList.remove('hidden');
-            
-            // Scroll to results
-            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
 
         function copyToClipboard(elementId) {
