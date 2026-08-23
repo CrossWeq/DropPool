@@ -579,7 +579,7 @@
             'charactersticth.png'
         ];
 
-        function spawnFallingChar() {
+        function spawnFallingChar(isInitial = false) {
             const char = document.createElement('img');
             char.src = charImages[Math.floor(Math.random() * charImages.length)];
             char.className = 'falling-char';
@@ -604,6 +604,11 @@
             const duration = Math.random() * 13 + 12;
             char.style.animationDuration = duration + 's';
             
+            // Eğer sayfa ilk açıldığında oluşturuluyorsa, animasyonun ortasından başlasın (ekran dolu gözüksün)
+            if (isInitial) {
+                char.style.animationDelay = -(Math.random() * duration) + 's';
+            }
+            
             // Dönme açısı
             const rot = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 360 + 180);
             char.style.setProperty('--end-rot', rot + 'deg');
@@ -612,17 +617,17 @@
             const opacity = (size - 30) / 45 * 0.4 + 0.6; 
             char.style.setProperty('--max-opacity', opacity);
             
-            document.body.appendChild(char);
-            
-            // Animasyon bitince sil
-            setTimeout(() => {
+            // Animasyon bitince güvenli bir şekilde sil (setTimeout kullanmak yerine event dinleyici)
+            char.addEventListener('animationend', () => {
                 char.remove();
-            }, duration * 1000);
+            });
+            
+            document.body.appendChild(char);
         }
 
-        // Başlangıçta ekranın boş kalmaması için farklı zamanlarda 12 karakter fırlat
+        // Başlangıçta ekranın boş kalmaması için karakterleri ekranın çeşitli yerlerinden başlat
         for(let i=0; i<12; i++) {
-            setTimeout(spawnFallingChar, Math.random() * 8000);
+            spawnFallingChar(true);
         }
 
         // Sürekli ve organik bir akış için rastgele aralıklarla (0.5s - 1.5s) tetikle
