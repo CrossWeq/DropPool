@@ -41,6 +41,7 @@
         const channelName = urlParams.get('kanal') || 'testkanal';
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
+        const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
 
         const activeThemesParams = urlParams.get('t') ? urlParams.get('t').split(',') : ['0', '1', '2', '3'];
         const activeThemesIndices = activeThemesParams.map(Number);
@@ -85,8 +86,12 @@
             const listToUse = activeThemesArr.length > 0 ? activeThemesArr : themes;
             const randomTheme = listToUse[Math.floor(Math.random() * listToUse.length)];
             
-            document.body.style.backgroundImage = `url('${randomTheme.bg}')`;
-            document.body.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
+            if (showBackground) {
+                document.body.style.backgroundImage = `url('${randomTheme.bg}')`;
+                document.body.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
+            } else {
+                document.body.style.backgroundImage = 'none';
+            }
 
             // Eğer pool objesi daha önceden oluşturulmuşsa görselini de değiştir
             if (typeof pool !== 'undefined' && pool.render && pool.render.sprite) {
@@ -249,7 +254,13 @@
             // Diğer Karakterler
             { file: 'chracteralien.png', scale: 0.020, radius: 16, yOffset: 0 }, 
             { file: 'chractercat.png', scale: 0.030, radius: 20, yOffset: -2 }, 
-            { file: 'chracterchef.png', scale: 0.100, radius: 30, yOffset: 2 }
+            { file: 'chracterchef.png', scale: 0.100, radius: 30, yOffset: 2 },
+            // Yeni Eklenen Karakterler
+            { file: 'characterfrog.png', scale: 0.053, radius: 36, yOffset: 0 }, // 1.5x büyütüldü
+            { file: 'charactercat3.png', scale: 0.110, radius: 28, yOffset: 0 }, // Ortada bir boyuta getirildi
+            { file: 'charactercat2.png', scale: 0.200, radius: 44, yOffset: 0 }, // Daha da büyütüldü
+            { file: 'characterdog2.png', scale: 0.200, radius: 44, yOffset: 0 },
+            { file: 'charactersticth.png', scale: 0.180, radius: 40, yOffset: 0 } // Çok az küçültüldü
         ];
         // Manuel çizim için resimleri önceden yüklüyoruz
         charConfigs.forEach(cfg => {
@@ -281,15 +292,16 @@
             let customDomElement = null;
 
             if (customEmoteUrl) {
-                randomChar = { file: customEmoteUrl, scale: 1, radius: 24, yOffset: 0, nameYOffset: 5, isCustom: true };
+                // Emote boyutları 1.5x büyütüldü (radius: 24 -> 36, width/height: 48 -> 72)
+                randomChar = { file: customEmoteUrl, scale: 1, radius: 36, yOffset: 0, nameYOffset: 5, isCustom: true };
                 
                 // Animasyonlu emote (GIF/WEBP) desteği için DOM (img) elemanı oluşturuyoruz
                 customDomElement = document.createElement('img');
                 customDomElement.src = customEmoteUrl;
                 customDomElement.className = 'custom-emote';
                 customDomElement.style.position = 'absolute';
-                customDomElement.style.width = '48px';
-                customDomElement.style.height = '48px';
+                customDomElement.style.width = '72px';
+                customDomElement.style.height = '72px';
                 customDomElement.style.objectFit = 'contain';
                 customDomElement.style.left = '-1000px'; 
                 customDomElement.style.top = '-1000px';
@@ -883,8 +895,44 @@
         console.log("Tekli test için konsola window.testAtla() yazabilirsiniz.");
         console.log("Toplu test için konsola window.topluAtla(30) yazabilirsiniz.");
 
-        // Sayfa yüklenir yüklenmez 1 saniye sonra otomatik 25 kişilik toplu atlayış yapsın: (Kapatıldı)
-        // setTimeout(() => window.topluAtla(25), 1000);
+        // --- ÖZEL TEST SENARYOSU (SADECE YENİ KARAKTERLER) ---
+        window.testYeniler = () => {
+            console.log("Sadece yeni eklenen 5 karakter test ediliyor...");
+            
+            // Orjinal listeyi yedeğe alıp sadece yenileri bırakıyoruz
+            const orjinalConfig = [...charConfigs];
+            charConfigs.length = 0;
+            charConfigs.push(
+                { file: 'characterfrog.png', scale: 0.053, radius: 36, yOffset: 0 },
+                { file: 'charactercat3.png', scale: 0.110, radius: 28, yOffset: 0 },
+                { file: 'charactercat2.png', scale: 0.200, radius: 44, yOffset: 0 },
+                { file: 'characterdog2.png', scale: 0.200, radius: 44, yOffset: 0 },
+                { file: 'charactersticth.png', scale: 0.180, radius: 40, yOffset: 0 }
+            );
+
+            let count = 0;
+            const isimler = ['Kurbik', 'Kedi3', 'Kedi2', 'Kopek2', 'Sticth'];
+            const interval = setInterval(() => {
+                spawnCharacter(isimler[count]);
+                count++;
+                if (count >= 5) {
+                    clearInterval(interval);
+                    // Atlayışlar bitince listeyi eski haline getir
+                    setTimeout(() => {
+                        charConfigs.length = 0;
+                        orjinalConfig.forEach(c => charConfigs.push(c));
+                    }, 1000);
+                }
+            }, 800); // Her birini 0.8 saniye arayla atlat
+        };
+
+        // Sayfa tarayıcıda açıldıktan 2 saniye sonra yeni karakterler otomatik olarak atlar. (Kapatıldı)
+        /*
+        setTimeout(() => {
+            window.testYeniler();
+        }, 2000);
+        */
+
     </script>
 </body>
 

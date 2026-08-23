@@ -103,7 +103,10 @@
             <p class="text-gray-400 font-light" data-i18n="subtitle">OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.</p>
         </div>
         
-        <button type="button" id="langBtn" onclick="toggleLang()" class="absolute top-6 right-6 bg-black/40 border border-gray-700/50 text-white font-bold py-2 px-4 rounded-xl hover:bg-white/10 transition-colors z-20 shadow-lg">ENG</button>
+        <div class="absolute top-6 right-6 flex gap-3 z-20">
+            <button type="button" onclick="toggleHelpModal()" class="w-10 h-10 bg-black/40 border border-gray-700/50 text-white font-bold rounded-xl hover:bg-white/10 transition-colors shadow-lg flex items-center justify-center">?</button>
+            <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/50 text-white font-bold py-2 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg">ENG</button>
+        </div>
 
         <form id="settingsForm" class="space-y-8 relative z-10">
             
@@ -135,6 +138,18 @@
                 <div class="flex flex-col gap-3" id="themeContainer">
                     <!-- Javascript ile doldurulacak -->
                 </div>
+            </div>
+
+            <!-- Ekstra Ayarlar -->
+            <div class="flex items-center justify-between bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-300" data-i18n="bgToggleTitle">Zemin Görselleri</label>
+                    <p class="text-xs text-gray-500" data-i18n="bgToggleDesc">Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="bgToggle" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
             </div>
 
             <!-- Paraşütler -->
@@ -202,9 +217,24 @@
 
     </div>
 
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative">
+            <button type="button" onclick="toggleHelpModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-2xl font-bold text-white mb-4" id="helpTitle" data-i18n="helpTitle">Nasıl Kurulur & Özellikler</h2>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed" id="helpContent">
+                <!-- Javascript ile doldurulacak -->
+            </div>
+        </div>
+    </div>
+
     <script>
         const i18n = {
             subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
+            bgToggleTitle: { tr: "Zemin Görselleri", en: "Floor Visuals" },
+            bgToggleDesc: { tr: "Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.", en: "If disabled, only the pool is visible and the floor becomes transparent." },
             channel: { tr: "Kick Kanal Adı", en: "Kick Channel Name" },
             cmd: { tr: "Tetikleyici Komut", en: "Trigger Command" },
             cd: { tr: "Kullanıcı Bekleme Süresi (Saniye)", en: "User Cooldown (Seconds)" },
@@ -221,7 +251,55 @@
             dev: { tr: "CrossWeq tarafından geliştirilmiştir.", en: "Developed by CrossWeq." },
             copied: { tr: "Kopyalandı!", en: "Copied!" },
             alert1: { tr: "Lütfen en az 1 tema seçin!", en: "Please select at least 1 theme!" },
-            alert2: { tr: "Lütfen en az 1 paraşüt seçin!", en: "Please select at least 1 parachute!" }
+            alert2: { tr: "Lütfen en az 1 paraşüt seçin!", en: "Please select at least 1 parachute!" },
+            helpTitle: { tr: "Nasıl Kurulur & Özellikler", en: "How to Install & Features" }
+        };
+
+        const helpContentObj = {
+            tr: `
+                <h3 class="text-lg font-semibold text-white mt-4">🚀 Nasıl Kurulur?</h3>
+                <ol class="list-decimal pl-5 space-y-1 text-gray-400">
+                    <li>Panelden <strong>Kick Kanal Adınızı</strong> ve diğer ayarları eksiksiz doldurun.</li>
+                    <li>İstediğiniz zemin, tema ve paraşütleri seçin.</li>
+                    <li>"Bağlantıları Oluştur" butonuna tıklayın.</li>
+                    <li>Oluşan <strong>1. Ana Oyun Ekranı</strong> linkini kopyalayın ve OBS'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak URL kısmına yapıştırın. Genişlik: 1920, Yükseklik: 1080 yapmanız önerilir.</li>
+                    <li>İsteğe bağlı olarak <strong>2. Sıralama Ekranı</strong> linkini de OBS'e tarayıcı kaynağı olarak ekleyebilirsiniz.</li>
+                </ol>
+
+                <h3 class="text-lg font-semibold text-white mt-4">✨ Özellikler</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><strong>Animasyonlu Kick Emotları:</strong> Sohbette <code>!atla [emote]</code> yazıldığında, izleyicinin attığı Kick emote'u (GIF/WEBP dahil) ekranda düşen bir karakter olur!</li>
+                    <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
+                    <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
+                </ul>
+
+                <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><code>!resetdrop</code> - Chat'ten yazıldığında herkesin bekleme süresini (cooldown) sıfırlar. Herkes anında tekrar atlayabilir.</li>
+                </ul>
+            `,
+            en: `
+                <h3 class="text-lg font-semibold text-white mt-4">🚀 How to Install?</h3>
+                <ol class="list-decimal pl-5 space-y-1 text-gray-400">
+                    <li>Fill in your <strong>Kick Channel Name</strong> and other settings completely from the panel.</li>
+                    <li>Select the themes, backgrounds, and parachutes you want.</li>
+                    <li>Click the "Generate Links" button.</li>
+                    <li>Copy the generated <strong>1. Main Overlay</strong> link, add a new "Browser" source in OBS, and paste it into the URL field. Recommended Size: 1920x1080.</li>
+                    <li>Optionally, you can add the <strong>2. Leaderboard Screen</strong> link to OBS as another browser source.</li>
+                </ol>
+
+                <h3 class="text-lg font-semibold text-white mt-4">✨ Features</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><strong>Animated Kick Emotes:</strong> When <code>!drop [emote]</code> is typed in chat, the emote sent by the viewer (including GIF/WEBP) becomes the falling character!</li>
+                    <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
+                    <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
+                </ul>
+
+                <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><code>!resetdrop</code> - Resets the cooldown for everyone when typed in chat. Everyone can jump again immediately.</li>
+                </ul>
+            `
         };
 
         const themeNames = {
@@ -248,6 +326,13 @@
             lang = lang === 'tr' ? 'en' : 'tr';
             document.getElementById('langBtn').innerText = lang === 'tr' ? 'ENG' : 'TR';
             
+            const cmdInput = document.getElementById('cmdInput');
+            if (lang === 'en' && cmdInput.value === '!atla') {
+                cmdInput.value = '!drop';
+            } else if (lang === 'tr' && cmdInput.value === '!drop') {
+                cmdInput.value = '!atla';
+            }
+            
             // Update static text
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -255,6 +340,9 @@
                     el.innerText = i18n[key][lang];
                 }
             });
+            
+            // Modal içeriğini de güncelle
+            document.getElementById('helpContent').innerHTML = helpContentObj[lang];
 
             // Update placeholder
             document.getElementById('channelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
@@ -426,10 +514,13 @@
             // Generate URLs
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
             
+            const bgToggle = document.getElementById('bgToggle').checked ? 1 : 0;
+            
             const overlayParams = new URLSearchParams({
                 kanal: channel,
                 cmd: cmd,
                 cd: cooldown,
+                bg: bgToggle,
                 t: selectedThemes.join(','),
                 p: selectedParachutes.join(',')
             });
@@ -469,7 +560,12 @@
         }
 
         /* YUKARIDAN DÜŞEN KARAKTERLER SİSTEMİ */
-        const charImages = ['characterdog.png', 'characterhurt.png', 'chracteralien.png', 'chractercat.png', 'chracterchef.png'];
+        const charImages = [
+            'characterdog.png', 'characterhurt.png', 'chracteralien.png', 
+            'chractercat.png', 'chracterchef.png', 'characterfrog.png', 
+            'charactercat3.png', 'charactercat2.png', 'characterdog2.png', 
+            'charactersticth.png'
+        ];
 
         function spawnFallingChar() {
             const char = document.createElement('img');
@@ -524,6 +620,22 @@
         }
         
         setTimeout(scheduleNextSpawn, 1000);
+        
+        function toggleHelpModal() {
+            const modal = document.getElementById('helpModal');
+            if (modal.classList.contains('hidden')) {
+                // Modalı aç
+                if(!document.getElementById('helpContent').innerHTML.trim()) {
+                    document.getElementById('helpContent').innerHTML = helpContentObj[lang]; // ilk açılışta doldur
+                }
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
+            } else {
+                // Modalı kapat
+                modal.classList.add('opacity-0');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
 
     </script>
 </body>
