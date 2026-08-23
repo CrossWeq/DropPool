@@ -266,16 +266,19 @@
                     <li>İsteğe bağlı olarak <strong>2. Sıralama Ekranı</strong> linkini de OBS'e tarayıcı kaynağı olarak ekleyebilirsiniz.</li>
                 </ol>
 
-                <h3 class="text-lg font-semibold text-white mt-4">✨ Özellikler</h3>
+                <h3 class="text-lg font-semibold text-white mt-4">✨ Özellikler ve İzleyici Komutları</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><strong>Paraşütlü Atlayış:</strong> <code>!atla</code> (veya panelden seçtiğiniz komut) yazıldığında standart bir paraşüt atlayışı gerçekleşir.</li>
                     <li><strong>Animasyonlu Kick Emotları:</strong> Sohbette <code>!atla [emote]</code> yazıldığında, izleyicinin attığı Kick emote'u (GIF/WEBP dahil) ekranda düşen bir karakter olur!</li>
+                    <li><strong>Helikopter Dalışı (Dive):</strong> <code>!atla dive</code> veya <code>!atladive</code> yazıldığında, izleyici paraşütsüz şekilde havada dönerek helikopterden atlar.</li>
                     <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!resetdrop</code> - Chat'ten yazıldığında herkesin bekleme süresini (cooldown) sıfırlar. Herkes anında tekrar atlayabilir.</li>
+                    <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler atla yazdığında sıraya girer. Yayıncı komutu tekrar yazdığında devasa bir uçak geçer ve herkes aynı anda uçağın altından atlar.</li>
+                    <li><code>!resetdrop</code> - Chat'ten yazıldığında herkesin bekleme süresini (cooldown) sıfırlar ve varsa toplu atlayış sırasını temizler. Herkes anında tekrar atlayabilir.</li>
                 </ul>
             `,
             en: `
@@ -288,16 +291,19 @@
                     <li>Optionally, you can add the <strong>2. Leaderboard Screen</strong> link to OBS as another browser source.</li>
                 </ol>
 
-                <h3 class="text-lg font-semibold text-white mt-4">✨ Features</h3>
+                <h3 class="text-lg font-semibold text-white mt-4">✨ Features & Viewer Commands</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><strong>Parachute Drop:</strong> Typing <code>!drop</code> (or your custom command) triggers a standard parachute drop.</li>
                     <li><strong>Animated Kick Emotes:</strong> When <code>!drop [emote]</code> is typed in chat, the emote sent by the viewer (including GIF/WEBP) becomes the falling character!</li>
+                    <li><strong>Helicopter Dive:</strong> Typing <code>!drop dive</code> or <code>!dropdive</code> causes the viewer to drop from a helicopter without a parachute, spinning.</li>
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!resetdrop</code> - Resets the cooldown for everyone when typed in chat. Everyone can jump again immediately.</li>
+                    <li><code>!droptogether</code> - Starts the "Queue Mode". Viewers who type the drop command are queued up. When the streamer types the command again, a massive plane flies by and drops everyone at once.</li>
+                    <li><code>!resetdrop</code> - Resets the cooldown for everyone and clears the drop queue if active. Everyone can jump again immediately.</li>
                 </ul>
             `
         };
@@ -382,6 +388,10 @@
 
         // Setup custom validation messages for inputs on load
         document.addEventListener('DOMContentLoaded', () => {
+            
+            // İlk açılışta modal içeriğini doldur
+            document.getElementById('helpContent').innerHTML = helpContentObj[lang];
+
             document.querySelectorAll('input[required]').forEach(input => {
                 input.addEventListener('invalid', function(e) {
                     if (!e.target.validity.valid) {
@@ -625,9 +635,6 @@
             const modal = document.getElementById('helpModal');
             if (modal.classList.contains('hidden')) {
                 // Modalı aç
-                if(!document.getElementById('helpContent').innerHTML.trim()) {
-                    document.getElementById('helpContent').innerHTML = helpContentObj[lang]; // ilk açılışta doldur
-                }
                 modal.classList.remove('hidden');
                 setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
             } else {
