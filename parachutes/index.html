@@ -261,7 +261,7 @@
         Composite.add(world, [leftWall, rightWall, ground, pool]);
 
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
-        function spawnCharacter(username) {
+        function spawnCharacter(username, customEmoteUrl = null) {
             // Eğer ekran kapalıysa aç ve yeni tema belirle
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -277,7 +277,30 @@
             // Rastgele X pozisyonu (kenarlara çok yakın olmasın)
             const randomX = Math.random() * (width - 100) + 50;
 
-            const randomChar = charConfigs[Math.floor(Math.random() * charConfigs.length)];
+            let randomChar;
+            let customDomElement = null;
+
+            if (customEmoteUrl) {
+                randomChar = { file: customEmoteUrl, scale: 1, radius: 24, yOffset: 0, nameYOffset: 5, isCustom: true };
+                
+                // Animasyonlu emote (GIF/WEBP) desteği için DOM (img) elemanı oluşturuyoruz
+                customDomElement = document.createElement('img');
+                customDomElement.src = customEmoteUrl;
+                customDomElement.className = 'custom-emote';
+                customDomElement.style.position = 'absolute';
+                customDomElement.style.width = '48px';
+                customDomElement.style.height = '48px';
+                customDomElement.style.objectFit = 'contain';
+                customDomElement.style.left = '-1000px'; 
+                customDomElement.style.top = '-1000px';
+                customDomElement.style.transform = 'translate(-50%, -50%)'; // Merkezlemek için
+                customDomElement.style.pointerEvents = 'none';
+                customDomElement.style.zIndex = '20'; // Canvas'ın üstünde olması için
+                document.body.appendChild(customDomElement);
+
+            } else {
+                randomChar = charConfigs[Math.floor(Math.random() * charConfigs.length)];
+            }
 
             // Karakter objesini oluştururken görselin (resmin) boyutuna uygun bir fiziksel çap (radius) veriyoruz ki yere batmasın.
             const character = Bodies.circle(randomX, -50, randomChar.radius, {
@@ -295,10 +318,12 @@
                 plugin: {
                     username: username,
                     parachuteOpened: false, // Paraşüt henüz açılmadı
-                    charTexture: randomChar.file,
+                    charTexture: customEmoteUrl ? null : randomChar.file,
                     charScale: randomChar.scale,
                     charYOffset: randomChar.yOffset || 0,
-                    nameYOffset: randomChar.nameYOffset || 0
+                    nameYOffset: randomChar.nameYOffset || 0,
+                    isCustom: randomChar.isCustom || false,
+                    domElement: customDomElement
                 }
             });
 
@@ -486,7 +511,7 @@
 
                     // Puan hesaplama (sadece havuza düştüyse puan ver, zemine düştüyse puan yok)
                     let finalScore = null; // Havuzu tutturamayanlar veya lideri geçemeyenler için null
-                    let waitTime = 3000; // Dışarı düşenler veya kralı geçemeyenler 3sn bekler
+                    let waitTime = 3000; // Dışarı düşenler 3sn bekler
 
                     if (groundBody.label === 'hedefZemin') {
                         const centerX = groundBody.position.x; // Havuzun anlık X konumu (rastgele spawn olduğu yer)
@@ -507,14 +532,23 @@
                         if (calculatedScore > currentKingScore) {
                             // YENİ KRAL! (Veya havuz boş)
                             finalScore = clampedScore.toFixed(2);
+                            waitTime = 30000; // Kral 30 saniye bekleyecek
 
                             // Eğer içeride eski bir kral varsa süresini beklemeden hemen sil
                             if (currentKing) {
+                                if (currentKing.plugin.removeTimer) clearTimeout(currentKing.plugin.removeTimer);
                                 Composite.remove(world, currentKing);
                             }
 
                             currentKing = characterBody; // Yeni kral artık bu kişi
-                            // Kralın süresi dolmayacak, overlay açık kaldığı sürece veya biri onu geçene kadar kalacak.
+                            
+                            // Kralın süresi: 30 saniye sonra gidecek
+                            characterBody.plugin.removeTimer = setTimeout(() => {
+                                Composite.remove(world, characterBody);
+                                if (currentKing === characterBody) {
+                                    currentKing = null;
+                                }
+                            }, waitTime);
 
                         } else {
                             // KRALI GEÇEMEDİ! Havuzun içine düştü ama lider olamadı. 
@@ -579,15 +613,25 @@
                     // Karakterleri her zaman manuel olarak çiziyoruz, böylece paraşüt açıldığında veya yere değdiğinde asla yok olmuyorlar.
                     context.save();
                     // Karakterin kendi şeffaflığını (ballOpacity) kullan (Paraşütün silinme animasyonu karaktere yansımasın)
-                    context.globalAlpha = body.plugin.ballOpacity !== undefined ? body.plugin.ballOpacity : 1;
+                    const opacity = body.plugin.ballOpacity !== undefined ? body.plugin.ballOpacity : 1;
+                    context.globalAlpha = opacity;
 
-                    let img = charImagesMap[body.plugin.charTexture];
-                    if (img && img.complete) {
-                        let drawWidth = img.width * body.plugin.charScale;
-                        let drawHeight = img.height * body.plugin.charScale;
-                        context.translate(body.position.x, body.position.y + (body.plugin.charYOffset || 0));
-                        context.rotate(body.angle);
-                        context.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                    if (body.plugin.isCustom && body.plugin.domElement) {
+                        // DOM elementini güncelle (Animasyonlu GIF/WEBP desteği)
+                        const el = body.plugin.domElement;
+                        el.style.left = body.position.x + 'px';
+                        el.style.top = (body.position.y + (body.plugin.charYOffset || 0)) + 'px';
+                        el.style.transform = `translate(-50%, -50%) rotate(${body.angle}rad)`;
+                        el.style.opacity = opacity;
+                    } else if (body.plugin.charTexture) {
+                        let img = charImagesMap[body.plugin.charTexture];
+                        if (img && img.complete) {
+                            let drawWidth = img.width * body.plugin.charScale;
+                            let drawHeight = img.height * body.plugin.charScale;
+                            context.translate(body.position.x, body.position.y + (body.plugin.charYOffset || 0));
+                            context.rotate(body.angle);
+                            context.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                        }
                     }
                     context.restore();
 
@@ -650,33 +694,50 @@
         });
 
         // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
-        // Saniyede bir kez ekranda aktif (kral olmayan) karakter var mı diye kontrol et
+        // Saniyede bir kez ekranda hiç karakter kaldı mı kontrol et
+        let overlayIdleTimerRef = null;
         setInterval(() => {
             if (typeof Composite !== 'undefined' && typeof world !== 'undefined') {
-                // Havada düşen veya skorunu gösterip silinmeyi bekleyen (kral olmayan) karakterler
-                const activeChars = Composite.allBodies(world).filter(b => b.label === 'karakter' && b !== currentKing).length;
+                // Sahnede herhangi bir karakter (kral dahil) var mı kontrol et
+                const activeCharBodies = Composite.allBodies(world).filter(b => b.label === 'karakter');
+                const activeChars = activeCharBodies.length;
                 
-                // Eğer sahnede hiç aktif karakter yoksa ve overlay açıksa
-                if (activeChars === 0 && isOverlayVisible) {
-                    isOverlayVisible = false;
-                    document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
-                    document.body.style.opacity = '0';
-                    console.log("Sahne tamamen boşaldı, overlay gizleniyor.");
-                    
-                    // Eski kralı ekrandan sil (çünkü bir sonraki açılışta havuzun yeri ve tema değişecek)
-                    // Not: Bu işlem sağdaki liderlik tablosunu (leaderboard) sıfırlamaz, sadece fiziksel objeyi siler.
-                    if (currentKing) {
-                        Composite.remove(world, currentKing);
-                        currentKing = null;
+                // Silinmiş karakterlerin DOM elementlerini temizle (Memory leak önleme)
+                const activeDomElements = activeCharBodies.map(b => b.plugin.domElement).filter(e => e);
+                document.querySelectorAll('.custom-emote').forEach(el => {
+                    if (!activeDomElements.includes(el)) {
+                        el.remove();
                     }
+                });
 
-                    // OBS veya tarayıcı takılmalarına karşı 1.5 saniye sonra arkaplanı ve havuzu tamamen yok et
-                    setTimeout(() => {
-                        if (!isOverlayVisible) {
-                            document.body.style.backgroundImage = 'none';
-                            pool.render.visible = false;
-                        }
-                    }, 1500);
+                // Eğer sahnede HİÇ karakter kalmadıysa ve overlay açıksa 5 saniyelik zamanlayıcıyı başlat
+                if (activeChars === 0 && isOverlayVisible) {
+                    if (!overlayIdleTimerRef) {
+                        overlayIdleTimerRef = setTimeout(() => {
+                            isOverlayVisible = false;
+                            document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
+                            document.body.style.opacity = '0';
+                            console.log("Sahne tamamen boşaldı, 5 saniye geçti, overlay gizleniyor.");
+                            
+                            if (currentKing) {
+                                if (currentKing.plugin.removeTimer) clearTimeout(currentKing.plugin.removeTimer);
+                                Composite.remove(world, currentKing);
+                                currentKing = null;
+                            }
+
+                            // 1.5 saniye sonra arkaplanı ve havuzu tamamen yok et
+                            setTimeout(() => {
+                                if (!isOverlayVisible) {
+                                    document.body.style.backgroundImage = 'none';
+                                    pool.render.visible = false;
+                                }
+                            }, 1500);
+                        }, 5000); // 5 saniye bekle
+                    }
+                } else if (activeChars > 0 && overlayIdleTimerRef) {
+                    // Ekranda karakter varsa (biri yeni atladıysa) gizleme işlemini iptal et
+                    clearTimeout(overlayIdleTimerRef);
+                    overlayIdleTimerRef = null;
                 }
             }
         }, 1000);
@@ -765,9 +826,19 @@
                             return;
                         }
 
-                        if (message.toLowerCase() === commandStr.toLowerCase()) {
+                        const msgLower = message.toLowerCase();
+                        const cmdLower = commandStr.toLowerCase();
+                        // Sadece !atla (cmd) veya !atla[emote] veya !atla [emote] komutlarını tespit et
+                        if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
                             if (checkCooldown(username)) {
-                                spawnCharacter(username);
+                                let customEmoteUrl = null;
+                                // Kick emote yapısını tespit et: [emote:12345:EmoteName]
+                                const emoteMatch = message.match(/\[emote:(\d+):.*?\]/i);
+                                if (emoteMatch) {
+                                    const emoteId = emoteMatch[1];
+                                    customEmoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
+                                }
+                                spawnCharacter(username, customEmoteUrl);
                             }
                         }
                     } catch(e) {
