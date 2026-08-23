@@ -90,9 +90,9 @@
         }
     </style>
 </head>
-<body class="p-6 md:p-12 flex items-center justify-center">
+<body class="p-6 md:p-12 flex flex-col justify-start min-h-screen">
 
-    <div class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-10 relative z-10 overflow-hidden">
+    <div class="glass-panel w-full max-w-4xl rounded-3xl p-8 md:p-10 relative z-10 overflow-hidden my-auto">
         
         <!-- Decorative Glow -->
         <div class="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-[120px] opacity-20 pointer-events-none"></div>
@@ -255,8 +255,8 @@
             helpTitle: { tr: "Nasıl Kurulur & Özellikler", en: "How to Install & Features" }
         };
 
-        const helpContentObj = {
-            tr: `
+        const getHelpContent = (cmd, lang) => {
+            const tr = `
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 Nasıl Kurulur?</h3>
                 <ol class="list-decimal pl-5 space-y-1 text-gray-400">
                     <li>Panelden <strong>Kick Kanal Adınızı</strong> ve diğer ayarları eksiksiz doldurun.</li>
@@ -268,20 +268,20 @@
 
                 <h3 class="text-lg font-semibold text-white mt-4">✨ Özellikler ve İzleyici Komutları</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><strong>Paraşütlü Atlayış:</strong> <code>!atla</code> (veya panelden seçtiğiniz komut) yazıldığında standart bir paraşüt atlayışı gerçekleşir.</li>
-                    <li><strong>Animasyonlu Kick Emotları:</strong> Sohbette <code>!atla [emote]</code> yazıldığında, izleyicinin attığı Kick emote'u (GIF/WEBP dahil) ekranda düşen bir karakter olur!</li>
-                    <li><strong>Helikopter Dalışı (Dive):</strong> <code>!atla dive</code> veya <code>!atladive</code> yazıldığında, izleyici paraşütsüz şekilde havada dönerek helikopterden atlar.</li>
+                    <li><strong>Paraşütlü Atlayış:</strong> <code>${cmd}</code> yazıldığında standart bir paraşüt atlayışı gerçekleşir.</li>
+                    <li><strong>Animasyonlu Kick Emotları:</strong> Sohbette <code>${cmd} [emote]</code> yazıldığında, izleyicinin attığı Kick emote'u (GIF/WEBP dahil) ekranda düşen bir karakter olur!</li>
+                    <li><strong>Helikopter Dalışı (Dive):</strong> <code>${cmd} dive</code> veya <code>${cmd}dive</code> yazıldığında, izleyici paraşütsüz şekilde havada dönerek helikopterden atlar.</li>
                     <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler atla yazdığında sıraya girer. Yayıncı komutu tekrar yazdığında devasa bir uçak geçer ve herkes aynı anda uçağın altından atlar.</li>
+                    <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler <code>${cmd}</code> yazdığında sıraya girer. Yayıncı atlama komutunu (<code>${cmd}</code>) tekrar yazdığında devasa bir uçak geçer ve herkes aynı anda uçağın altından atlar.</li>
                     <li><code>!resetdrop</code> - Chat'ten yazıldığında herkesin bekleme süresini (cooldown) sıfırlar ve varsa toplu atlayış sırasını temizler. Herkes anında tekrar atlayabilir.</li>
                 </ul>
-            `,
-            en: `
+            `;
+            const en = `
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 How to Install?</h3>
                 <ol class="list-decimal pl-5 space-y-1 text-gray-400">
                     <li>Fill in your <strong>Kick Channel Name</strong> and other settings completely from the panel.</li>
@@ -293,19 +293,20 @@
 
                 <h3 class="text-lg font-semibold text-white mt-4">✨ Features & Viewer Commands</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><strong>Parachute Drop:</strong> Typing <code>!drop</code> (or your custom command) triggers a standard parachute drop.</li>
-                    <li><strong>Animated Kick Emotes:</strong> When <code>!drop [emote]</code> is typed in chat, the emote sent by the viewer (including GIF/WEBP) becomes the falling character!</li>
-                    <li><strong>Helicopter Dive:</strong> Typing <code>!drop dive</code> or <code>!dropdive</code> causes the viewer to drop from a helicopter without a parachute, spinning.</li>
+                    <li><strong>Parachute Drop:</strong> Typing <code>${cmd}</code> triggers a standard parachute drop.</li>
+                    <li><strong>Animated Kick Emotes:</strong> When <code>${cmd} [emote]</code> is typed in chat, the emote sent by the viewer (including GIF/WEBP) becomes the falling character!</li>
+                    <li><strong>Helicopter Dive:</strong> Typing <code>${cmd} dive</code> or <code>${cmd}dive</code> causes the viewer to drop from a helicopter without a parachute, spinning.</li>
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!droptogether</code> - Starts the "Queue Mode". Viewers who type the drop command are queued up. When the streamer types the command again, a massive plane flies by and drops everyone at once.</li>
+                    <li><code>!droptogether</code> - Starts the "Queue Mode". Viewers who type <code>${cmd}</code> are queued up. When the streamer types the jump command (<code>${cmd}</code>), a massive plane flies by and drops everyone at once.</li>
                     <li><code>!resetdrop</code> - Resets the cooldown for everyone and clears the drop queue if active. Everyone can jump again immediately.</li>
                 </ul>
-            `
+            `;
+            return lang === 'tr' ? tr : en;
         };
 
         const themeNames = {
@@ -347,8 +348,9 @@
                 }
             });
             
-            // Modal içeriğini de güncelle
-            document.getElementById('helpContent').innerHTML = helpContentObj[lang];
+            // Modal içeriğini de güncelle (inputta ne varsa ona göre oluştur)
+            const currentCmd = document.getElementById('cmdInput').value.trim() || (lang === 'tr' ? '!atla' : '!drop');
+            document.getElementById('helpContent').innerHTML = getHelpContent(currentCmd, lang);
 
             // Update placeholder
             document.getElementById('channelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
@@ -390,7 +392,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             
             // İlk açılışta modal içeriğini doldur
-            document.getElementById('helpContent').innerHTML = helpContentObj[lang];
+            const initialCmd = document.getElementById('cmdInput').value.trim() || '!atla';
+            document.getElementById('helpContent').innerHTML = getHelpContent(initialCmd, lang);
 
             document.querySelectorAll('input[required]').forEach(input => {
                 input.addEventListener('invalid', function(e) {
@@ -634,7 +637,10 @@
         function toggleHelpModal() {
             const modal = document.getElementById('helpModal');
             if (modal.classList.contains('hidden')) {
-                // Modalı aç
+                // Modalı aç (Her açılışta Input değerine göre metni dinamik bas)
+                const currentCmd = document.getElementById('cmdInput').value.trim() || (lang === 'tr' ? '!atla' : '!drop');
+                document.getElementById('helpContent').innerHTML = getHelpContent(currentCmd, lang);
+                
                 modal.classList.remove('hidden');
                 setTimeout(() => { modal.classList.remove('opacity-0'); }, 10);
             } else {
