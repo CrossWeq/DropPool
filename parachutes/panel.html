@@ -632,7 +632,11 @@
 
         // Sürekli ve organik bir akış için rastgele aralıklarla (0.5s - 1.5s) tetikle
         function scheduleNextSpawn() {
-            spawnFallingChar();
+            // Sekme arka plandayken CSS animasyonları durduğu için karakterlerin birikip
+            // sekmeye geri dönüldüğünde aynı anda yağmasını engellemek için görünürlük kontrolü:
+            if (document.visibilityState === 'visible') {
+                spawnFallingChar();
+            }
             setTimeout(scheduleNextSpawn, Math.random() * 1000 + 500);
         }
         

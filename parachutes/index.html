@@ -709,8 +709,8 @@
                             scoreText = `${scoreText} ⭐`;
                         }
 
-                        // Puan boyutu 27px olduğu için ismin üzerine taşmasın diye aralığı 28'e düşürdük
-                        const scoreOffsetY = nameOffsetY + 28;
+                        // Puan boyutu 27px olduğu için ismin üzerine taşmasın diye aralığı 40'a çıkararak yukarı taşıdık
+                        const scoreOffsetY = nameOffsetY + 40;
 
                         context.strokeText(scoreText, body.position.x, body.position.y - scoreOffsetY);
                         context.fillText(scoreText, body.position.x, body.position.y - scoreOffsetY);
@@ -897,12 +897,18 @@
                                         if (username.toLowerCase() === channelName.toLowerCase()) {
                                             // Yayıncı atlarsa uçağı tetikle ve modu kapat
                                             isDropTogetherMode = false;
-                                            dropTogetherQueue.unshift({ username, customEmoteUrl });
+                                            if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                                                dropTogetherQueue.unshift({ username, customEmoteUrl });
+                                            }
                                             triggerPlaneDrop();
                                         } else {
-                                            // İzleyici atlarsa sıraya ekle (paraşüt açılmaz)
-                                            dropTogetherQueue.push({ username, customEmoteUrl });
-                                            console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
+                                            // İzleyici atlarsa sıraya ekle (aynı kişi bir kere eklenebilir)
+                                            if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                                                dropTogetherQueue.push({ username, customEmoteUrl });
+                                                console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
+                                            } else {
+                                                console.log(`[DropPool] ${username} zaten sırada.`);
+                                            }
                                         }
                                     } else {
                                         // Normal modda doğrudan düşür
