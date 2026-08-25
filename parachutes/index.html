@@ -298,16 +298,24 @@
             
             let tarzanAnchorX = 0;
             let tarzanAnchorY = -50;
+            let tarzanFromLeft = true;
             
             if (isTarzan) {
-                // Tarzan modunda ekranın çok dışından gelsin
-                const fromLeft = Math.random() < 0.5;
-                randomX = fromLeft ? -200 : width + 200; // Ekranın içine daha yakın bir nokta
-                actualSpawnY = 150; // Daha aşağıdan doğsun ki tam ekranın ortasında sallansın
+                // SARKAÇ MATEMATİĞİ:
+                // Anchor ekranın tam tepesinde, ortada (görünmez nokta)
+                // Karakter ekranın kenarında, orta yükseklikte başlar
+                // Yerçekimi + kısıtlama = karakteri ekranın ortasına doğru fırlatır
+                tarzanFromLeft = Math.random() < 0.5;
                 
-                // İpin takılı olduğu yer ekranın ÇOK üstünde ve kenarlardan %25 içeride olsun
-                tarzanAnchorX = fromLeft ? width * 0.25 : width * 0.75;
-                tarzanAnchorY = -600;
+                // Anchor: ekranın yatay ortası, 700px yukarıda (ekran dışı)
+                tarzanAnchorX = width / 2;
+                tarzanAnchorY = -700;
+                
+                // Karakter: ekranın tam kenarında (5px içeride), dikey ortada
+                // Bu sayede anchor→karakter mesafesi ipin uzunluğunu belirliyor
+                // ve karakter anchor'ın tam altına (ekran ortasına) doğru sallanıyor
+                randomX = tarzanFromLeft ? 5 : width - 5;
+                actualSpawnY = height / 2; // Ekranın dikey ortası (yaklaşık 540px)
             }
 
             let randomChar;
@@ -367,14 +375,20 @@
             Composite.add(world, character);
 
             if (isTarzan) {
-                // Sadece karakteri sallamak için görünmez ama çok güçlü bir tekli ip (Constraint)
+                // Karaktere başlangıç ivmesi ver: sarkaç daha hızlı başlasın
+                // Sol kenardan geliyorsa sağa, sağ kenardan geliyorsa sola itilsin
+                const tarzanInitialVx = tarzanFromLeft ? 8 : -8;
+                Body.setVelocity(character, { x: tarzanInitialVx, y: 2 });
+                
+                // Tek parça, düz ve sert bir ip constraint'i
                 const tarzanConstraint = Constraint.create({
                     pointA: { x: tarzanAnchorX, y: tarzanAnchorY },
                     bodyB: character,
-                    stiffness: 1, // Esnemesin, mükemmel sarkaç olsun
+                    stiffness: 1,
+                    damping: 0,
                     render: { 
                         visible: true, 
-                        lineWidth: 4, 
+                        lineWidth: 3, 
                         strokeStyle: '#8B4513' 
                     }
                 });
@@ -384,8 +398,9 @@
                 character.plugin.tarzanConstraint = tarzanConstraint;
                 character.plugin.tarzanAnchorX = tarzanAnchorX;
                 character.plugin.tarzanAnchorY = tarzanAnchorY;
+                character.plugin.tarzanFromLeft = tarzanFromLeft;
                 character.plugin.tarzanReleased = false;
-                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2500; // 2.5s sallanma süresi
+                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2500;
             } else {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
