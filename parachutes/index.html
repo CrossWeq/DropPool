@@ -161,7 +161,9 @@
             Bodies = Matter.Bodies,
             Composite = Matter.Composite,
             Events = Matter.Events,
-            Body = Matter.Body;
+            Body = Matter.Body,
+            Constraint = Matter.Constraint,
+            Composites = Matter.Composites;
 
         // Fizik motorunu oluştur
         const engine = Engine.create();
@@ -277,7 +279,7 @@
         Composite.add(world, [leftWall, rightWall, ground, pool]);
 
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
-        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false, isDrunk = false) {
+        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false, isDrunk = false, isTarzan = false) {
             // Eğer ekran kapalıysa aç ve yeni tema belirle
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -290,8 +292,23 @@
             // Her yeni kişi düştüğünde boşta kalma süresini sıfırla (60dk zamanlayıcısı)
             resetIdleTimer();
 
+            let actualSpawnY = spawnY;
             // Rastgele X pozisyonu (kenarlara çok yakın olmasın)
-            const randomX = spawnX !== null ? spawnX : (Math.random() * (width - 100) + 50);
+            let randomX = spawnX !== null ? spawnX : (Math.random() * (width - 100) + 50);
+            
+            let tarzanAnchorX = 0;
+            let tarzanAnchorY = -50;
+            
+            if (isTarzan) {
+                // Tarzan modunda ekranın çok dışından, köşeden gelsin
+                const fromLeft = Math.random() < 0.5;
+                randomX = fromLeft ? -400 : width + 400;
+                actualSpawnY = -200;
+                
+                // İpin takılı olduğu yer ekranın üst köşesi olsun
+                tarzanAnchorX = fromLeft ? 0 : width;
+                tarzanAnchorY = -50;
+            }
 
             let randomChar;
             let customDomElement = null;
@@ -320,7 +337,7 @@
             }
 
             // Karakter objesini oluştururken görselin (resmin) boyutuna uygun bir fiziksel çap (radius) veriyoruz ki yere batmasın.
-            const character = Bodies.circle(randomX, spawnY, randomChar.radius, {
+            const character = Bodies.circle(randomX, actualSpawnY, randomChar.radius, {
                 restitution: 0.9, // Sağa sola çarpınca daha çok seksin
                 frictionAir: 0, // Yatay hızını havada kaybetmemesi için
                 friction: 0, // Duvarlara sürttüğünde yavaşlamaması için
@@ -342,16 +359,56 @@
                     isCustom: randomChar.isCustom || false,
                     domElement: customDomElement,
                     isDive: isDive,
-                    isDrunk: isDrunk
+                    isDrunk: isDrunk,
+                    isTarzan: isTarzan
                 }
             });
 
             Composite.add(world, character);
 
-            // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
-            // Çapı (ve dolayısıyla kütlesi) küçük olanların aşırı hızlı fırlamaması için kuvveti kütleye (mass) göre ayarlıyoruz
-            const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
-            Body.applyForce(character, { x: character.position.x, y: character.position.y }, { x: randomForceX, y: 0 });
+            if (isTarzan) {
+                const group = Body.nextGroup(true);
+                const segments = 12; // İpin parça sayısı
+                const segmentLength = 30; // İpin uzunluğunu artırdım
+                
+                const rope = Composites.stack(tarzanAnchorX, tarzanAnchorY, 1, segments, 0, 0, function(x, y) {
+                    return Bodies.rectangle(x, y, 5, segmentLength, { 
+                        collisionFilter: { group: group },
+                        render: { fillStyle: '#8B4513' }, // İp rengi kahverengi
+                        density: 0.05
+                    });
+                });
+
+                Composites.chain(rope, 0, 0.5, 0, -0.5, { stiffness: 0.9, length: 2, render: { visible: false } });
+                
+                // İpin en üst parçasını tavana bağla
+                const topAnchor = Constraint.create({
+                    pointA: { x: tarzanAnchorX, y: tarzanAnchorY },
+                    bodyB: rope.bodies[0],
+                    pointB: { x: 0, y: -segmentLength/2 },
+                    stiffness: 0.9
+                });
+                
+                // İpin en alt parçasını karaktere bağla
+                const bottomAnchor = Constraint.create({
+                    bodyA: rope.bodies[rope.bodies.length - 1],
+                    pointA: { x: 0, y: segmentLength/2 },
+                    bodyB: character,
+                    pointB: { x: 0, y: -randomChar.radius },
+                    stiffness: 0.9
+                });
+                
+                Composite.add(world, [rope, topAnchor, bottomAnchor]);
+                
+                character.plugin.tarzanRope = rope;
+                character.plugin.tarzanTopAnchor = topAnchor;
+                character.plugin.tarzanReleased = false;
+                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2000; // 2s sallanma süresi
+            } else {
+                // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
+                const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
+                Body.applyForce(character, { x: character.position.x, y: character.position.y }, { x: randomForceX, y: 0 });
+            }
         }
 
         // --- 5. FİZİK GÜNCELLEMESİ (PARAŞÜT MEKANİĞİ) ---
@@ -373,6 +430,32 @@
                             Matter.Body.setVelocity(body, { x: 0, y: body.velocity.y }); // Sağa sola sapmayı (savrulmayı) tamamen engelle, dümdüz insin
                         }
                         continue; // Paraşüt açılma sınırlarını ve sarkaçları tamamen pas geç
+                    }
+
+                    // --- TARZAN MODU İÇİN ÖZEL DAVRANIŞ ---
+                    if (body.plugin.isTarzan) {
+                        if (!body.plugin.landed) {
+                            Matter.Body.setAngularVelocity(body, 0);
+                            Matter.Body.setAngle(body, 0);
+                            
+                            // Timer dolduysa ve henüz ip kopmadıysa kopar
+                            if (!body.plugin.tarzanReleased && engine.timing.timestamp > body.plugin.tarzanReleaseTimer) {
+                                body.plugin.tarzanReleased = true;
+                                if (body.plugin.tarzanTopAnchor) {
+                                    Composite.remove(world, body.plugin.tarzanTopAnchor);
+                                }
+                                // Koptuktan 3 saniye sonra ipi tamamen dünyadan sil
+                                body.plugin.tarzanDeleteTimer = engine.timing.timestamp + 3000;
+                            }
+                        }
+                        
+                        // Koptuktan sonra silinme zamanı geldiyse veya karakter havuza ineli çok olduysa ipi sil
+                        if (body.plugin.tarzanReleased && body.plugin.tarzanRope && engine.timing.timestamp > body.plugin.tarzanDeleteTimer) {
+                            Composite.remove(world, body.plugin.tarzanRope);
+                            body.plugin.tarzanRope = null;
+                        }
+                        
+                        continue; // Paraşüt açılma sınırlarını pas geç
                     }
 
                     if (body.plugin.landed) {
@@ -923,20 +1006,23 @@
                         const msgLower = message.toLowerCase();
                         const cmdLower = commandStr.toLowerCase();
                         
-                        // Dive komutu kontrolü: !atla dive veya !atladive
+                        // Dive komutu kontrolü
                         let isDiveCommand = false;
                         let isNormalDropCommand = false;
                         let isDrunkCommand = false;
+                        let isTarzanCommand = false;
 
                         if (msgLower === cmdLower + " dive" || msgLower === cmdLower + "dive" || msgLower.startsWith(cmdLower + " dive ") || msgLower.startsWith(cmdLower + "dive ") || msgLower.startsWith(cmdLower + " dive[") || msgLower.startsWith(cmdLower + "dive[")) {
                             isDiveCommand = true;
                         } else if (msgLower === cmdLower + " drunk" || msgLower === cmdLower + "drunk" || msgLower.startsWith(cmdLower + " drunk ") || msgLower.startsWith(cmdLower + "drunk ") || msgLower.startsWith(cmdLower + " drunk[") || msgLower.startsWith(cmdLower + "drunk[")) {
                             isDrunkCommand = true;
+                        } else if (msgLower === cmdLower + " tarzan" || msgLower === cmdLower + "tarzan" || msgLower.startsWith(cmdLower + " tarzan ") || msgLower.startsWith(cmdLower + "tarzan ") || msgLower.startsWith(cmdLower + " tarzan[") || msgLower.startsWith(cmdLower + "tarzan[")) {
+                            isTarzanCommand = true;
                         } else if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
                             isNormalDropCommand = true;
                         }
 
-                        if (isDiveCommand || isDrunkCommand || isNormalDropCommand) {
+                        if (isDiveCommand || isDrunkCommand || isTarzanCommand || isNormalDropCommand) {
                             if (checkCooldown(username)) {
                                 let customEmoteUrl = null;
                                 // Kick emote yapısını tespit et: [emote:12345:EmoteName]
@@ -950,27 +1036,27 @@
                                     // Dalış modu (helikopter)
                                     triggerHelicopterDrop(username, customEmoteUrl);
                                 } else {
-                                    // Normal veya drunk atlama modu
+                                    // Normal, drunk veya tarzan atlama modu
                                     if (isDropTogetherMode) {
                                         if (username.toLowerCase() === channelName.toLowerCase()) {
                                             // Yayıncı atlarsa uçağı tetikle ve modu kapat
                                             isDropTogetherMode = false;
                                             if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: isDrunkCommand });
+                                                dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: isDrunkCommand, isTarzan: isTarzanCommand });
                                             }
                                             triggerPlaneDrop();
                                         } else {
-                                            // İzleyici atlarsa sıraya ekle (aynı kişi bir kere eklenebilir)
+                                            // İzleyici atlarsa sıraya ekle
                                             if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: isDrunkCommand });
+                                                dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: isDrunkCommand, isTarzan: isTarzanCommand });
                                                 console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
                                             } else {
                                                 console.log(`[DropPool] ${username} zaten sırada.`);
                                             }
                                         }
                                     } else {
-                                        // Normal veya drunk modda doğrudan düşür
-                                        spawnCharacter(username, customEmoteUrl, null, -50, false, isDrunkCommand);
+                                        // Normal, drunk veya tarzan modda doğrudan düşür
+                                        spawnCharacter(username, customEmoteUrl, null, -50, false, isDrunkCommand, isTarzanCommand);
                                     }
                                 }
                             }
@@ -1095,7 +1181,7 @@
 
                 setTimeout(() => {
                     // Uçağın gövde alt merkezinden düşsünler
-                    spawnCharacter(user.username, user.customEmoteUrl, expectedX + (500 / 2), 150, false, user.isDrunk);
+                    spawnCharacter(user.username, user.customEmoteUrl, expectedX + (500 / 2), 150, false, user.isDrunk, user.isTarzan);
                 }, dropTime);
             });
 
