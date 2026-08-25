@@ -467,8 +467,8 @@
                                 // Çok daha abartılı sağ-sol savrulması (-25 ile +25 arası hızlar)
                                 const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 40 + 10);
                                 
-                                // Dikey hızda ani yavaşlamalar veya çok hızlı düşüşler (0 - 5.0)
-                                const randomSpeedY = Math.random() * 5.0;
+                                // Dikey hızda ani yavaşlamalar veya hafif hızlı düşüşler (0 - 2.5)
+                                const randomSpeedY = Math.random() * 2.5;
                                 
                                 Matter.Body.setVelocity(body, { x: randomSpeedX, y: randomSpeedY });
                             }
@@ -516,8 +516,8 @@
                             }
                         } else {
                             // NORMAL AÇIK DURUM
-                            // Sarhoş ise dikey hız sınırı çok daha esnek olsun (1.5 yerine 5.0'a kadar izin ver)
-                            const maxSpeedY = body.plugin.isDrunk ? 5.0 : 1.5;
+                            // Sarhoş ise dikey hız sınırı biraz daha esnek olsun (1.5 yerine 2.5'a kadar izin ver)
+                            const maxSpeedY = body.plugin.isDrunk ? 2.5 : 1.5;
                             if (body.velocity.y > maxSpeedY) {
                                 Matter.Body.setVelocity(body, { x: body.velocity.x, y: maxSpeedY });
                             }
