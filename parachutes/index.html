@@ -300,14 +300,14 @@
             let tarzanAnchorY = -50;
             
             if (isTarzan) {
-                // Tarzan modunda ekranın çok dışından, köşeden gelsin
+                // Tarzan modunda ekranın çok dışından gelsin
                 const fromLeft = Math.random() < 0.5;
-                randomX = fromLeft ? -400 : width + 400;
-                actualSpawnY = -200;
+                randomX = fromLeft ? -300 : width + 300;
+                actualSpawnY = -150;
                 
-                // İpin takılı olduğu yer ekranın üst köşesi olsun
-                tarzanAnchorX = fromLeft ? 0 : width;
-                tarzanAnchorY = -50;
+                // İpin takılı olduğu yer ekranın ÇOK üstünde ve kenarlardan %25 içeride olsun
+                tarzanAnchorX = fromLeft ? width * 0.25 : width * 0.75;
+                tarzanAnchorY = -600;
             }
 
             let randomChar;
@@ -368,34 +368,60 @@
 
             if (isTarzan) {
                 const group = Body.nextGroup(true);
-                const segments = 12; // İpin parça sayısı
-                const segmentLength = 30; // İpin uzunluğunu artırdım
                 
-                const rope = Composites.stack(tarzanAnchorX, tarzanAnchorY, 1, segments, 0, 0, function(x, y) {
-                    return Bodies.rectangle(x, y, 5, segmentLength, { 
+                // Anchor ile Karakter arasındaki kesin mesafeyi hesapla
+                const dx = randomX - tarzanAnchorX;
+                const dy = actualSpawnY - tarzanAnchorY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                const segments = 16; // İpi biraz daha parçalı yapalım ki gerçekçi kopsun
+                const segmentLength = distance / segments;
+                const angle = Math.atan2(dy, dx);
+                
+                const ropeBodies = [];
+                for (let i = 0; i < segments; i++) {
+                    // Segmenti tam ip çizgisinde doğru açıyla konumlandır
+                    const cx = tarzanAnchorX + Math.cos(angle) * (i + 0.5) * segmentLength;
+                    const cy = tarzanAnchorY + Math.sin(angle) * (i + 0.5) * segmentLength;
+                    
+                    const segment = Bodies.rectangle(cx, cy, 5, segmentLength, {
                         collisionFilter: { group: group },
                         render: { fillStyle: '#8B4513' }, // İp rengi kahverengi
-                        density: 0.05
+                        density: 0.05,
+                        angle: angle - Math.PI / 2 // Dikdörtgenin yönünü ip hizasına çevir
                     });
-                });
-
-                Composites.chain(rope, 0, 0.5, 0, -0.5, { stiffness: 0.9, length: 2, render: { visible: false } });
+                    ropeBodies.push(segment);
+                }
+                
+                const rope = Composite.create({ bodies: ropeBodies });
+                
+                // Segmentleri birbirine sağlam zincirle bağla
+                for (let i = 0; i < segments - 1; i++) {
+                    Composite.add(rope, Constraint.create({
+                        bodyA: ropeBodies[i],
+                        pointA: { x: 0, y: segmentLength / 2 },
+                        bodyB: ropeBodies[i + 1],
+                        pointB: { x: 0, y: -segmentLength / 2 },
+                        stiffness: 0.99,
+                        render: { visible: false }
+                    }));
+                }
                 
                 // İpin en üst parçasını tavana bağla
                 const topAnchor = Constraint.create({
                     pointA: { x: tarzanAnchorX, y: tarzanAnchorY },
-                    bodyB: rope.bodies[0],
+                    bodyB: ropeBodies[0],
                     pointB: { x: 0, y: -segmentLength/2 },
-                    stiffness: 0.9
+                    stiffness: 0.99
                 });
                 
                 // İpin en alt parçasını karaktere bağla
                 const bottomAnchor = Constraint.create({
-                    bodyA: rope.bodies[rope.bodies.length - 1],
+                    bodyA: ropeBodies[segments - 1],
                     pointA: { x: 0, y: segmentLength/2 },
                     bodyB: character,
                     pointB: { x: 0, y: -randomChar.radius },
-                    stiffness: 0.9
+                    stiffness: 0.99
                 });
                 
                 Composite.add(world, [rope, topAnchor, bottomAnchor]);
@@ -403,7 +429,7 @@
                 character.plugin.tarzanRope = rope;
                 character.plugin.tarzanTopAnchor = topAnchor;
                 character.plugin.tarzanReleased = false;
-                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2000; // 2s sallanma süresi
+                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2500; // 2.5s sallanma süresi (daha uzun)
             } else {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
