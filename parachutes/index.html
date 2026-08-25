@@ -411,6 +411,12 @@
                                 Matter.Body.setVelocity(body, { x: randomSpeedX, y: body.velocity.y });
                             }
                             
+                            if (!body.plugin.drunkJerkTimerFreefall || engine.timing.timestamp > body.plugin.drunkJerkTimerFreefall) {
+                                body.plugin.drunkJerkTimerFreefall = engine.timing.timestamp + 200 + Math.random() * 300;
+                                const jerkX = (Math.random() - 0.5) * 20;
+                                Matter.Body.setVelocity(body, { x: body.velocity.x * 0.7 + jerkX, y: body.velocity.y });
+                            }
+                            
                             // Dalgalı hareket kuvveti (titrek düşüş)
                             let time = engine.timing.timestamp * 0.0015;
                             let wavyForceX = Math.sin(time * 10 + body.id) * 0.0003 * body.mass;
@@ -461,8 +467,8 @@
                             swayForce = Math.sin(time * 12 + body.id) * 0.00015 * body.mass;
                             
                             if (!body.plugin.drunkTimer || engine.timing.timestamp > body.plugin.drunkTimer) {
-                                // 0.8s - 1.6s arası (daha sık) yeni hareket belirle
-                                body.plugin.drunkTimer = engine.timing.timestamp + 800 + Math.random() * 800;
+                                // 1.2s - 2.5s arası ana yön belirle (daha uzun süre bir yöne gitsin)
+                                body.plugin.drunkTimer = engine.timing.timestamp + 1200 + Math.random() * 1300;
                                 
                                 // Çok daha abartılı sağ-sol savrulması (-25 ile +25 arası hızlar)
                                 const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 40 + 10);
@@ -471,6 +477,15 @@
                                 const randomSpeedY = Math.random() * 2.5;
                                 
                                 Matter.Body.setVelocity(body, { x: randomSpeedX, y: randomSpeedY });
+                            }
+                            
+                            if (!body.plugin.drunkJerkTimer || engine.timing.timestamp > body.plugin.drunkJerkTimer) {
+                                // 0.2s - 0.5s arası küçük zikzak (sağa giderken küçük sol yapıp sağa devam etme vb)
+                                body.plugin.drunkJerkTimer = engine.timing.timestamp + 200 + Math.random() * 300;
+                                
+                                // Ana hızı biraz koruyarak üzerine zıt veya aynı yönde ufak sapmalar ekle
+                                const jerkX = (Math.random() - 0.5) * 15;
+                                Matter.Body.setVelocity(body, { x: body.velocity.x * 0.75 + jerkX, y: body.velocity.y });
                             }
                             
                             // Sürtünmeyi azalttım, momentumunu daha uzun süre korusun (0.99 -> 0.995)
