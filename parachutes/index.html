@@ -404,8 +404,12 @@
                             body.render.opacity = body.plugin.ballOpacity;
                         }
                     } else if (!body.plugin.parachuteOpened) {
-                        if (body.plugin.isDrunk && Math.random() < 0.1) {
-                            Matter.Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.0002 * body.mass, y: 0 });
+                        if (body.plugin.isDrunk) {
+                            if (!body.plugin.drunkTimerFreefall || engine.timing.timestamp > body.plugin.drunkTimerFreefall) {
+                                body.plugin.drunkTimerFreefall = engine.timing.timestamp + 100 + Math.random() * 400;
+                                body.plugin.drunkForceFreefallX = (Math.random() - 0.5) * 0.0008 * body.mass;
+                            }
+                            Matter.Body.applyForce(body, body.position, { x: body.plugin.drunkForceFreefallX, y: 0 });
                         }
                         // Çarpışma sonrası bekleme (cooldown) süresini kontrol et
                         let canOpen = true;
@@ -440,23 +444,29 @@
                         // Salınım hızını azaltmak için zaman çarpanı 0.003'ten 0.0015'e düşürüldü
                         let time = engine.timing.timestamp * 0.0015;
                         let swayAngle = Math.sin(time + body.id) * 0.15;
-                        
-                        if (body.plugin.isDrunk) {
-                            swayAngle = Math.sin(time * 3 + body.id) * 0.6 + Math.cos(time * 5) * 0.4;
-                        }
-                        
-                        Matter.Body.setAngle(body, swayAngle);
-
-                        // Kütlesi (çapı) küçük olanların aşırı savrulmaması için kuvveti mass ile çarpıyoruz
                         let swayForce = Math.sin(time + body.id) * 0.00002 * body.mass;
                         
                         if (body.plugin.isDrunk) {
-                            swayForce = (Math.sin(time * 4 + body.id) + Math.cos(time * 7)) * 0.0001 * body.mass;
-                            if (Math.random() < 0.05) {
-                                Matter.Body.applyForce(body, body.position, { x: 0, y: (Math.random() - 0.5) * 0.0005 * body.mass });
+                            if (!body.plugin.drunkTimer || engine.timing.timestamp > body.plugin.drunkTimer) {
+                                body.plugin.drunkTimer = engine.timing.timestamp + 200 + Math.random() * 800; // 0.2s - 1.0s arası yeni hareket
+                                
+                                // Çok daha ani ve dengesiz kuvvetler (sola giderken aniden sağa kopma)
+                                body.plugin.drunkForceX = (Math.random() - 0.5) * 0.0008 * body.mass;
+                                body.plugin.drunkForceY = (Math.random() - 0.5) * 0.0004 * body.mass;
+                                
+                                // Hedef açı
+                                body.plugin.drunkTargetAngle = (Math.random() - 0.5) * 1.5;
                             }
+                            
+                            swayForce = body.plugin.drunkForceX;
+                            // Ara sıra olan yukarı aşağı anlık hareketleri de uygula
+                            Matter.Body.applyForce(body, body.position, { x: 0, y: body.plugin.drunkForceY });
+                            
+                            // Açıyı hedefe doğru sürekli kaydır ama sarsıntılı görünsün
+                            swayAngle = body.angle + (body.plugin.drunkTargetAngle - body.angle) * 0.1;
                         }
                         
+                        Matter.Body.setAngle(body, swayAngle);
                         Matter.Body.applyForce(body, body.position, { x: swayForce, y: 0 });
 
                         // 2. Duruma Özel İşlemler
