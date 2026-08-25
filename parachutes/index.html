@@ -302,8 +302,8 @@
             if (isTarzan) {
                 // Tarzan modunda ekranın çok dışından gelsin
                 const fromLeft = Math.random() < 0.5;
-                randomX = fromLeft ? -300 : width + 300;
-                actualSpawnY = -150;
+                randomX = fromLeft ? -200 : width + 200; // Ekranın içine daha yakın bir nokta
+                actualSpawnY = 150; // Daha aşağıdan doğsun ki tam ekranın ortasında sallansın
                 
                 // İpin takılı olduğu yer ekranın ÇOK üstünde ve kenarlardan %25 içeride olsun
                 tarzanAnchorX = fromLeft ? width * 0.25 : width * 0.75;
@@ -367,69 +367,25 @@
             Composite.add(world, character);
 
             if (isTarzan) {
-                const group = Body.nextGroup(true);
-                
-                // Anchor ile Karakter arasındaki kesin mesafeyi hesapla
-                const dx = randomX - tarzanAnchorX;
-                const dy = actualSpawnY - tarzanAnchorY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                const segments = 16; // İpi biraz daha parçalı yapalım ki gerçekçi kopsun
-                const segmentLength = distance / segments;
-                const angle = Math.atan2(dy, dx);
-                
-                const ropeBodies = [];
-                for (let i = 0; i < segments; i++) {
-                    // Segmenti tam ip çizgisinde doğru açıyla konumlandır
-                    const cx = tarzanAnchorX + Math.cos(angle) * (i + 0.5) * segmentLength;
-                    const cy = tarzanAnchorY + Math.sin(angle) * (i + 0.5) * segmentLength;
-                    
-                    const segment = Bodies.rectangle(cx, cy, 5, segmentLength, {
-                        collisionFilter: { group: group },
-                        render: { fillStyle: '#8B4513' }, // İp rengi kahverengi
-                        density: 0.05,
-                        angle: angle - Math.PI / 2 // Dikdörtgenin yönünü ip hizasına çevir
-                    });
-                    ropeBodies.push(segment);
-                }
-                
-                const rope = Composite.create({ bodies: ropeBodies });
-                
-                // Segmentleri birbirine sağlam zincirle bağla
-                for (let i = 0; i < segments - 1; i++) {
-                    Composite.add(rope, Constraint.create({
-                        bodyA: ropeBodies[i],
-                        pointA: { x: 0, y: segmentLength / 2 },
-                        bodyB: ropeBodies[i + 1],
-                        pointB: { x: 0, y: -segmentLength / 2 },
-                        stiffness: 0.99,
-                        render: { visible: false }
-                    }));
-                }
-                
-                // İpin en üst parçasını tavana bağla
-                const topAnchor = Constraint.create({
+                // Sadece karakteri sallamak için görünmez ama çok güçlü bir tekli ip (Constraint)
+                const tarzanConstraint = Constraint.create({
                     pointA: { x: tarzanAnchorX, y: tarzanAnchorY },
-                    bodyB: ropeBodies[0],
-                    pointB: { x: 0, y: -segmentLength/2 },
-                    stiffness: 0.99
-                });
-                
-                // İpin en alt parçasını karaktere bağla
-                const bottomAnchor = Constraint.create({
-                    bodyA: ropeBodies[segments - 1],
-                    pointA: { x: 0, y: segmentLength/2 },
                     bodyB: character,
-                    pointB: { x: 0, y: -randomChar.radius },
-                    stiffness: 0.99
+                    stiffness: 1, // Esnemesin, mükemmel sarkaç olsun
+                    render: { 
+                        visible: true, 
+                        lineWidth: 4, 
+                        strokeStyle: '#8B4513' 
+                    }
                 });
                 
-                Composite.add(world, [rope, topAnchor, bottomAnchor]);
+                Composite.add(world, tarzanConstraint);
                 
-                character.plugin.tarzanRope = rope;
-                character.plugin.tarzanTopAnchor = topAnchor;
+                character.plugin.tarzanConstraint = tarzanConstraint;
+                character.plugin.tarzanAnchorX = tarzanAnchorX;
+                character.plugin.tarzanAnchorY = tarzanAnchorY;
                 character.plugin.tarzanReleased = false;
-                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2500; // 2.5s sallanma süresi (daha uzun)
+                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2500; // 2.5s sallanma süresi
             } else {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
@@ -467,21 +423,67 @@
                             // Timer dolduysa ve henüz ip kopmadıysa kopar
                             if (!body.plugin.tarzanReleased && engine.timing.timestamp > body.plugin.tarzanReleaseTimer) {
                                 body.plugin.tarzanReleased = true;
-                                if (body.plugin.tarzanTopAnchor) {
-                                    Composite.remove(world, body.plugin.tarzanTopAnchor);
+                                if (body.plugin.tarzanConstraint) {
+                                    Composite.remove(world, body.plugin.tarzanConstraint);
                                 }
-                                // Koptuktan 3 saniye sonra ipi tamamen dünyadan sil
+                                
+                                // Kopma anında fiziksel ip parçalarını oluşturup karakterin peşinden düşmesini sağla
+                                const dx = body.plugin.tarzanAnchorX - body.position.x;
+                                const dy = body.plugin.tarzanAnchorY - body.position.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                const segments = 8;
+                                const segmentLength = distance / segments;
+                                const angle = Math.atan2(dy, dx);
+                                
+                                const ropeBodies = [];
+                                const group = Matter.Body.nextGroup(true);
+                                
+                                for (let j = 0; j < segments; j++) {
+                                    const cx = body.position.x + Math.cos(angle) * (j + 0.5) * segmentLength;
+                                    const cy = body.position.y + Math.sin(angle) * (j + 0.5) * segmentLength;
+                                    const segment = Matter.Bodies.rectangle(cx, cy, 5, segmentLength, {
+                                        collisionFilter: { group: group },
+                                        render: { fillStyle: '#8B4513' },
+                                        density: 0.002, // Hafif olsun
+                                        angle: angle - Math.PI / 2
+                                    });
+                                    Matter.Body.setVelocity(segment, { x: body.velocity.x, y: body.velocity.y });
+                                    ropeBodies.push(segment);
+                                }
+                                
+                                const rope = Matter.Composite.create({ bodies: ropeBodies });
+                                for (let j = 0; j < segments - 1; j++) {
+                                    Matter.Composite.add(rope, Matter.Constraint.create({
+                                        bodyA: ropeBodies[j],
+                                        pointA: { x: 0, y: segmentLength / 2 },
+                                        bodyB: ropeBodies[j + 1],
+                                        pointB: { x: 0, y: -segmentLength / 2 },
+                                        stiffness: 0.9,
+                                        render: { visible: false }
+                                    }));
+                                }
+                                
+                                Matter.Composite.add(rope, Matter.Constraint.create({
+                                    bodyA: ropeBodies[0],
+                                    pointA: { x: 0, y: -segmentLength / 2 },
+                                    bodyB: body,
+                                    stiffness: 0.9,
+                                    render: { visible: false }
+                                }));
+                                
+                                Matter.Composite.add(world, rope);
+                                body.plugin.tarzanRope = rope;
+                                
                                 body.plugin.tarzanDeleteTimer = engine.timing.timestamp + 3000;
                             }
                         }
                         
-                        // Koptuktan sonra silinme zamanı geldiyse veya karakter havuza ineli çok olduysa ipi sil
                         if (body.plugin.tarzanReleased && body.plugin.tarzanRope && engine.timing.timestamp > body.plugin.tarzanDeleteTimer) {
                             Composite.remove(world, body.plugin.tarzanRope);
                             body.plugin.tarzanRope = null;
                         }
                         
-                        continue; // Paraşüt açılma sınırlarını pas geç
+                        continue;
                     }
 
                     if (body.plugin.landed) {
