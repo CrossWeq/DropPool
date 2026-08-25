@@ -277,7 +277,7 @@
         Composite.add(world, [leftWall, rightWall, ground, pool]);
 
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
-        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false) {
+        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false, isDrunk = false) {
             // Eğer ekran kapalıysa aç ve yeni tema belirle
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -341,7 +341,8 @@
                     nameYOffset: randomChar.nameYOffset || 0,
                     isCustom: randomChar.isCustom || false,
                     domElement: customDomElement,
-                    isDive: isDive
+                    isDive: isDive,
+                    isDrunk: isDrunk
                 }
             });
 
@@ -403,6 +404,9 @@
                             body.render.opacity = body.plugin.ballOpacity;
                         }
                     } else if (!body.plugin.parachuteOpened) {
+                        if (body.plugin.isDrunk && Math.random() < 0.1) {
+                            Matter.Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.0002 * body.mass, y: 0 });
+                        }
                         // Çarpışma sonrası bekleme (cooldown) süresini kontrol et
                         let canOpen = true;
                         if (body.plugin.parachuteCooldown && engine.timing.timestamp < body.plugin.parachuteCooldown) {
@@ -436,10 +440,23 @@
                         // Salınım hızını azaltmak için zaman çarpanı 0.003'ten 0.0015'e düşürüldü
                         let time = engine.timing.timestamp * 0.0015;
                         let swayAngle = Math.sin(time + body.id) * 0.15;
+                        
+                        if (body.plugin.isDrunk) {
+                            swayAngle = Math.sin(time * 3 + body.id) * 0.6 + Math.cos(time * 5) * 0.4;
+                        }
+                        
                         Matter.Body.setAngle(body, swayAngle);
 
                         // Kütlesi (çapı) küçük olanların aşırı savrulmaması için kuvveti mass ile çarpıyoruz
                         let swayForce = Math.sin(time + body.id) * 0.00002 * body.mass;
+                        
+                        if (body.plugin.isDrunk) {
+                            swayForce = (Math.sin(time * 4 + body.id) + Math.cos(time * 7)) * 0.0001 * body.mass;
+                            if (Math.random() < 0.05) {
+                                Matter.Body.applyForce(body, body.position, { x: 0, y: (Math.random() - 0.5) * 0.0005 * body.mass });
+                            }
+                        }
+                        
                         Matter.Body.applyForce(body, body.position, { x: swayForce, y: 0 });
 
                         // 2. Duruma Özel İşlemler
@@ -871,14 +888,17 @@
                         // Dive komutu kontrolü: !atla dive veya !atladive
                         let isDiveCommand = false;
                         let isNormalDropCommand = false;
+                        let isDrunkCommand = false;
 
                         if (msgLower === cmdLower + " dive" || msgLower === cmdLower + "dive" || msgLower.startsWith(cmdLower + " dive ") || msgLower.startsWith(cmdLower + "dive ") || msgLower.startsWith(cmdLower + " dive[") || msgLower.startsWith(cmdLower + "dive[")) {
                             isDiveCommand = true;
+                        } else if (msgLower === cmdLower + " drunk" || msgLower === cmdLower + "drunk" || msgLower.startsWith(cmdLower + " drunk ") || msgLower.startsWith(cmdLower + "drunk ") || msgLower.startsWith(cmdLower + " drunk[") || msgLower.startsWith(cmdLower + "drunk[")) {
+                            isDrunkCommand = true;
                         } else if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
                             isNormalDropCommand = true;
                         }
 
-                        if (isDiveCommand || isNormalDropCommand) {
+                        if (isDiveCommand || isDrunkCommand || isNormalDropCommand) {
                             if (checkCooldown(username)) {
                                 let customEmoteUrl = null;
                                 // Kick emote yapısını tespit et: [emote:12345:EmoteName]
@@ -892,27 +912,27 @@
                                     // Dalış modu (helikopter)
                                     triggerHelicopterDrop(username, customEmoteUrl);
                                 } else {
-                                    // Normal atlama modu
+                                    // Normal veya drunk atlama modu
                                     if (isDropTogetherMode) {
                                         if (username.toLowerCase() === channelName.toLowerCase()) {
                                             // Yayıncı atlarsa uçağı tetikle ve modu kapat
                                             isDropTogetherMode = false;
                                             if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.unshift({ username, customEmoteUrl });
+                                                dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: isDrunkCommand });
                                             }
                                             triggerPlaneDrop();
                                         } else {
                                             // İzleyici atlarsa sıraya ekle (aynı kişi bir kere eklenebilir)
                                             if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.push({ username, customEmoteUrl });
+                                                dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: isDrunkCommand });
                                                 console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
                                             } else {
                                                 console.log(`[DropPool] ${username} zaten sırada.`);
                                             }
                                         }
                                     } else {
-                                        // Normal modda doğrudan düşür
-                                        spawnCharacter(username, customEmoteUrl);
+                                        // Normal veya drunk modda doğrudan düşür
+                                        spawnCharacter(username, customEmoteUrl, null, -50, false, isDrunkCommand);
                                     }
                                 }
                             }
@@ -1037,7 +1057,7 @@
 
                 setTimeout(() => {
                     // Uçağın gövde alt merkezinden düşsünler
-                    spawnCharacter(user.username, user.customEmoteUrl, expectedX + (500 / 2), 150);
+                    spawnCharacter(user.username, user.customEmoteUrl, expectedX + (500 / 2), 150, false, user.isDrunk);
                 }, dropTime);
             });
 
