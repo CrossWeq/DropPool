@@ -406,10 +406,12 @@
                     } else if (!body.plugin.parachuteOpened) {
                         if (body.plugin.isDrunk) {
                             if (!body.plugin.drunkTimerFreefall || engine.timing.timestamp > body.plugin.drunkTimerFreefall) {
-                                body.plugin.drunkTimerFreefall = engine.timing.timestamp + 100 + Math.random() * 400;
-                                body.plugin.drunkForceFreefallX = (Math.random() - 0.5) * 0.0008 * body.mass;
+                                body.plugin.drunkTimerFreefall = engine.timing.timestamp + 1000 + Math.random() * 1000;
+                                const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 8 + 2);
+                                Matter.Body.setVelocity(body, { x: randomSpeedX, y: body.velocity.y });
                             }
-                            Matter.Body.applyForce(body, body.position, { x: body.plugin.drunkForceFreefallX, y: 0 });
+                            // Havadayken de yana gidişini yavaşça frenleyelim
+                            Matter.Body.setVelocity(body, { x: body.velocity.x * 0.99, y: body.velocity.y });
                         }
                         // Çarpışma sonrası bekleme (cooldown) süresini kontrol et
                         let canOpen = true;
@@ -447,23 +449,26 @@
                         let swayForce = Math.sin(time + body.id) * 0.00002 * body.mass;
                         
                         if (body.plugin.isDrunk) {
+                            // Salınımı daha yavaş ve sakin yapıyoruz
+                            swayAngle = Math.sin(time * 0.8 + body.id) * 0.2;
+                            swayForce = 0; // Sürekli uygulanan sallama kuvvetini sıfırla, impulse kullanacağız
+                            
                             if (!body.plugin.drunkTimer || engine.timing.timestamp > body.plugin.drunkTimer) {
-                                body.plugin.drunkTimer = engine.timing.timestamp + 200 + Math.random() * 800; // 0.2s - 1.0s arası yeni hareket
+                                // 1.0s - 2.0s arası yeni hareket belirle
+                                body.plugin.drunkTimer = engine.timing.timestamp + 1000 + Math.random() * 1000;
                                 
-                                // Çok daha ani ve dengesiz kuvvetler (sola giderken aniden sağa kopma)
-                                body.plugin.drunkForceX = (Math.random() - 0.5) * 0.0008 * body.mass;
-                                body.plugin.drunkForceY = (Math.random() - 0.5) * 0.0004 * body.mass;
+                                // Bir anda sağa veya sola doğru rastgele bir hız (velocity) uygula
+                                // Bazen yavaş, bazen hızlı (-4 ile +4 arası hızlar)
+                                const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 6 + 2);
                                 
-                                // Hedef açı
-                                body.plugin.drunkTargetAngle = (Math.random() - 0.5) * 1.5;
+                                // Bazen aşağı doğru da hızlan veya yavaşla
+                                const randomSpeedY = 0.5 + Math.random() * 3.0;
+                                
+                                Matter.Body.setVelocity(body, { x: randomSpeedX, y: randomSpeedY });
                             }
                             
-                            swayForce = body.plugin.drunkForceX;
-                            // Ara sıra olan yukarı aşağı anlık hareketleri de uygula
-                            Matter.Body.applyForce(body, body.position, { x: 0, y: body.plugin.drunkForceY });
-                            
-                            // Açıyı hedefe doğru sürekli kaydır ama sarsıntılı görünsün
-                            swayAngle = body.angle + (body.plugin.drunkTargetAngle - body.angle) * 0.1;
+                            // Yana olan hızını her frame çok az yavaşlatarak (friction gibi) doğal süzülme sağla
+                            Matter.Body.setVelocity(body, { x: body.velocity.x * 0.99, y: body.velocity.y });
                         }
                         
                         Matter.Body.setAngle(body, swayAngle);
@@ -505,8 +510,10 @@
                             }
                         } else {
                             // NORMAL AÇIK DURUM
-                            if (body.velocity.y > 1.5) {
-                                Matter.Body.setVelocity(body, { x: body.velocity.x, y: 1.5 });
+                            // Sarhoş ise dikey hız sınırı daha esnek olsun (1.5 yerine 3.5'a kadar izin ver)
+                            const maxSpeedY = body.plugin.isDrunk ? 3.5 : 1.5;
+                            if (body.velocity.y > maxSpeedY) {
+                                Matter.Body.setVelocity(body, { x: body.velocity.x, y: maxSpeedY });
                             }
                         } // closes inner else
                     } // closes outer else
