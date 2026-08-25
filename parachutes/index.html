@@ -407,9 +407,15 @@
                         if (body.plugin.isDrunk) {
                             if (!body.plugin.drunkTimerFreefall || engine.timing.timestamp > body.plugin.drunkTimerFreefall) {
                                 body.plugin.drunkTimerFreefall = engine.timing.timestamp + 800 + Math.random() * 800;
-                                const randomSpeedX = (Math.random() - 0.5) * 24;
+                                const randomSpeedX = (Math.random() - 0.5) * 40;
                                 Matter.Body.setVelocity(body, { x: randomSpeedX, y: body.velocity.y });
                             }
+                            
+                            // Dalgalı hareket kuvveti (titrek düşüş)
+                            let time = engine.timing.timestamp * 0.0015;
+                            let wavyForceX = Math.sin(time * 10 + body.id) * 0.0003 * body.mass;
+                            Matter.Body.applyForce(body, body.position, { x: wavyForceX, y: 0 });
+                            
                             // Daha az sürtünme ile uzun savrulmalar
                             Matter.Body.setVelocity(body, { x: body.velocity.x * 0.995, y: body.velocity.y });
                         }
@@ -451,14 +457,15 @@
                         if (body.plugin.isDrunk) {
                             // Salınımı daha yavaş ve sakin yapıyoruz
                             swayAngle = Math.sin(time * 0.8 + body.id) * 0.2;
-                            swayForce = 0; // Sürekli uygulanan sallama kuvvetini sıfırla, impulse kullanacağız
+                            // Dalgalı (wavy) hareket için sürekli sarsıntılı bir kuvvet
+                            swayForce = Math.sin(time * 12 + body.id) * 0.00015 * body.mass;
                             
                             if (!body.plugin.drunkTimer || engine.timing.timestamp > body.plugin.drunkTimer) {
                                 // 0.8s - 1.6s arası (daha sık) yeni hareket belirle
                                 body.plugin.drunkTimer = engine.timing.timestamp + 800 + Math.random() * 800;
                                 
-                                // Çok daha abartılı sağ-sol savrulması (-12 ile +12 arası hızlar)
-                                const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 20 + 4);
+                                // Çok daha abartılı sağ-sol savrulması (-25 ile +25 arası hızlar)
+                                const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 40 + 10);
                                 
                                 // Dikey hızda ani yavaşlamalar veya çok hızlı düşüşler (0 - 5.0)
                                 const randomSpeedY = Math.random() * 5.0;
