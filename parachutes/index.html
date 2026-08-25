@@ -26,6 +26,14 @@
             width: 100vw;
             height: 100vh;
         }
+
+        @keyframes heliBobbing {
+            0% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-6px) rotate(1deg); }
+            50% { transform: translateY(0px) rotate(0deg); }
+            75% { transform: translateY(6px) rotate(-1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
     </style>
     <!-- Matter.js fizik motoru CDN üzerinden dahil ediliyor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
@@ -264,7 +272,7 @@
             { file: 'chracterchef.png', scale: 0.100, radius: 30, yOffset: 2 },
             // Yeni Eklenen Karakterler
             { file: 'characterfrog.png', scale: 0.053, radius: 36, yOffset: 0 }, // 1.5x büyütüldü
-            { file: 'charactercat3.png', scale: 0.110, radius: 28, yOffset: 0 }, // Ortada bir boyuta getirildi
+            { file: 'charactercat3.png', scale: 0.100, radius: 25, yOffset: 0 }, // 1.1x küçültüldü
             { file: 'charactercat2.png', scale: 0.200, radius: 44, yOffset: 0 }, // Daha da büyütüldü
             { file: 'characterdog2.png', scale: 0.200, radius: 44, yOffset: 0 },
             { file: 'charactersticth.png', scale: 0.180, radius: 40, yOffset: 0 } // Çok az küçültüldü
@@ -307,15 +315,16 @@
                 // Yerçekimi + kısıtlama = karakteri ekranın ortasına doğru fırlatır
                 tarzanFromLeft = Math.random() < 0.5;
                 
-                // Anchor: ekranın yatay ortası, 700px yukarıda (ekran dışı)
-                tarzanAnchorX = width / 2;
-                tarzanAnchorY = -200;
+                // Anchor: İp hep tam ortadan değil, rastgele sağdan/soldan gelebilsin
+                tarzanAnchorX = (width / 2) + (Math.random() * 600 - 300);
                 
-                // Karakter: ekranın tam kenarında (5px içeride), dikey ortada
-                // Bu sayede anchor→karakter mesafesi ipin uzunluğunu belirliyor
-                // ve karakter anchor'ın tam altına (ekran ortasına) doğru sallanıyor
-                randomX = tarzanFromLeft ? 5 : width - 5;
-                actualSpawnY = height / 2; // Ekranın dikey ortası (yaklaşık 540px)
+                // İpin en üst noktası tam ekranın en üst noktası olsun
+                tarzanAnchorY = 0;
+                
+                // Karakterin başlangıç noktası da daha yukarı alındı ki ip kısa kalmaya devam etsin
+                let baseStartX = tarzanFromLeft ? (width / 4) : (width * 3 / 4);
+                randomX = baseStartX + (Math.random() * 200 - 100);
+                actualSpawnY = (height / 5) + (Math.random() * 100 - 50);
             }
 
             let randomChar;
@@ -377,7 +386,8 @@
             if (isTarzan) {
                 // Karaktere başlangıç ivmesi ver: sarkaç daha hızlı başlasın
                 // Sol kenardan geliyorsa sağa, sağ kenardan geliyorsa sola itilsin
-                const tarzanInitialVx = tarzanFromLeft ? 16 : -16;
+                // Fırlatma hissini (salınımı) güçlendirmek için hız artırıldı
+                const tarzanInitialVx = tarzanFromLeft ? 18 : -18;
                 Body.setVelocity(character, { x: tarzanInitialVx, y: 2 });
                 
                 // Tek parça, düz ve sert bir ip constraint'i
@@ -400,7 +410,8 @@
                 character.plugin.tarzanAnchorY = tarzanAnchorY;
                 character.plugin.tarzanFromLeft = tarzanFromLeft;
                 character.plugin.tarzanReleased = false;
-                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 1200;
+                // Bazen çok erken bıraktığı için süre tekrar biraz artırıldı (600ms - 1200ms)
+                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 600 + (Math.random() * 600);
             } else {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
@@ -436,83 +447,69 @@
                                 Matter.Body.setAngularVelocity(body, 0);
                                 Matter.Body.setAngle(body, 0);
                             } else {
-                                // 1 tur takla atıp geri doğrulma
-                                if (body.plugin.flipAngle === undefined) {
-                                    body.plugin.flipAngle = 0;
-                                    body.plugin.flipSpeed = body.plugin.tarzanFromLeft ? 0.25 : -0.25;
-                                }
-                                
-                                if (Math.abs(body.plugin.flipAngle) < Math.PI * 2) {
-                                    body.plugin.flipAngle += body.plugin.flipSpeed;
-                                    Matter.Body.setAngle(body, body.plugin.flipAngle);
-                                    Matter.Body.setAngularVelocity(body, 0);
+                                // Dönmeyi biraz gecikmeli başlat
+                                if (engine.timing.timestamp > body.plugin.tarzanReleaseTimer + 300) {
+                                    // 1 tur takla atıp geri doğrulma
+                                    if (body.plugin.flipAngle === undefined) {
+                                        body.plugin.flipAngle = 0;
+                                        // Dönüş hızı bir tık artırıldı (0.05 -> 0.08)
+                                        body.plugin.flipSpeed = body.plugin.tarzanFromLeft ? -0.08 : 0.08;
+                                    }
+                                    
+                                    if (Math.abs(body.plugin.flipAngle) < Math.PI * 2) {
+                                        body.plugin.flipAngle += body.plugin.flipSpeed;
+                                        Matter.Body.setAngle(body, body.plugin.flipAngle);
+                                        Matter.Body.setAngularVelocity(body, 0);
+                                    } else {
+                                        Matter.Body.setAngle(body, 0);
+                                        Matter.Body.setAngularVelocity(body, 0);
+                                    }
                                 } else {
-                                    Matter.Body.setAngle(body, 0);
                                     Matter.Body.setAngularVelocity(body, 0);
+                                    Matter.Body.setAngle(body, 0);
                                 }
                             }
                             
                             // Timer dolduysa ve henüz ip kopmadıysa kopar
                             if (!body.plugin.tarzanReleased && engine.timing.timestamp > body.plugin.tarzanReleaseTimer) {
                                 body.plugin.tarzanReleased = true;
+                                
+                                // Kuvvetleri sıfırlamıyoruz, yatay olarak fırlamaya devam edecek.
+                                // İpin salınıma 1 saniye daha devam edip sonra fade olarak kaybolması için:
                                 if (body.plugin.tarzanConstraint) {
-                                    Composite.remove(world, body.plugin.tarzanConstraint);
-                                }
-                                
-                                // Kopma anında fiziksel ip parçalarını oluşturup karakterin peşinden düşmesini sağla
-                                const dx = body.plugin.tarzanAnchorX - body.position.x;
-                                const dy = body.plugin.tarzanAnchorY - body.position.y;
-                                const distance = Math.sqrt(dx * dx + dy * dy);
-                                const segments = 1;
-                                const segmentLength = distance / segments;
-                                const angle = Math.atan2(dy, dx);
-                                
-                                const ropeBodies = [];
-                                const group = Matter.Body.nextGroup(true);
-                                
-                                for (let j = 0; j < segments; j++) {
-                                    const cx = body.position.x + Math.cos(angle) * (j + 0.5) * segmentLength;
-                                    const cy = body.position.y + Math.sin(angle) * (j + 0.5) * segmentLength;
-                                    const segment = Matter.Bodies.rectangle(cx, cy, 5, segmentLength, {
-                                        collisionFilter: { group: group },
-                                        render: { fillStyle: '#8B4513' },
-                                        density: 0.002, // Hafif olsun
-                                        angle: angle - Math.PI / 2
+                                    // İpin ucuna karakterin yerine görünmez, hafif bir ağırlık takıyoruz
+                                    const dummyWeight = Matter.Bodies.circle(body.position.x, body.position.y, 5, {
+                                        collisionFilter: { group: Matter.Body.nextGroup(true) },
+                                        render: { visible: false },
+                                        density: 0.01 // İpin düzgün sallanması için küçük bir ağırlık
                                     });
-                                    Matter.Body.setVelocity(segment, { x: body.velocity.x, y: body.velocity.y });
-                                    ropeBodies.push(segment);
+                                    Matter.Body.setVelocity(dummyWeight, { x: body.velocity.x, y: body.velocity.y });
+                                    Matter.Composite.add(world, dummyWeight);
+                                    
+                                    // Constraint'i (ipi) karaktere değil, bu ağırlığa bağlıyoruz
+                                    body.plugin.tarzanConstraint.bodyB = dummyWeight;
+                                    
+                                    // 1 saniye sonra ipi kaybolmaya (fade) başlat
+                                    setTimeout(() => {
+                                        let fadeOpacity = 1;
+                                        let fadeInterval = setInterval(() => {
+                                            fadeOpacity -= 0.1;
+                                            if (fadeOpacity <= 0) {
+                                                clearInterval(fadeInterval);
+                                                Matter.Composite.remove(world, dummyWeight);
+                                                if (body.plugin.tarzanConstraint) {
+                                                    Matter.Composite.remove(world, body.plugin.tarzanConstraint);
+                                                }
+                                            } else {
+                                                if (body.plugin.tarzanConstraint && body.plugin.tarzanConstraint.render) {
+                                                    // Rengi transparan yap (fade out)
+                                                    body.plugin.tarzanConstraint.render.strokeStyle = `rgba(139, 69, 19, ${fadeOpacity})`;
+                                                }
+                                            }
+                                        }, 50);
+                                    }, 1000);
                                 }
-                                
-                                const rope = Matter.Composite.create({ bodies: ropeBodies });
-                                for (let j = 0; j < segments - 1; j++) {
-                                    Matter.Composite.add(rope, Matter.Constraint.create({
-                                        bodyA: ropeBodies[j],
-                                        pointA: { x: 0, y: segmentLength / 2 },
-                                        bodyB: ropeBodies[j + 1],
-                                        pointB: { x: 0, y: -segmentLength / 2 },
-                                        stiffness: 0.9,
-                                        render: { visible: false }
-                                    }));
-                                }
-                                
-                                Matter.Composite.add(rope, Matter.Constraint.create({
-                                    bodyA: ropeBodies[0],
-                                    pointA: { x: 0, y: -segmentLength / 2 },
-                                    bodyB: body,
-                                    stiffness: 0.9,
-                                    render: { visible: false }
-                                }));
-                                
-                                Matter.Composite.add(world, rope);
-                                body.plugin.tarzanRope = rope;
-                                
-                                body.plugin.tarzanDeleteTimer = engine.timing.timestamp + 3000;
                             }
-                        }
-                        
-                        if (body.plugin.tarzanReleased && body.plugin.tarzanRope && engine.timing.timestamp > body.plugin.tarzanDeleteTimer) {
-                            Composite.remove(world, body.plugin.tarzanRope);
-                            body.plugin.tarzanRope = null;
                         }
                         
                         continue;
@@ -1078,6 +1075,12 @@
                             isDrunkCommand = true;
                         } else if (msgLower === cmdLower + " tarzan" || msgLower === cmdLower + "tarzan" || msgLower.startsWith(cmdLower + " tarzan ") || msgLower.startsWith(cmdLower + "tarzan ") || msgLower.startsWith(cmdLower + " tarzan[") || msgLower.startsWith(cmdLower + "tarzan[")) {
                             isTarzanCommand = true;
+                        } else if (msgLower === cmdLower + " random" || msgLower === cmdLower + "random" || msgLower.startsWith(cmdLower + " random ") || msgLower.startsWith(cmdLower + "random ") || msgLower.startsWith(cmdLower + " random[") || msgLower.startsWith(cmdLower + "random[")) {
+                            const r = Math.floor(Math.random() * 4);
+                            if (r === 0) isNormalDropCommand = true;
+                            else if (r === 1) isDiveCommand = true;
+                            else if (r === 2) isDrunkCommand = true;
+                            else if (r === 3) isTarzanCommand = true;
                         } else if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
                             isNormalDropCommand = true;
                         }
@@ -1102,13 +1105,13 @@
                                             // Yayıncı atlarsa uçağı tetikle ve modu kapat
                                             isDropTogetherMode = false;
                                             if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: isDrunkCommand, isTarzan: isTarzanCommand });
+                                                dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: false, isTarzan: false });
                                             }
                                             triggerPlaneDrop();
                                         } else {
                                             // İzleyici atlarsa sıraya ekle
                                             if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: isDrunkCommand, isTarzan: isTarzanCommand });
+                                                dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: false, isTarzan: false });
                                                 console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
                                             } else {
                                                 console.log(`[DropPool] ${username} zaten sırada.`);
@@ -1154,6 +1157,7 @@
             heli.style.width = '450px'; // İlk haline (300) göre 1.5x büyütüldü
             heli.style.zIndex = '100';
             heli.style.transition = 'left 5s linear';
+            heli.style.animation = 'heliBobbing 3.5s infinite ease-in-out';
             document.body.appendChild(heli);
 
             setTimeout(() => {
@@ -1334,6 +1338,11 @@
         };
 
         // --- HELİKOPTER DIVE TEST SENARYOSU ---
+        window.testHelikopter = () => {
+            console.log("Tekli helikopter (bobbing) testi başlatılıyor...");
+            triggerHelicopterDrop("TestHeli", null, null);
+        };
+
         window.testHelikopterler = () => {
             console.log("Helikopter test senaryosu başlatılıyor... 9 helikopter sırayla geçecek.");
             let count = 1;
@@ -1362,6 +1371,26 @@
             window.testHelikopterler();
         }, 2000);
         */
+
+        // --- TARZAN TEST SENARYOSU ---
+        window.testTarzan = () => {
+            console.log("Tarzan test senaryosu başlatıldı. Her 5 saniyede bir Tarzan atlayışı yapılacak.");
+            // İlk atlayışı hemen yap
+            spawnCharacter("TarzanTest", null, null, -50, false, false, true);
+            
+            // Sonraki atlayışları 5 saniyede bir yap
+            setInterval(() => {
+                spawnCharacter("TarzanTest", null, null, -50, false, false, true);
+            }, 5000);
+        };
+
+        // İsterseniz aşağıdaki satırın başındaki // işaretlerini kaldırarak sayfa açılır açılmaz testin başlamasını sağlayabilirsiniz:
+        // window.testTarzan();
+        
+        // Sayfa açılır açılmaz tüm helikopterleri test etmek için:
+        setTimeout(() => {
+            window.testHelikopterler();
+        }, 1000);
 
     </script>
 </body>

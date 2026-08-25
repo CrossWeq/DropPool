@@ -43,6 +43,7 @@
 - `!atla dive`: Helikopterden paraşütsüz ve havada fırıl fırıl dönerek (spin) çılgın bir dalış yapar.
 - `!atla drunk`: Sarhoş gibi ne yapacağı belli olmayan rastgele sağa sola savrularak aşağı düşer.
 - `!atla tarzan`: Ekranın dışından uzun bir iple sarkaç hareketi (sallanma) yaparak uçar. İp bir süre sonra kopar ve karakter havuza düşer.
+- `!atla random`: Normal, dive, drunk veya tarzan komutlarından birini rastgele seçerek uygular.
 - `!droptogether` *(Sadece Yayıncı)*: Toplu atlayış (Queue) modunu başlatır. İzleyiciler komut yazınca beklemeye (sıraya) alınır. Yayıncı atlama komutu girdiğinde hem kendisi de sıraya eklenir hem de devasa bir uçak anında kalkar, herkesi aynı anda uçaktan atar.
 - `!resetdrop` *(Sadece Yayıncı)*: Tüm izleyicilerin bekleme süresini (cooldown) sıfırlar ve varsa toplu atlayış sırasını iptal edip temizler.
 
@@ -51,6 +52,7 @@
 - `!drop dive`: Drops from a helicopter without a parachute, spinning wildly in the air.
 - `!drop drunk`: Falls down swaying left and right randomly, moving like a drunk jumper.
 - `!drop tarzan`: Swings into the screen on a long rope like a pendulum. The rope snaps after a while, dropping the character into the pool.
+- `!drop random`: Randomly selects and applies one of the normal, dive, drunk, or tarzan drop modes.
 - `!droptogether` *(Streamer Only)*: Starts "Queue Mode". Viewers who type the drop command are queued up. When the streamer types the drop command, they are added to the queue as well and a massive plane immediately flies by, dropping everyone at once.
 - `!resetdrop` *(Streamer Only)*: Resets all viewer cooldowns and clears the drop queue if active.
 
