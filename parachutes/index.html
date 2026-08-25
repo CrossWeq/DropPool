@@ -309,7 +309,7 @@
                 
                 // Anchor: ekranın yatay ortası, 700px yukarıda (ekran dışı)
                 tarzanAnchorX = width / 2;
-                tarzanAnchorY = -700;
+                tarzanAnchorY = -200;
                 
                 // Karakter: ekranın tam kenarında (5px içeride), dikey ortada
                 // Bu sayede anchor→karakter mesafesi ipin uzunluğunu belirliyor
@@ -377,7 +377,7 @@
             if (isTarzan) {
                 // Karaktere başlangıç ivmesi ver: sarkaç daha hızlı başlasın
                 // Sol kenardan geliyorsa sağa, sağ kenardan geliyorsa sola itilsin
-                const tarzanInitialVx = tarzanFromLeft ? 8 : -8;
+                const tarzanInitialVx = tarzanFromLeft ? 16 : -16;
                 Body.setVelocity(character, { x: tarzanInitialVx, y: 2 });
                 
                 // Tek parça, düz ve sert bir ip constraint'i
@@ -400,7 +400,7 @@
                 character.plugin.tarzanAnchorY = tarzanAnchorY;
                 character.plugin.tarzanFromLeft = tarzanFromLeft;
                 character.plugin.tarzanReleased = false;
-                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 2500;
+                character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 1200;
             } else {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
@@ -432,8 +432,25 @@
                     // --- TARZAN MODU İÇİN ÖZEL DAVRANIŞ ---
                     if (body.plugin.isTarzan) {
                         if (!body.plugin.landed) {
-                            Matter.Body.setAngularVelocity(body, 0);
-                            Matter.Body.setAngle(body, 0);
+                            if (!body.plugin.tarzanReleased) {
+                                Matter.Body.setAngularVelocity(body, 0);
+                                Matter.Body.setAngle(body, 0);
+                            } else {
+                                // 1 tur takla atıp geri doğrulma
+                                if (body.plugin.flipAngle === undefined) {
+                                    body.plugin.flipAngle = 0;
+                                    body.plugin.flipSpeed = body.plugin.tarzanFromLeft ? 0.25 : -0.25;
+                                }
+                                
+                                if (Math.abs(body.plugin.flipAngle) < Math.PI * 2) {
+                                    body.plugin.flipAngle += body.plugin.flipSpeed;
+                                    Matter.Body.setAngle(body, body.plugin.flipAngle);
+                                    Matter.Body.setAngularVelocity(body, 0);
+                                } else {
+                                    Matter.Body.setAngle(body, 0);
+                                    Matter.Body.setAngularVelocity(body, 0);
+                                }
+                            }
                             
                             // Timer dolduysa ve henüz ip kopmadıysa kopar
                             if (!body.plugin.tarzanReleased && engine.timing.timestamp > body.plugin.tarzanReleaseTimer) {
@@ -446,7 +463,7 @@
                                 const dx = body.plugin.tarzanAnchorX - body.position.x;
                                 const dy = body.plugin.tarzanAnchorY - body.position.y;
                                 const distance = Math.sqrt(dx * dx + dy * dy);
-                                const segments = 8;
+                                const segments = 1;
                                 const segmentLength = distance / segments;
                                 const angle = Math.atan2(dy, dx);
                                 
