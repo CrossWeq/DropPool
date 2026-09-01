@@ -64,6 +64,13 @@
             return '#ef4444'; // 95 - 100: Kırmızı
         }
 
+        function getRankColor(index) {
+            if (index === 0) return '#FFD700'; // Altın (Gold)
+            if (index === 1) return '#C0C0C0'; // Gümüş (Silver)
+            if (index === 2) return '#CD7F32'; // Bronz (Bronze)
+            return '#FFFFFF'; // 4. ve 5. için Beyaz
+        }
+
         function renderLeaderboard() {
             const listEl = document.getElementById('leaderboard-list');
             if (!listEl) return;
@@ -71,7 +78,9 @@
             let html = '';
             for (let i = 0; i < 5; i++) {
                 const item = leaderboard[i];
-                const rankNum = (i + 1) + '-';
+                const rankNum = (i + 1) + '.';
+                const rankStyled = `<span style="color: ${getRankColor(i)};">${rankNum}</span>`;
+                
                 if (item) {
                     const num = parseFloat(item.score);
                     const color = getScoreColor(num);
@@ -82,9 +91,9 @@
                         ? item.username.substring(0, 15) + '...' 
                         : item.username;
 
-                    html += `<div class="lb-row">${rankNum} ${displayName} <span style="color: ${color}; font-weight: 800;">${num.toFixed(2)}${star}</span></div>`;
+                    html += `<div class="lb-row">${rankStyled} ${displayName} <span style="color: ${color}; font-weight: 800;">${num.toFixed(2)}${star}</span></div>`;
                 } else {
-                    html += `<div class="lb-row">${rankNum}</div>`;
+                    html += `<div class="lb-row">${rankStyled}</div>`;
                 }
             }
             listEl.innerHTML = html;
