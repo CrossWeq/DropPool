@@ -12,7 +12,7 @@
         }
     </script>
     <style>
-        body { background-color: #0a0f1c; color: #f8fafc; min-height: 100vh; }
+        html, body { background-color: #0a0f1c !important; color: #f8fafc; min-height: 100vh; opacity: 1 !important; }
         .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -204,6 +204,26 @@
             renderStats();
         }
 
+        function translateLogDetail(detail, l) {
+            if (l === 'tr') return detail;
+            let d = detail;
+            d = d.replace('puan aldı (Havuza indi).', 'points received (Landed in pool).');
+            d = d.replace('Havuzu ıskaladı (Dışarı düştü).', 'Missed the pool (Landed outside).');
+            d = d.replace('!resetdrop ile tüm süreleri ve sıralamayı sıfırladı.', 'Reset all cooldowns and leaderboard via !resetdrop.');
+            d = d.replace('!droptogether modunu aktif etti.', 'Activated !droptogether mode.');
+            d = d.replace('Toplu atlayış (Uçak) başlattı!', 'Started mass drop (Plane)!');
+            d = d.replace('Toplu atlayış (Uçak) için sıraya girdi.', 'Queued for mass drop (Plane).');
+            d = d.replace('Özel atlayış (Helikopter) başlattı.', 'Started special drop (Helicopter).');
+            
+            d = d.replace(' atlayış başlattı.', ' drop started.');
+            d = d.replace('Normal', 'Standard');
+            d = d.replace('Sahte', 'Fake');
+            d = d.replace('Sarhoş', 'Drunk');
+            d = d.replace('Dalış', 'Dive');
+            
+            return d;
+        }
+
         function renderLogs() {
             const tbody = document.getElementById('logTableBody');
             const emptyState = document.getElementById('emptyState');
@@ -231,12 +251,14 @@
                     actionBadge = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-md text-xs font-bold">${log.action}</span>`;
                 }
 
+                let translatedDetail = translateLogDetail(log.detail, lang);
+
                 html += `
                     <tr class="hover:bg-white/5 transition-colors group">
                         <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">${log.time}</td>
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${log.username}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${actionBadge}</td>
-                        <td class="px-6 py-4 text-gray-300 max-w-md truncate">${log.detail}</td>
+                        <td class="px-6 py-4 text-gray-300 max-w-md truncate">${translatedDetail}</td>
                     </tr>
                 `;
             }
