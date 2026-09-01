@@ -33,10 +33,6 @@
             
             <div class="flex gap-3 items-center">
                 <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/50 text-white font-bold py-2.5 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg">ENG</button>
-                <button onclick="exportToCSV()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-lg flex items-center gap-2 text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span data-i18n="exportBtn">Excel/CSV İndir</span>
-                </button>
                 <button onclick="clearAllData()" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
                     <span data-i18n="clearBtn">Tüm Verileri Sıfırla</span>
                 </button>
@@ -130,7 +126,6 @@
         const i18n = {
             title: { tr: "DropPool İstatistik Merkezi", en: "DropPool Stats Center" },
             desc: { tr: "Tüm zamanların oyuncu istatistikleri ve anlık olay geçmişi.", en: "All-time player statistics and live event history." },
-            exportBtn: { tr: "Excel/CSV İndir", en: "Export CSV" },
             clearBtn: { tr: "Tüm Verileri Sıfırla", en: "Reset All Data" },
             tabStats: { tr: "Oyuncu İstatistikleri", en: "Player Stats" },
             tabLogs: { tr: "Canlı Olay Akışı (Log)", en: "Live Event Log" },
@@ -147,7 +142,6 @@
             noLogs: { tr: "Henüz hiçbir kayıt yok.", en: "No logs available yet." },
             searchPlaceholder: { tr: "Kullanıcı Ara...", en: "Search user..." },
             confirmClear: { tr: "TÜM İSTATİSTİKLERİ VE GEÇMİŞİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? (Atlayış sayıları ve rekorlar dahil her şey sıfırlanır!)", en: "ARE YOU SURE YOU WANT TO CLEAR ALL STATS AND HISTORY? (Everything including jump counts and records will be reset!)" },
-            alertNoData: { tr: "Dışa aktarılacak kayıt yok.", en: "No data to export." },
             badges: {
                 JUMP: { tr: 'ATLAYIŞ', en: 'JUMP' },
                 SCORE: { tr: 'PUAN', en: 'SCORE' },
@@ -357,43 +351,6 @@
                 renderStats();
             }
         }
-
-        function exportToCSV() {
-            const isStatsActive = document.getElementById('statsTab').classList.contains('active');
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            let filename = "";
-
-            if(isStatsActive) {
-                if(Object.keys(statsData).length === 0) {
-                    alert(i18n.alertNoData[lang]);
-                    return;
-                }
-                csvContent += (lang === 'tr' ? "Kullanici Adi,Toplam Atlayis,Rekor Puan\r\n" : "Username,Total Jumps,Best Score\r\n");
-                const users = Object.values(statsData);
-                users.forEach(u => {
-                    csvContent += `"${u.username}","${u.jumps}","${u.maxScore.toFixed(2)}"\r\n`;
-                });
-                filename = "droppool_data_" + new Date().toISOString().split('T')[0] + ".csv";
-            } else {
-                if(logs.length === 0) {
-                    alert(i18n.alertNoData[lang]);
-                    return;
-                }
-                csvContent += (lang === 'tr' ? "Tarih/Saat,Kullanici,Olay,Detay\r\n" : "Date/Time,User,Event,Detail\r\n");
-                logs.forEach(row => {
-                    let detail = row.detail.replace(/"/g, '""');
-                    csvContent += `"${row.time}","${row.username}","${row.action}","${detail}"\r\n`;
-                });
-                filename = "droppool_logs_" + new Date().toISOString().split('T')[0] + ".csv";
-            }
-            
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         loadData();
