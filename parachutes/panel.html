@@ -213,6 +213,18 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Logs & Data -->
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium" data-i18n="res3Title">3. İstatistik ve Geçmiş Merkezi</label>
+                        <p class="text-xs text-gray-500 mb-1" data-i18n="res3Desc">Bu linki OBS'te "Görünüm -> Yuvalar -> Özel Tarayıcı Yuvaları" kısmına ekleyip paneli OBS içine gömebilirsiniz.</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="logsUrl" readonly class="flex-1 bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-cyan-400 font-mono text-sm focus:outline-none">
+                            <button type="button" onclick="copyToClipboard('logsUrl')" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors whitespace-nowrap">
+                                <span data-i18n="copy">Kopyala</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -253,6 +265,8 @@
             res1Desc: { tr: 'Bu linki OBS\'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak ekleyin (Önerilen: 1920x1080).', en: 'Add this link to OBS as a new "Browser" source (Recommended: 1920x1080).' },
             res2Title: { tr: "2. Sıralama Ekranı", en: "2. Leaderboard Screen" },
             res2Desc: { tr: "Bu linki OBS'te ekleyip ekranın uygun bir köşesine yerleştirin.", en: "Add this link to OBS and place it in a suitable corner." },
+            res3Title: { tr: "3. İstatistik ve Geçmiş Merkezi", en: "3. Stats & History Center" },
+            res3Desc: { tr: "Bu linki OBS'te 'Görünüm -> Yuvalar -> Özel Tarayıcı Yuvaları' kısmına ekleyip paneli OBS içine gömebilirsiniz.", en: "Add this link to OBS via 'View -> Docks -> Custom Browser Docks' to embed the panel into OBS." },
             copy: { tr: "Kopyala", en: "Copy" },
             contact: { tr: "İletişim:", en: "Contact:" },
             dev: { tr: "CrossWeq tarafından geliştirilmiştir.", en: "Developed by CrossWeq." },
@@ -641,6 +655,7 @@
             // Lokal dosya sisteminde çalışması için .html uzantıları gereklidir
             document.getElementById('overlayUrl').value = `${baseUrl}/index.html?${overlayParams.toString()}`;
             document.getElementById('leaderboardUrl').value = `${baseUrl}/siralama.html?${lbParams.toString()}`;
+            document.getElementById('logsUrl').value = `${baseUrl}/log.html`;
 
             // Show results (otomatik scroll yok, kullanıcı isterse aşağı kayar)
             document.getElementById('resultSection').classList.remove('hidden');
