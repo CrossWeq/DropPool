@@ -414,6 +414,13 @@
                 input.addEventListener('input', function(e) {
                     e.target.setCustomValidity('');
                 });
+                // Enter tuşuna basıldığında formu göndermek yerine text kutusundan çık (blur)
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.blur();
+                    }
+                });
             });
         });
 
