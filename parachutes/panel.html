@@ -106,7 +106,7 @@
         </div>
         
         <div class="absolute top-6 right-6 flex gap-3 z-20">
-            <button type="button" onclick="window.open('log.html', '_blank')" class="bg-indigo-600/20 border border-indigo-500/50 text-indigo-400 font-medium py-2 px-4 rounded-xl hover:bg-indigo-600/40 transition-colors shadow-lg flex items-center gap-2" title="Log/Geçmiş Görüntüle">
+            <button type="button" onclick="window.open('log.html', '_blank')" class="bg-black/40 border border-gray-700/50 text-white font-medium py-2 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg flex items-center gap-2" title="Log/Geçmiş Görüntüle">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 <span class="hidden sm:inline">Geçmiş</span>
             </button>
@@ -286,6 +286,13 @@
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
                 </ul>
 
+                <h3 class="text-lg font-semibold text-white mt-4">📊 İstatistik ve Geçmiş Merkezi</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li>Sağ üstteki <strong>Geçmiş</strong> butonuna tıklayarak ayrı bir sekmede İstatistik Merkezini açabilirsiniz.</li>
+                    <li>Oyuncu İstatistikleri sekmesinden kimin kaç kez atladığını ve rekor puanlarını listeleyebilir, arama yapabilirsiniz.</li>
+                    <li>Sağ taraftaki <strong>Tüm Zamanların Top 10'u</strong> tablosunu ve Canlı Olay Akışı sekmesinden geçmişte olan tüm tetiklemeleri görebilirsiniz.</li>
+                </ul>
+
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
                     <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler <code>${cmd}</code> yazdığında sıraya girer. Yayıncı atlama komutunu (<code>${cmd}</code>) yazdığında hem kendisi de sıraya eklenir hem de devasa bir uçak anında kalkar, sıradaki herkes aynı anda uçağın altından atlar.</li>
@@ -313,6 +320,13 @@
                     <li><strong>Random Drop:</strong> Typing <code>${cmd} random</code> will randomly select and apply one of the normal, dive, drunk, tarzan, or fake modes.</li>
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
+                </ul>
+
+                <h3 class="text-lg font-semibold text-white mt-4">📊 Stats & History Center</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li>Click the <strong>Geçmiş (Logs)</strong> button at the top right to open the Stats Center in a new tab.</li>
+                    <li>On the Player Stats tab, you can search and see the total jump count and record scores of all viewers.</li>
+                    <li>You can also view the <strong>All-Time Top 10 Leaderboard</strong> and check every past event via the Live Event Log tab.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
