@@ -1239,28 +1239,28 @@
                                     customEmoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
                                 }
                                 
-                                if (isDiveCommand) {
-                                    // Dalış modu (helikopter)
-                                    triggerHelicopterDrop(username, customEmoteUrl);
-                                } else {
-                                    // Normal, drunk veya tarzan atlama modu
-                                    if (isDropTogetherMode) {
-                                        if (username.toLowerCase() === channelName.toLowerCase()) {
-                                            // Yayıncı atlarsa uçağı tetikle ve modu kapat
-                                            isDropTogetherMode = false;
-                                            if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: isDrunkCommand, isTarzan: isTarzanCommand, isFake: isFakeCommand });
-                                            }
-                                            triggerPlaneDrop();
-                                        } else {
-                                            // İzleyici atlarsa sıraya ekle
-                                            if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                                                dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: isDrunkCommand, isTarzan: isTarzanCommand, isFake: isFakeCommand });
-                                                console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
-                                            } else {
-                                                console.log(`[DropPool] ${username} zaten sırada.`);
-                                            }
+                                if (isDropTogetherMode) {
+                                    // Toplu atlayışta dive dahil tüm özel komutlar yoksayılır ve default atlayış yapılır. (Emote hariç)
+                                    if (username.toLowerCase() === channelName.toLowerCase()) {
+                                        // Yayıncı atlarsa uçağı tetikle ve modu kapat
+                                        isDropTogetherMode = false;
+                                        if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                                            dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
                                         }
+                                        triggerPlaneDrop();
+                                    } else {
+                                        // İzleyici atlarsa sıraya ekle (isDrunk, isTarzan, isFake her zaman false)
+                                        if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                                            dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
+                                            console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
+                                        } else {
+                                            console.log(`[DropPool] ${username} zaten sırada.`);
+                                        }
+                                    }
+                                } else {
+                                    if (isDiveCommand) {
+                                        // Dalış modu (helikopter)
+                                        triggerHelicopterDrop(username, customEmoteUrl);
                                     } else {
                                         // Normal, drunk, tarzan veya fake modda doğrudan düşür
                                         spawnCharacter(username, customEmoteUrl, null, -50, false, isDrunkCommand, isTarzanCommand, isFakeCommand);
