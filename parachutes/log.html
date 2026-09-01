@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DropPool İstatistik & Geçmiş</title>
+    <title>DropPool Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -19,32 +19,37 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-7xl mx-auto">
+    <!-- Language Toggle Button -->
+    <div class="fixed top-6 right-6 z-50">
+        <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/50 text-white font-bold py-2 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg">ENG</button>
+    </div>
+
+    <div class="max-w-7xl mx-auto mt-4">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 pr-20">
             <div>
                 <h1 class="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
                     <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    DropPool İstatistik Merkezi
+                    <span data-i18n="title">DropPool İstatistik Merkezi</span>
                 </h1>
-                <p class="text-gray-400 mt-2 text-sm">Tüm zamanların oyuncu istatistikleri ve anlık olay geçmişi.</p>
+                <p class="text-gray-400 mt-2 text-sm" data-i18n="desc">Tüm zamanların oyuncu istatistikleri ve anlık olay geçmişi.</p>
             </div>
             
             <div class="flex gap-3">
                 <button onclick="exportToCSV()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-lg flex items-center gap-2 text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Excel/CSV İndir
+                    <span data-i18n="exportBtn">Excel/CSV İndir</span>
                 </button>
                 <button onclick="clearAllData()" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
-                    Tüm Verileri Sıfırla
+                    <span data-i18n="clearBtn">Tüm Verileri Sıfırla</span>
                 </button>
             </div>
         </div>
 
         <!-- Tabs -->
         <div class="flex border-b border-gray-800 mb-8">
-            <button onclick="switchTab('statsTab')" id="btn-statsTab" class="tab-btn active px-6 py-3 font-semibold text-sm border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors">Oyuncu İstatistikleri</button>
-            <button onclick="switchTab('logsTab')" id="btn-logsTab" class="tab-btn px-6 py-3 font-semibold text-sm border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors">Canlı Olay Akışı (Log)</button>
+            <button onclick="switchTab('statsTab')" id="btn-statsTab" class="tab-btn active px-6 py-3 font-semibold text-sm border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors" data-i18n="tabStats">Oyuncu İstatistikleri</button>
+            <button onclick="switchTab('logsTab')" id="btn-logsTab" class="tab-btn px-6 py-3 font-semibold text-sm border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors" data-i18n="tabLogs">Canlı Olay Akışı (Log)</button>
         </div>
 
         <!-- STATS TAB -->
@@ -54,7 +59,7 @@
                 <div class="lg:col-span-2">
                     <div class="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl flex flex-col h-[600px]">
                         <div class="p-4 border-b border-gray-800 bg-black/20 flex justify-between items-center">
-                            <h2 class="text-lg font-bold text-white">Tüm Oyuncular</h2>
+                            <h2 class="text-lg font-bold text-white" data-i18n="allPlayers">Tüm Oyuncular</h2>
                             <div class="relative w-64">
                                 <input type="text" id="searchInput" onkeyup="filterStats()" placeholder="Kullanıcı Ara..." class="w-full bg-black/40 border border-gray-700/50 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:border-indigo-500 text-sm text-white">
                                 <svg class="w-4 h-4 text-gray-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -64,9 +69,9 @@
                             <table class="w-full text-left border-collapse">
                                 <thead class="sticky top-0 bg-gray-900 border-b border-gray-800 z-10">
                                     <tr class="text-xs uppercase tracking-wider text-gray-400">
-                                        <th class="px-6 py-4 font-semibold">Kullanıcı Adı</th>
-                                        <th class="px-6 py-4 font-semibold text-center">Toplam Atlayış</th>
-                                        <th class="px-6 py-4 font-semibold text-right">Rekor Puan</th>
+                                        <th class="px-6 py-4 font-semibold" data-i18n="thUser">Kullanıcı Adı</th>
+                                        <th class="px-6 py-4 font-semibold text-center" data-i18n="thJumps">Toplam Atlayış</th>
+                                        <th class="px-6 py-4 font-semibold text-right" data-i18n="thScore">Rekor Puan</th>
                                     </tr>
                                 </thead>
                                 <tbody id="statsTableBody" class="divide-y divide-gray-800/50 text-sm">
@@ -74,7 +79,7 @@
                                 </tbody>
                             </table>
                             <div id="statsEmpty" class="hidden py-16 text-center">
-                                <p class="text-gray-500 font-medium">Henüz istatistik bulunmuyor.</p>
+                                <p class="text-gray-500 font-medium" data-i18n="noStats">Henüz istatistik bulunmuyor.</p>
                             </div>
                         </div>
                     </div>
@@ -84,7 +89,7 @@
                 <div class="lg:col-span-1">
                     <div class="bg-gradient-to-b from-indigo-900/40 to-gray-900/50 border border-indigo-500/20 rounded-2xl overflow-hidden backdrop-blur-xl h-full flex flex-col">
                         <div class="p-5 border-b border-indigo-500/20 bg-black/20 flex flex-col items-center justify-center gap-2 text-center">
-                            <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">Tüm Zamanların Top 10'u</h2>
+                            <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200" data-i18n="top10">Tüm Zamanların Top 10'u</h2>
                         </div>
                         <div class="p-4 flex-1 overflow-y-auto">
                             <ul id="top10List" class="space-y-2">
@@ -100,23 +105,23 @@
         <div id="logsTab" class="tab-content">
             <div class="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl h-[600px] flex flex-col">
                 <div class="p-4 border-b border-gray-800 bg-black/20">
-                    <p class="text-sm text-gray-400">Sadece son 500 olay (Zaman Tüneli)</p>
+                    <p class="text-sm text-gray-400" data-i18n="logLimit">Sadece son 500 olay (Zaman Tüneli)</p>
                 </div>
                 <div class="overflow-y-auto flex-1">
                     <table class="w-full text-left border-collapse">
                         <thead class="sticky top-0 bg-gray-900 border-b border-gray-800 z-10">
                             <tr class="text-xs uppercase tracking-wider text-gray-400">
-                                <th class="px-6 py-4 font-semibold">Tarih / Saat</th>
-                                <th class="px-6 py-4 font-semibold">Kullanıcı</th>
-                                <th class="px-6 py-4 font-semibold">Olay</th>
-                                <th class="px-6 py-4 font-semibold">Detay</th>
+                                <th class="px-6 py-4 font-semibold" data-i18n="thDate">Tarih / Saat</th>
+                                <th class="px-6 py-4 font-semibold" data-i18n="thUser">Kullanıcı</th>
+                                <th class="px-6 py-4 font-semibold" data-i18n="thAction">Olay</th>
+                                <th class="px-6 py-4 font-semibold" data-i18n="thDetail">Detay</th>
                             </tr>
                         </thead>
                         <tbody id="logTableBody" class="divide-y divide-gray-800/50 text-sm">
                         </tbody>
                     </table>
                     <div id="emptyState" class="hidden py-16 text-center">
-                        <p class="text-gray-500 font-medium">Henüz hiçbir kayıt yok.</p>
+                        <p class="text-gray-500 font-medium" data-i18n="noLogs">Henüz hiçbir kayıt yok.</p>
                     </div>
                 </div>
             </div>
@@ -125,6 +130,56 @@
     </div>
 
     <script>
+        const i18n = {
+            title: { tr: "DropPool İstatistik Merkezi", en: "DropPool Stats Center" },
+            desc: { tr: "Tüm zamanların oyuncu istatistikleri ve anlık olay geçmişi.", en: "All-time player statistics and live event history." },
+            exportBtn: { tr: "Excel/CSV İndir", en: "Export CSV" },
+            clearBtn: { tr: "Tüm Verileri Sıfırla", en: "Reset All Data" },
+            tabStats: { tr: "Oyuncu İstatistikleri", en: "Player Stats" },
+            tabLogs: { tr: "Canlı Olay Akışı (Log)", en: "Live Event Log" },
+            allPlayers: { tr: "Tüm Oyuncular", en: "All Players" },
+            thUser: { tr: "Kullanıcı Adı", en: "Username" },
+            thJumps: { tr: "Toplam Atlayış", en: "Total Jumps" },
+            thScore: { tr: "Rekor Puan", en: "Best Score" },
+            noStats: { tr: "Henüz istatistik bulunmuyor.", en: "No statistics available yet." },
+            top10: { tr: "Tüm Zamanların Top 10'u", en: "All-Time Top 10" },
+            logLimit: { tr: "Sadece son 500 olay (Zaman Tüneli)", en: "Only last 500 events (Timeline)" },
+            thDate: { tr: "Tarih / Saat", en: "Date / Time" },
+            thAction: { tr: "Olay", en: "Event" },
+            thDetail: { tr: "Detay", en: "Detail" },
+            noLogs: { tr: "Henüz hiçbir kayıt yok.", en: "No logs available yet." },
+            searchPlaceholder: { tr: "Kullanıcı Ara...", en: "Search user..." },
+            confirmClear: { tr: "TÜM İSTATİSTİKLERİ VE GEÇMİŞİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? (Atlayış sayıları ve rekorlar dahil her şey sıfırlanır!)", en: "ARE YOU SURE YOU WANT TO CLEAR ALL STATS AND HISTORY? (Everything including jump counts and records will be reset!)" },
+            alertNoData: { tr: "Dışa aktarılacak kayıt yok.", en: "No data to export." },
+            badges: {
+                JUMP: { tr: 'ATLAYIŞ', en: 'JUMP' },
+                SCORE: { tr: 'PUAN', en: 'SCORE' },
+                SYSTEM: { tr: 'SİSTEM', en: 'SYSTEM' }
+            }
+        };
+
+        let lang = 'tr';
+
+        function toggleLang() {
+            lang = lang === 'tr' ? 'en' : 'tr';
+            document.getElementById('langBtn').innerText = lang === 'tr' ? 'ENG' : 'TR';
+            
+            // Update static text
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[key]) {
+                    el.innerText = i18n[key][lang];
+                }
+            });
+
+            // Update placeholders
+            document.getElementById('searchInput').placeholder = i18n.searchPlaceholder[lang];
+
+            // Re-render data to translate dynamic contents (badges, empty states)
+            renderLogs();
+            renderStats();
+        }
+
         const syncChannel = new BroadcastChannel('droppool_channel');
         let logs = [];
         let statsData = {};
@@ -138,13 +193,11 @@
         }
 
         function loadData() {
-            // Load logs
             try {
                 const l = localStorage.getItem('droppool_logs');
                 logs = l ? JSON.parse(l) : [];
             } catch (e) { logs = []; }
             
-            // Load stats
             try {
                 const s = localStorage.getItem('droppool_stats');
                 statsData = s ? JSON.parse(s) : {};
@@ -167,19 +220,28 @@
             for (let i = logs.length - 1; i >= 0; i--) {
                 const log = logs[i];
                 let actionBadge = '';
-                if(log.action === 'ATLAYIŞ') actionBadge = '<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-md text-xs font-bold">ATLAYIŞ</span>';
-                else if(log.action === 'PUAN') actionBadge = '<span class="bg-green-500/10 text-green-400 border border-green-500/20 px-2.5 py-1 rounded-md text-xs font-bold">PUAN</span>';
-                else if(log.action === 'SİSTEM') actionBadge = '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-md text-xs font-bold">SİSTEM</span>';
-                else actionBadge = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-md text-xs font-bold">${log.action}</span>`;
+                
+                if(log.action === 'ATLAYIŞ') {
+                    actionBadge = \`<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-md text-xs font-bold">\${i18n.badges.JUMP[lang]}</span>\`;
+                }
+                else if(log.action === 'PUAN') {
+                    actionBadge = \`<span class="bg-green-500/10 text-green-400 border border-green-500/20 px-2.5 py-1 rounded-md text-xs font-bold">\${i18n.badges.SCORE[lang]}</span>\`;
+                }
+                else if(log.action === 'SİSTEM') {
+                    actionBadge = \`<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-md text-xs font-bold">\${i18n.badges.SYSTEM[lang]}</span>\`;
+                }
+                else {
+                    actionBadge = \`<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-md text-xs font-bold">\${log.action}</span>\`;
+                }
 
-                html += `
+                html += \`
                     <tr class="hover:bg-white/5 transition-colors group">
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">${log.time}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${log.username}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${actionBadge}</td>
-                        <td class="px-6 py-4 text-gray-300 max-w-md truncate">${log.detail}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">\${log.time}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">\${log.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">\${actionBadge}</td>
+                        <td class="px-6 py-4 text-gray-300 max-w-md truncate">\${log.detail}</td>
                     </tr>
-                `;
+                \`;
             }
             tbody.innerHTML = html;
         }
@@ -192,13 +254,13 @@
             const users = Object.values(statsData);
             if(users.length === 0) {
                 tbody.innerHTML = '';
-                top10.innerHTML = '<li class="text-gray-500 text-center py-4 text-sm">Kayıt yok</li>';
+                top10.innerHTML = \`<li class="text-gray-500 text-center py-4 text-sm">\${i18n.noLogs[lang]}</li>\`;
                 empty.classList.remove('hidden');
                 return;
             }
             empty.classList.add('hidden');
 
-            // --- Top 10 Liderlik Tablosu ---
+            // --- Top 10 ---
             const sortedByScore = [...users].sort((a,b) => b.maxScore - a.maxScore).slice(0, 10);
             let top10Html = '';
             sortedByScore.forEach((u, index) => {
@@ -208,7 +270,7 @@
                 if(index === 1) { medal = '🥈'; bgClass = 'bg-gray-300/20 border-gray-300/30 border hover:bg-gray-300/30'; }
                 if(index === 2) { medal = '🥉'; bgClass = 'bg-orange-600/20 border-orange-600/30 border hover:bg-orange-600/30'; }
                 
-                top10Html += `
+                top10Html += \`
                     <li class="flex justify-between items-center px-4 py-3 rounded-xl transition-colors \${bgClass}">
                         <div class="flex items-center gap-3">
                             <span class="font-bold text-lg w-7 text-center \${index<3?'text-white':'text-gray-500'}">\${medal}</span>
@@ -216,27 +278,25 @@
                         </div>
                         <span class="font-bold text-green-400">\${u.maxScore.toFixed(2)}</span>
                     </li>
-                `;
+                \`;
             });
             top10.innerHTML = top10Html;
 
-            // --- Tüm Kullanıcılar Tablosu ---
-            // Arama filtresi
+            // --- All Users Table ---
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filteredUsers = users.filter(u => u.username.toLowerCase().includes(query));
             
-            // Atlayış sayısına göre sırala (Varsayılan olarak en çok atlayan üstte)
             filteredUsers.sort((a,b) => b.jumps - a.jumps);
             
             let statsHtml = '';
             filteredUsers.forEach(u => {
-                statsHtml += `
+                statsHtml += \`
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-white">\${u.username}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-blue-400 font-bold">\${u.jumps}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-green-400 font-bold">\${u.maxScore.toFixed(2)}</td>
                     </tr>
-                `;
+                \`;
             });
             tbody.innerHTML = statsHtml;
         }
@@ -268,7 +328,7 @@
         });
 
         function clearAllData() {
-            if(confirm("TÜM İSTATİSTİKLERİ VE GEÇMİŞİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? (Atlayış sayıları ve rekorlar dahil her şey sıfırlanır!)")) {
+            if(confirm(i18n.confirmClear[lang])) {
                 logs = [];
                 statsData = {};
                 localStorage.removeItem('droppool_logs');
@@ -280,25 +340,32 @@
         }
 
         function exportToCSV() {
-            // Aktif sekmeye göre csv oluştur
             const isStatsActive = document.getElementById('statsTab').classList.contains('active');
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
             let filename = "";
 
             if(isStatsActive) {
-                csvContent += "Kullanici Adi,Toplam Atlayis,Rekor Puan\r\n";
+                if(Object.keys(statsData).length === 0) {
+                    alert(i18n.alertNoData[lang]);
+                    return;
+                }
+                csvContent += (lang === 'tr' ? "Kullanici Adi,Toplam Atlayis,Rekor Puan\r\n" : "Username,Total Jumps,Best Score\r\n");
                 const users = Object.values(statsData);
                 users.forEach(u => {
-                    csvContent += `"\${u.username}","\${u.jumps}","\${u.maxScore.toFixed(2)}"\r\n`;
+                    csvContent += \`"\${u.username}","\${u.jumps}","\${u.maxScore.toFixed(2)}"\r\n\`;
                 });
-                filename = "droppool_istatistik_" + new Date().toISOString().split('T')[0] + ".csv";
+                filename = "droppool_data_" + new Date().toISOString().split('T')[0] + ".csv";
             } else {
-                csvContent += "Tarih/Saat,Kullanici,Olay,Detay\r\n";
+                if(logs.length === 0) {
+                    alert(i18n.alertNoData[lang]);
+                    return;
+                }
+                csvContent += (lang === 'tr' ? "Tarih/Saat,Kullanici,Olay,Detay\r\n" : "Date/Time,User,Event,Detail\r\n");
                 logs.forEach(row => {
                     let detail = row.detail.replace(/"/g, '""');
-                    csvContent += `"\${row.time}","\${row.username}","\${row.action}","\${detail}"\r\n`;
+                    csvContent += \`"\${row.time}","\${row.username}","\${row.action}","\${detail}"\r\n\`;
                 });
-                filename = "droppool_gecmis_" + new Date().toISOString().split('T')[0] + ".csv";
+                filename = "droppool_logs_" + new Date().toISOString().split('T')[0] + ".csv";
             }
             
             var encodedUri = encodeURI(csvContent);
