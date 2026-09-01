@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropPool İstatistik & Geçmiş</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'] } } }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0f1c; color: #f8fafc; min-height: 100vh; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+                    <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    DropPool İstatistik Merkezi
+                </h1>
+                <p class="text-gray-400 mt-2 text-sm">Tüm zamanların oyuncu istatistikleri ve anlık olay geçmişi.</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="exportToCSV()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-lg flex items-center gap-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Excel/CSV İndir
+                </button>
+                <button onclick="clearAllData()" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
+                    Tüm Verileri Sıfırla
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-800 mb-8">
+            <button onclick="switchTab('statsTab')" id="btn-statsTab" class="tab-btn active px-6 py-3 font-semibold text-sm border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors">Oyuncu İstatistikleri</button>
+            <button onclick="switchTab('logsTab')" id="btn-logsTab" class="tab-btn px-6 py-3 font-semibold text-sm border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors">Canlı Olay Akışı (Log)</button>
+        </div>
+
+        <!-- STATS TAB -->
+        <div id="statsTab" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left: All Users Table -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl flex flex-col h-[600px]">
+                        <div class="p-4 border-b border-gray-800 bg-black/20 flex justify-between items-center">
+                            <h2 class="text-lg font-bold text-white">Tüm Oyuncular</h2>
+                            <div class="relative w-64">
+                                <input type="text" id="searchInput" onkeyup="filterStats()" placeholder="Kullanıcı Ara..." class="w-full bg-black/40 border border-gray-700/50 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:border-indigo-500 text-sm text-white">
+                                <svg class="w-4 h-4 text-gray-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                        </div>
+                        <div class="overflow-y-auto flex-1">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-gray-900 border-b border-gray-800 z-10">
+                                    <tr class="text-xs uppercase tracking-wider text-gray-400">
+                                        <th class="px-6 py-4 font-semibold">Kullanıcı Adı</th>
+                                        <th class="px-6 py-4 font-semibold text-center">Toplam Atlayış</th>
+                                        <th class="px-6 py-4 font-semibold text-right">Rekor Puan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statsTableBody" class="divide-y divide-gray-800/50 text-sm">
+                                    <!-- JS populated -->
+                                </tbody>
+                            </table>
+                            <div id="statsEmpty" class="hidden py-16 text-center">
+                                <p class="text-gray-500 font-medium">Henüz istatistik bulunmuyor.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Top 10 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gradient-to-b from-indigo-900/40 to-gray-900/50 border border-indigo-500/20 rounded-2xl overflow-hidden backdrop-blur-xl h-full flex flex-col">
+                        <div class="p-5 border-b border-indigo-500/20 bg-black/20 flex items-center gap-3">
+                            <span class="text-2xl">👑</span>
+                            <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">Tüm Zamanların Top 10'u</h2>
+                        </div>
+                        <div class="p-4 flex-1 overflow-y-auto">
+                            <ul id="top10List" class="space-y-2">
+                                <!-- JS populated -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGS TAB -->
+        <div id="logsTab" class="tab-content">
+            <div class="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl h-[600px] flex flex-col">
+                <div class="p-4 border-b border-gray-800 bg-black/20">
+                    <p class="text-sm text-gray-400">Sadece son 500 olay (Zaman Tüneli)</p>
+                </div>
+                <div class="overflow-y-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-gray-900 border-b border-gray-800 z-10">
+                            <tr class="text-xs uppercase tracking-wider text-gray-400">
+                                <th class="px-6 py-4 font-semibold">Tarih / Saat</th>
+                                <th class="px-6 py-4 font-semibold">Kullanıcı</th>
+                                <th class="px-6 py-4 font-semibold">Olay</th>
+                                <th class="px-6 py-4 font-semibold">Detay</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody" class="divide-y divide-gray-800/50 text-sm">
+                        </tbody>
+                    </table>
+                    <div id="emptyState" class="hidden py-16 text-center">
+                        <p class="text-gray-500 font-medium">Henüz hiçbir kayıt yok.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const syncChannel = new BroadcastChannel('droppool_channel');
+        let logs = [];
+        let statsData = {};
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+
+        function loadData() {
+            // Load logs
+            try {
+                const l = localStorage.getItem('droppool_logs');
+                logs = l ? JSON.parse(l) : [];
+            } catch (e) { logs = []; }
+            
+            // Load stats
+            try {
+                const s = localStorage.getItem('droppool_stats');
+                statsData = s ? JSON.parse(s) : {};
+            } catch (e) { statsData = {}; }
+
+            renderLogs();
+            renderStats();
+        }
+
+        function renderLogs() {
+            const tbody = document.getElementById('logTableBody');
+            const emptyState = document.getElementById('emptyState');
+            if (logs.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            let html = '';
+            for (let i = logs.length - 1; i >= 0; i--) {
+                const log = logs[i];
+                let actionBadge = '';
+                if(log.action === 'ATLAYIŞ') actionBadge = '<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-md text-xs font-bold">ATLAYIŞ</span>';
+                else if(log.action === 'PUAN') actionBadge = '<span class="bg-green-500/10 text-green-400 border border-green-500/20 px-2.5 py-1 rounded-md text-xs font-bold">PUAN</span>';
+                else if(log.action === 'SİSTEM') actionBadge = '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-md text-xs font-bold">SİSTEM</span>';
+                else actionBadge = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-md text-xs font-bold">${log.action}</span>`;
+
+                html += `
+                    <tr class="hover:bg-white/5 transition-colors group">
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">${log.time}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${log.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${actionBadge}</td>
+                        <td class="px-6 py-4 text-gray-300 max-w-md truncate">${log.detail}</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderStats() {
+            const tbody = document.getElementById('statsTableBody');
+            const empty = document.getElementById('statsEmpty');
+            const top10 = document.getElementById('top10List');
+            
+            const users = Object.values(statsData);
+            if(users.length === 0) {
+                tbody.innerHTML = '';
+                top10.innerHTML = '<li class="text-gray-500 text-center py-4 text-sm">Kayıt yok</li>';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            // --- Top 10 Liderlik Tablosu ---
+            const sortedByScore = [...users].sort((a,b) => b.maxScore - a.maxScore).slice(0, 10);
+            let top10Html = '';
+            sortedByScore.forEach((u, index) => {
+                let medal = \`\${index+1}.\`;
+                let bgClass = 'bg-white/5 hover:bg-white/10';
+                if(index === 0) { medal = '🥇'; bgClass = 'bg-yellow-500/20 border-yellow-500/30 border hover:bg-yellow-500/30'; }
+                if(index === 1) { medal = '🥈'; bgClass = 'bg-gray-300/20 border-gray-300/30 border hover:bg-gray-300/30'; }
+                if(index === 2) { medal = '🥉'; bgClass = 'bg-orange-600/20 border-orange-600/30 border hover:bg-orange-600/30'; }
+                
+                top10Html += `
+                    <li class="flex justify-between items-center px-4 py-3 rounded-xl transition-colors \${bgClass}">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg w-7 text-center \${index<3?'text-white':'text-gray-500'}">\${medal}</span>
+                            <span class="font-medium text-white">\${u.username}</span>
+                        </div>
+                        <span class="font-bold text-green-400">\${u.maxScore.toFixed(2)}</span>
+                    </li>
+                `;
+            });
+            top10.innerHTML = top10Html;
+
+            // --- Tüm Kullanıcılar Tablosu ---
+            // Arama filtresi
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filteredUsers = users.filter(u => u.username.toLowerCase().includes(query));
+            
+            // Atlayış sayısına göre sırala (Varsayılan olarak en çok atlayan üstte)
+            filteredUsers.sort((a,b) => b.jumps - a.jumps);
+            
+            let statsHtml = '';
+            filteredUsers.forEach(u => {
+                statsHtml += `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">\${u.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-blue-400 font-bold">\${u.jumps}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-green-400 font-bold">\${u.maxScore.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = statsHtml;
+        }
+
+        function filterStats() {
+            renderStats();
+        }
+
+        syncChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'NEW_LOG') {
+                logs.push(event.data.log);
+                if (logs.length > 500) logs = logs.slice(logs.length - 500);
+                if(document.getElementById('logsTab').classList.contains('active')) renderLogs();
+            } else if (event.data && event.data.type === 'STATS_UPDATE') {
+                statsData = event.data.stats;
+                if(document.getElementById('statsTab').classList.contains('active')) renderStats();
+            } else if (event.data && event.data.type === 'CLEAR_LOGS') {
+                logs = [];
+                statsData = {};
+                renderLogs();
+                renderStats();
+            }
+        };
+
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'droppool_logs' || event.key === 'droppool_stats') {
+                loadData();
+            }
+        });
+
+        function clearAllData() {
+            if(confirm("TÜM İSTATİSTİKLERİ VE GEÇMİŞİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? (Atlayış sayıları ve rekorlar dahil her şey sıfırlanır!)")) {
+                logs = [];
+                statsData = {};
+                localStorage.removeItem('droppool_logs');
+                localStorage.removeItem('droppool_stats');
+                syncChannel.postMessage({ type: 'CLEAR_LOGS' });
+                renderLogs();
+                renderStats();
+            }
+        }
+
+        function exportToCSV() {
+            // Aktif sekmeye göre csv oluştur
+            const isStatsActive = document.getElementById('statsTab').classList.contains('active');
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            let filename = "";
+
+            if(isStatsActive) {
+                csvContent += "Kullanici Adi,Toplam Atlayis,Rekor Puan\r\n";
+                const users = Object.values(statsData);
+                users.forEach(u => {
+                    csvContent += `"\${u.username}","\${u.jumps}","\${u.maxScore.toFixed(2)}"\r\n`;
+                });
+                filename = "droppool_istatistik_" + new Date().toISOString().split('T')[0] + ".csv";
+            } else {
+                csvContent += "Tarih/Saat,Kullanici,Olay,Detay\r\n";
+                logs.forEach(row => {
+                    let detail = row.detail.replace(/"/g, '""');
+                    csvContent += `"\${row.time}","\${row.username}","\${row.action}","\${detail}"\r\n`;
+                });
+                filename = "droppool_gecmis_" + new Date().toISOString().split('T')[0] + ".csv";
+            }
+            
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

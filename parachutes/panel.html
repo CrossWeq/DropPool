@@ -106,6 +106,10 @@
         </div>
         
         <div class="absolute top-6 right-6 flex gap-3 z-20">
+            <button type="button" onclick="window.open('log.html', '_blank')" class="bg-indigo-600/20 border border-indigo-500/50 text-indigo-400 font-medium py-2 px-4 rounded-xl hover:bg-indigo-600/40 transition-colors shadow-lg flex items-center gap-2" title="Log/Geçmiş Görüntüle">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="hidden sm:inline">Geçmiş</span>
+            </button>
             <button type="button" onclick="toggleHelpModal()" class="w-10 h-10 bg-black/40 border border-gray-700/50 text-white font-bold rounded-xl hover:bg-white/10 transition-colors shadow-lg flex items-center justify-center">?</button>
             <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/50 text-white font-bold py-2 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg">ENG</button>
         </div>
@@ -118,6 +122,7 @@
                     <label class="text-sm font-medium text-gray-300" data-i18n="channel">Kick Kanal Adı</label>
                     <input type="text" id="channelInput" placeholder="Örn: crossweq" required
                         class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
+                    <p id="channelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-gray-300" data-i18n="cmd">Tetikleyici Komut</label>
@@ -397,6 +402,40 @@
                 }
             });
         }
+        async function validateKickChannel(channelName) {
+            if (!channelName) return false;
+            
+            const apiTargets = [
+                `https://kick.com/api/v2/channels/${channelName}`,
+                `https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName)}`,
+                `https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName)}`,
+                `https://api.codetabs.com/v1/proxy?quest=https://kick.com/api/v2/channels/${channelName}`
+            ];
+
+            for (const url of apiTargets) {
+                try {
+                    const ctrl = new AbortController();
+                    const tid = setTimeout(() => ctrl.abort(), 4000);
+                    const res = await fetch(url, { signal: ctrl.signal });
+                    clearTimeout(tid);
+                    
+                    if (res.status === 404) return false;
+                    
+                    const raw = await res.json();
+                    const data = raw.contents ? JSON.parse(raw.contents) : raw;
+                    
+                    if (data && data.user && data.user.username) {
+                        return true;
+                    } else if (data && data.message && data.message.includes("Not Found")) {
+                        return false;
+                    }
+                } catch(e) {
+                    continue;
+                }
+            }
+            // Fallback: If all proxies fail, allow it so we don't block users due to API/CORS issues
+            return true;
+        }
 
         // Setup custom validation messages for inputs on load
         document.addEventListener('DOMContentLoaded', () => {
@@ -421,6 +460,32 @@
                         e.target.blur();
                     }
                 });
+            });
+
+            // Kick Kanal Doğrulama (Blur olduğunda veya Enter'a basıp çıktığında)
+            const channelInput = document.getElementById('channelInput');
+            const channelError = document.getElementById('channelError');
+            
+            channelInput.addEventListener('blur', async function(e) {
+                const val = e.target.value.trim();
+                if (!val) {
+                    channelError.classList.add('hidden');
+                    return;
+                }
+                
+                channelError.innerText = lang === 'tr' ? 'Kanal kontrol ediliyor...' : 'Checking channel...';
+                channelError.classList.remove('hidden', 'text-red-400');
+                channelError.classList.add('text-yellow-400');
+                
+                const exists = await validateKickChannel(val);
+                
+                if (!exists) {
+                    channelError.innerText = lang === 'tr' ? 'Böyle bir Kick kanalı bulunamadı! Harf hatası yapmış olabilirsiniz.' : 'Kick channel not found! Check for typos.';
+                    channelError.classList.remove('text-yellow-400', 'hidden');
+                    channelError.classList.add('text-red-400');
+                } else {
+                    channelError.classList.add('hidden');
+                }
             });
         });
 

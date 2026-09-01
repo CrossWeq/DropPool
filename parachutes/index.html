@@ -28,11 +28,25 @@
         }
 
         @keyframes heliBobbing {
-            0% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-6px) rotate(1deg); }
-            50% { transform: translateY(0px) rotate(0deg); }
-            75% { transform: translateY(6px) rotate(-1deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-6px) rotate(1deg);
+            }
+
+            50% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            75% {
+                transform: translateY(6px) rotate(-1deg);
+            }
+
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
         }
     </style>
     <!-- Matter.js fizik motoru CDN üzerinden dahil ediliyor -->
@@ -93,7 +107,7 @@
             const activeThemesArr = themes.filter((t, index) => activeThemesIndices.includes(index));
             const listToUse = activeThemesArr.length > 0 ? activeThemesArr : themes;
             const randomTheme = listToUse[Math.floor(Math.random() * listToUse.length)];
-            
+
             if (showBackground) {
                 document.body.style.backgroundImage = `url('${randomTheme.bg}')`;
                 document.body.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
@@ -161,6 +175,66 @@
             syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
             console.log("Atla Sıralaması sıfırlandı!");
         };
+
+        function addDropPoolLog(username, action, detail) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const logEntry = {
+                time: timeString,
+                username: username,
+                action: action,
+                detail: detail
+            };
+            
+            try {
+                let logs = [];
+                const existing = localStorage.getItem('droppool_logs');
+                if (existing) {
+                    logs = JSON.parse(existing);
+                }
+                logs.push(logEntry);
+                
+                if (logs.length > 500) {
+                    logs = logs.slice(logs.length - 500);
+                }
+                
+                localStorage.setItem('droppool_logs', JSON.stringify(logs));
+                syncChannel.postMessage({ type: 'NEW_LOG', log: logEntry });
+            } catch(e) {
+                console.error("Log kaydetme hatası:", e);
+            }
+        }
+
+        function updateDropPoolStats(username, type, score = 0) {
+            try {
+                let stats = {};
+                const existing = localStorage.getItem('droppool_stats');
+                if (existing) {
+                    stats = JSON.parse(existing);
+                }
+                
+                const lowerUser = username.toLowerCase();
+                if (!stats[lowerUser]) {
+                    stats[lowerUser] = { username: username, jumps: 0, maxScore: 0 };
+                } else {
+                    stats[lowerUser].username = username; // Update casing just in case
+                }
+                
+                if (type === 'JUMP') {
+                    stats[lowerUser].jumps += 1;
+                } else if (type === 'SCORE') {
+                    if (score > stats[lowerUser].maxScore) {
+                        stats[lowerUser].maxScore = score;
+                    }
+                }
+                
+                localStorage.setItem('droppool_stats', JSON.stringify(stats));
+                syncChannel.postMessage({ type: 'STATS_UPDATE', stats: stats });
+            } catch(e) {
+                console.error("Stats kaydetme hatası:", e);
+            }
+        }
 
         // --- 2. MATTER.JS KURULUMU ---
         const Engine = Matter.Engine,
@@ -263,12 +337,12 @@
         const charConfigs = [
             // Sadece yeni eklenen karakterler (Test için)
             // Kalp (characterhurt): İstenen orta boyuta getirildi ve biraz aşağı (yOffset: 2) alındı
-            { file: 'characterhurt.png', scale: 0.013, radius: 9, yOffset: 2, nameYOffset: 20 }, 
+            { file: 'characterhurt.png', scale: 0.013, radius: 9, yOffset: 2, nameYOffset: 20 },
             // Köpek (characterdog): 1.2x büyütüldü ve biraz aşağı alındı
             { file: 'characterdog.png', scale: 0.036, radius: 24, yOffset: 3 },
             // Diğer Karakterler
-            { file: 'chracteralien.png', scale: 0.020, radius: 16, yOffset: 0 }, 
-            { file: 'chractercat.png', scale: 0.030, radius: 20, yOffset: -2 }, 
+            { file: 'chracteralien.png', scale: 0.020, radius: 16, yOffset: 0 },
+            { file: 'chractercat.png', scale: 0.030, radius: 20, yOffset: -2 },
             { file: 'chracterchef.png', scale: 0.100, radius: 30, yOffset: 2 },
             // Yeni Eklenen Karakterler
             { file: 'characterfrog.png', scale: 0.053, radius: 36, yOffset: 0 }, // 1.5x büyütüldü
@@ -283,7 +357,7 @@
             img.src = cfg.file;
             charImagesMap[cfg.file] = img;
         });
-        
+
         let jetpackImg = new Image();
         jetpackImg.src = 'jetback.png';
         charImagesMap['jetback.png'] = jetpackImg;
@@ -307,24 +381,24 @@
             let actualSpawnY = spawnY;
             // Rastgele X pozisyonu (kenarlara çok yakın olmasın)
             let randomX = spawnX !== null ? spawnX : (Math.random() * (width - 100) + 50);
-            
+
             let tarzanAnchorX = 0;
             let tarzanAnchorY = -50;
             let tarzanFromLeft = true;
-            
+
             if (isTarzan) {
                 // SARKAÇ MATEMATİĞİ:
                 // Anchor ekranın tam tepesinde, ortada (görünmez nokta)
                 // Karakter ekranın kenarında, orta yükseklikte başlar
                 // Yerçekimi + kısıtlama = karakteri ekranın ortasına doğru fırlatır
                 tarzanFromLeft = Math.random() < 0.5;
-                
+
                 // Anchor: İp hep tam ortadan değil, rastgele sağdan/soldan gelebilsin
                 tarzanAnchorX = (width / 2) + (Math.random() * 600 - 300);
-                
+
                 // İpin en üst noktası tam ekranın en üst noktası olsun
                 tarzanAnchorY = 0;
-                
+
                 // Karakterin başlangıç noktası da daha yukarı alındı ki ip kısa kalmaya devam etsin
                 let baseStartX = tarzanFromLeft ? (width / 4) : (width * 3 / 4);
                 randomX = baseStartX + (Math.random() * 200 - 100);
@@ -337,7 +411,7 @@
             if (customEmoteUrl) {
                 // Emote boyutları 1.5x büyütüldü (radius: 24 -> 36, width/height: 48 -> 72)
                 randomChar = { file: customEmoteUrl, scale: 1, radius: 36, yOffset: 0, nameYOffset: 5, isCustom: true };
-                
+
                 // Animasyonlu emote (GIF/WEBP) desteği için DOM (img) elemanı oluşturuyoruz
                 customDomElement = document.createElement('img');
                 customDomElement.src = customEmoteUrl;
@@ -346,7 +420,7 @@
                 customDomElement.style.width = '72px';
                 customDomElement.style.height = '72px';
                 customDomElement.style.objectFit = 'contain';
-                customDomElement.style.left = '-1000px'; 
+                customDomElement.style.left = '-1000px';
                 customDomElement.style.top = '-1000px';
                 customDomElement.style.transform = 'translate(-50%, -50%)'; // Merkezlemek için
                 customDomElement.style.pointerEvents = 'none';
@@ -394,22 +468,22 @@
                 // Fırlatma hissini (salınımı) güçlendirmek için hız artırıldı
                 const tarzanInitialVx = tarzanFromLeft ? 18 : -18;
                 Body.setVelocity(character, { x: tarzanInitialVx, y: 2 });
-                
+
                 // Tek parça, düz ve sert bir ip constraint'i
                 const tarzanConstraint = Constraint.create({
                     pointA: { x: tarzanAnchorX, y: tarzanAnchorY },
                     bodyB: character,
                     stiffness: 1,
                     damping: 0,
-                    render: { 
-                        visible: true, 
-                        lineWidth: 3, 
-                        strokeStyle: '#8B4513' 
+                    render: {
+                        visible: true,
+                        lineWidth: 3,
+                        strokeStyle: '#8B4513'
                     }
                 });
-                
+
                 Composite.add(world, tarzanConstraint);
-                
+
                 character.plugin.tarzanConstraint = tarzanConstraint;
                 character.plugin.tarzanAnchorX = tarzanAnchorX;
                 character.plugin.tarzanAnchorY = tarzanAnchorY;
@@ -419,7 +493,7 @@
                 character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 600 + (Math.random() * 600);
             } else {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
-                const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass; 
+                const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass;
                 Body.applyForce(character, { x: character.position.x, y: character.position.y }, { x: randomForceX, y: 0 });
             }
         }
@@ -434,7 +508,7 @@
 
                 // Sadece bizim oluşturduğumuz 'karakter' etiketli objeler için işlem yap
                 if (body.label === 'karakter' && body.plugin) {
-                    
+
                     // --- DIVE MODU İÇİN ÖZEL DAVRANIŞ (PARAŞÜT İPTALİ VE HAVADA SPIN) ---
                     if (body.plugin.isDive) {
                         if (!body.plugin.landed) {
@@ -452,26 +526,26 @@
                                 // Rota hesaplama (Sadece bir kez)
                                 if (!body.plugin.fakePathCalculated) {
                                     body.plugin.fakePathCalculated = true;
-                                    
+
                                     let poolCenterX = (typeof pool !== 'undefined' && pool) ? pool.position.x : width / 2;
                                     body.plugin.fakeTargetX = poolCenterX;
                                     body.plugin.fakeTargetY = height - 150; // Paraşüt bırakma noktası
-                                    
+
                                     // Rastgele geliş açısı seç (15 ile 50 derece arası). 75 derece çok uçuk hızlara sebep oluyordu.
                                     let sign = Math.random() < 0.5 ? 1 : -1;
-                                    let angleDeg = Math.random() * 35 + 15; 
+                                    let angleDeg = Math.random() * 35 + 15;
                                     let angleRad = (angleDeg * Math.PI) / 180 * sign;
-                                    
+
                                     let dy = body.plugin.fakeTargetY - (-50); // Toplam dikey yol
                                     let totalDx = Math.tan(angleRad) * dy; // Toplam yatay yol
-                                    
+
                                     // Unfolded (katlanmamış) başlangıç X noktası
                                     let unfoldedStartX = poolCenterX - totalDx;
-                                    
+
                                     body.plugin.fakeUnfoldedStartX = unfoldedStartX;
                                     body.plugin.fakeTargetUnfoldedX = poolCenterX;
                                     body.plugin.fakeStartY = -50;
-                                    
+
                                     // Gerçek (katlanmış) başlangıç noktasını bul ve karakteri oraya ışınla
                                     let wallLeft = 50;
                                     let wallRight = width - 50;
@@ -480,9 +554,9 @@
                                     let normalizedUnfolded = unfoldedStartX - wallLeft;
                                     let mod = ((normalizedUnfolded % period) + period) % period;
                                     let actualStartX = wallLeft + (mod > innerWidth ? period - mod : mod);
-                                    
+
                                     Matter.Body.setPosition(body, { x: actualStartX, y: -50 });
-                                    
+
                                     // İlk sallantıyı engellemek için başlangıç X hızını anında hedef hıza eşitleyelim
                                     let initialBaseVx = ((poolCenterX - unfoldedStartX) / dy) * body.velocity.y;
                                     let initialTargetVx = mod > innerWidth ? -initialBaseVx : initialBaseVx;
@@ -492,9 +566,9 @@
                                 // İdeal diagonal X noktası (katlanmış uzayda)
                                 let progress = (body.position.y - body.plugin.fakeStartY) / (body.plugin.fakeTargetY - body.plugin.fakeStartY);
                                 progress = Math.max(0, Math.min(1, progress));
-                                
+
                                 let currentUnfoldedX = body.plugin.fakeUnfoldedStartX + (body.plugin.fakeTargetUnfoldedX - body.plugin.fakeUnfoldedStartX) * progress;
-                                
+
                                 // Karakter yarıçapı sınırlarında katlama (Duvarlara sürtünmeyi tamamen önler!)
                                 let wallLeft = 50;
                                 let wallRight = width - 50;
@@ -506,7 +580,7 @@
 
                                 // İdeal yolda ilerlemesi için gereken temel X hızı
                                 let baseVx = ((body.plugin.fakeTargetUnfoldedX - body.plugin.fakeUnfoldedStartX) / (body.plugin.fakeTargetY - body.plugin.fakeStartY)) * body.velocity.y;
-                                
+
                                 // Serbest düşüşteyken (paraşüt açılmadan önce) mermi gibi sağa/sola fırlamasını engellemek için hız sınırı
                                 baseVx = Math.max(-22, Math.min(22, baseVx));
                                 let targetVx = mod > innerWidth ? -baseVx : baseVx;
@@ -517,11 +591,11 @@
                                 let dv = targetVx - body.velocity.x;
                                 let forceX = (dx * 0.0002 + dv * 0.005) * body.mass;
                                 Matter.Body.applyForce(body, body.position, { x: forceX, y: 0 });
-                                
+
                                 // Tam inerken (Yükseklik kontrolü: Havuzun hemen üstü)
                                 if (body.position.y > height - 150) {
                                     body.plugin.fakeJetpackActivated = true;
-                                    
+
                                     // Paraşütü anında bırak
                                     body.plugin.parachuteOpened = false;
                                     body.plugin.parachuteOpening = false;
@@ -529,15 +603,15 @@
                                     if (body.render.sprite) {
                                         delete body.render.sprite.texture;
                                     }
-                                    
+
                                     body.plugin.hasJetpack = true;
-                                    
+
                                     // Jetpack X yönünde rastgele hız (örneğin 3 ile 7 arası)
                                     let sign = Math.random() < 0.5 ? -1 : 1;
                                     body.plugin.jetpackVelocityX = sign * (Math.random() * 4 + 3);
                                     // Jetpack Y yönünde rastgele hız (örneğin -10 ile -15 arası)
                                     body.plugin.jetpackVelocityY = -(Math.random() * 5 + 10);
-                                    
+
                                     // Jetpack ile duvarlardan (ekran kenarlarından) geçebilmesi için çarpışmaları kapat
                                     body.collisionFilter = {
                                         category: body.collisionFilter.category,
@@ -547,7 +621,7 @@
                             } else {
                                 // Jetpack devrede: Havaya ve rastgele bir açıyla uçuş
                                 Matter.Body.setVelocity(body, { x: body.plugin.jetpackVelocityX, y: body.plugin.jetpackVelocityY });
-                                
+
                                 // Karakterin açısını hızına (uçuş yönüne) göre orantılı olarak belirle
                                 let targetAngle = body.plugin.jetpackVelocityX * 0.04;
                                 Matter.Body.setAngle(body, targetAngle);
@@ -580,7 +654,7 @@
                                         // Dönüş hızı bir tık artırıldı (0.05 -> 0.08)
                                         body.plugin.flipSpeed = body.plugin.tarzanFromLeft ? -0.08 : 0.08;
                                     }
-                                    
+
                                     if (Math.abs(body.plugin.flipAngle) < Math.PI * 2) {
                                         body.plugin.flipAngle += body.plugin.flipSpeed;
                                         Matter.Body.setAngle(body, body.plugin.flipAngle);
@@ -594,11 +668,11 @@
                                     Matter.Body.setAngle(body, 0);
                                 }
                             }
-                            
+
                             // Timer dolduysa ve henüz ip kopmadıysa kopar
                             if (!body.plugin.tarzanReleased && engine.timing.timestamp > body.plugin.tarzanReleaseTimer) {
                                 body.plugin.tarzanReleased = true;
-                                
+
                                 // Kuvvetleri sıfırlamıyoruz, yatay olarak fırlamaya devam edecek.
                                 // İpin salınıma 1 saniye daha devam edip sonra fade olarak kaybolması için:
                                 if (body.plugin.tarzanConstraint) {
@@ -610,10 +684,10 @@
                                     });
                                     Matter.Body.setVelocity(dummyWeight, { x: body.velocity.x, y: body.velocity.y });
                                     Matter.Composite.add(world, dummyWeight);
-                                    
+
                                     // Constraint'i (ipi) karaktere değil, bu ağırlığa bağlıyoruz
                                     body.plugin.tarzanConstraint.bodyB = dummyWeight;
-                                    
+
                                     // 1 saniye sonra ipi kaybolmaya (fade) başlat
                                     setTimeout(() => {
                                         let fadeOpacity = 1;
@@ -636,7 +710,7 @@
                                 }
                             }
                         }
-                        
+
                         continue;
                     }
 
@@ -675,18 +749,18 @@
                                 const randomSpeedX = (Math.random() - 0.5) * 40;
                                 Matter.Body.setVelocity(body, { x: randomSpeedX, y: body.velocity.y });
                             }
-                            
+
                             if (!body.plugin.drunkJerkTimerFreefall || engine.timing.timestamp > body.plugin.drunkJerkTimerFreefall) {
                                 body.plugin.drunkJerkTimerFreefall = engine.timing.timestamp + 200 + Math.random() * 300;
                                 const jerkX = (Math.random() - 0.5) * 20;
                                 Matter.Body.setVelocity(body, { x: body.velocity.x * 0.7 + jerkX, y: body.velocity.y });
                             }
-                            
+
                             // Dalgalı hareket kuvveti (titrek düşüş)
                             let time = engine.timing.timestamp * 0.0015;
                             let wavyForceX = Math.sin(time * 10 + body.id) * 0.0003 * body.mass;
                             Matter.Body.applyForce(body, body.position, { x: wavyForceX, y: 0 });
-                            
+
                             // Daha az sürtünme ile uzun savrulmalar
                             Matter.Body.setVelocity(body, { x: body.velocity.x * 0.995, y: body.velocity.y });
                         }
@@ -704,7 +778,7 @@
                             // Kullanıcının panelden seçtiği aktif paraşütler arasından rastgele birini seç
                             const listToUse = activeParachutes.length > 0 ? activeParachutes : [11];
                             const parasutNo = listToUse[Math.floor(Math.random() * listToUse.length)];
-                            
+
                             body.render.sprite.texture = `parasut${parasutNo}.png`;
                             body.render.sprite.yOffset = 0.8; // Paraşütü karakterin üstüne taşır
 
@@ -724,39 +798,39 @@
                         let time = engine.timing.timestamp * 0.0015;
                         let swayAngle = Math.sin(time + body.id) * 0.15;
                         let swayForce = Math.sin(time + body.id) * 0.00002 * body.mass;
-                        
+
                         if (body.plugin.isDrunk) {
                             // Salınımı daha yavaş ve sakin yapıyoruz
                             swayAngle = Math.sin(time * 0.8 + body.id) * 0.2;
                             // Dalgalı (wavy) hareket için sürekli sarsıntılı bir kuvvet
                             swayForce = Math.sin(time * 12 + body.id) * 0.00015 * body.mass;
-                            
+
                             if (!body.plugin.drunkTimer || engine.timing.timestamp > body.plugin.drunkTimer) {
                                 // 1.2s - 2.5s arası ana yön belirle (daha uzun süre bir yöne gitsin)
                                 body.plugin.drunkTimer = engine.timing.timestamp + 1200 + Math.random() * 1300;
-                                
+
                                 // Çok daha abartılı sağ-sol savrulması (-25 ile +25 arası hızlar)
                                 const randomSpeedX = (Math.random() - 0.5) * (Math.random() * 40 + 10);
-                                
+
                                 // Dikey hızda ani yavaşlamalar veya hafif hızlı düşüşler (0 - 2.5)
                                 const randomSpeedY = Math.random() * 2.5;
-                                
+
                                 Matter.Body.setVelocity(body, { x: randomSpeedX, y: randomSpeedY });
                             }
-                            
+
                             if (!body.plugin.drunkJerkTimer || engine.timing.timestamp > body.plugin.drunkJerkTimer) {
                                 // 0.2s - 0.5s arası küçük zikzak (sağa giderken küçük sol yapıp sağa devam etme vb)
                                 body.plugin.drunkJerkTimer = engine.timing.timestamp + 200 + Math.random() * 300;
-                                
+
                                 // Ana hızı biraz koruyarak üzerine zıt veya aynı yönde ufak sapmalar ekle
                                 const jerkX = (Math.random() - 0.5) * 15;
                                 Matter.Body.setVelocity(body, { x: body.velocity.x * 0.75 + jerkX, y: body.velocity.y });
                             }
-                            
+
                             // Sürtünmeyi azalttım, momentumunu daha uzun süre korusun (0.99 -> 0.995)
                             Matter.Body.setVelocity(body, { x: body.velocity.x * 0.995, y: body.velocity.y });
                         }
-                        
+
                         Matter.Body.setAngle(body, swayAngle);
                         Matter.Body.applyForce(body, body.position, { x: swayForce, y: 0 });
 
@@ -874,6 +948,8 @@
 
                         // Havuza düşen herkesin skorunu sağdaki "Atla Sıralaması" tablosuna ekle/güncelle
                         updateLeaderboard(characterBody.plugin.username, calculatedScore);
+                        addDropPoolLog(characterBody.plugin.username, 'PUAN', `${calculatedScore} puan aldı (Havuza indi).`);
+                        updateDropPoolStats(characterBody.plugin.username, 'SCORE', calculatedScore);
 
                         // Kral Mekaniği (Mevcut kralın puanını al, yoksa -1 say)
                         let currentKingScore = (currentKing && currentKing.plugin && currentKing.plugin.score) ? parseFloat(currentKing.plugin.score) : -1;
@@ -890,7 +966,7 @@
                             }
 
                             currentKing = characterBody; // Yeni kral artık bu kişi
-                            
+
                             // Kralın süresi: 30 saniye sonra gidecek
                             characterBody.plugin.removeTimer = setTimeout(() => {
                                 Composite.remove(world, characterBody);
@@ -911,6 +987,7 @@
                         }
                     } else {
                         // ZEMİNE (HAVUZ DIŞINA) DÜŞENLER
+                        addDropPoolLog(characterBody.plugin.username, 'PUAN', `Havuzu ıskaladı (Dışarı düştü).`);
                         setTimeout(() => {
                             Composite.remove(world, characterBody);
                         }, waitTime);
@@ -1007,7 +1084,7 @@
                     // Karakter boyutları farklı olduğu için ismin yüksekliğini görselin tepesine (visual radius) göre dinamik belirliyoruz
                     const visualRadius = (body.circleRadius || 30) - (body.plugin.charYOffset || 0);
                     const nameOffsetY = (isLeader ? (visualRadius + 28) : (visualRadius + 18)) + (body.plugin.nameYOffset || 0); // Özel karakter offset'i varsa ekle
-                    
+
                     context.font = `600 ${fontSize}px "Outfit", sans-serif`;
                     context.textAlign = "center"; // Puan ile karakter isminin hizada (ortalı) durması için
                     context.fillStyle = 'white';
@@ -1065,7 +1142,7 @@
                 // Sahnede herhangi bir karakter (kral dahil) var mı kontrol et
                 const activeCharBodies = Composite.allBodies(world).filter(b => b.label === 'karakter');
                 const activeChars = activeCharBodies.length;
-                
+
                 // Silinmiş karakterlerin DOM elementlerini temizle (Memory leak önleme)
                 const activeDomElements = activeCharBodies.map(b => b.plugin.domElement).filter(e => e);
                 document.querySelectorAll('.custom-emote').forEach(el => {
@@ -1082,7 +1159,7 @@
                             document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
                             document.body.style.opacity = '0';
                             console.log("Sahne tamamen boşaldı, 5 saniye geçti, overlay gizleniyor.");
-                            
+
                             if (currentKing) {
                                 if (currentKing.plugin.removeTimer) clearTimeout(currentKing.plugin.removeTimer);
                                 Composite.remove(world, currentKing);
@@ -1139,7 +1216,7 @@
                         console.log('Chatroom ID bulundu:', chatroomId);
                         break;
                     }
-                } catch(e) {
+                } catch (e) {
                     console.warn('Bu kaynak başarısız, diğerine geçiliyor...');
                 }
             }
@@ -1188,6 +1265,7 @@
                             userCooldowns.clear();
                             isDropTogetherMode = false;
                             dropTogetherQueue = [];
+                            addDropPoolLog(username, 'SİSTEM', '!resetdrop ile tüm süreleri ve sıralamayı sıfırladı.');
                             console.log('[DropPool] !resetdrop komutu alındı — tüm bekleme süreleri sıfırlandı ve toplu atlama iptal edildi.');
                             return;
                         }
@@ -1196,13 +1274,15 @@
                         if (message.toLowerCase() === '!droptogether' && username.toLowerCase() === channelName.toLowerCase()) {
                             isDropTogetherMode = true;
                             dropTogetherQueue = [];
-                            console.log('[DropPool] Toplu atlayış (Drop Together) modu AKTİF! İzleyiciler sıraya alınıyor.');
+                            userCooldowns.clear();
+                            addDropPoolLog(username, 'SİSTEM', '!droptogether modunu aktif etti.');
+                            console.log('[DropPool] Toplu atlayış (Drop Together) modu AKTİF! İzleyiciler sıraya alınıyor. Tüm beklemeler sıfırlandı.');
                             return;
                         }
 
                         const msgLower = message.toLowerCase();
                         const cmdLower = commandStr.toLowerCase();
-                        
+
                         // Dive komutu kontrolü
                         let isDiveCommand = false;
                         let isNormalDropCommand = false;
@@ -1238,7 +1318,7 @@
                                     const emoteId = emoteMatch[1];
                                     customEmoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
                                 }
-                                
+
                                 if (isDropTogetherMode) {
                                     // Toplu atlayışta dive dahil tüm özel komutlar yoksayılır ve default atlayış yapılır. (Emote hariç)
                                     if (username.toLowerCase() === channelName.toLowerCase()) {
@@ -1246,12 +1326,16 @@
                                         isDropTogetherMode = false;
                                         if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
                                             dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
+                                            addDropPoolLog(username, 'SİSTEM', 'Toplu atlayış (Uçak) başlattı!');
+                                            updateDropPoolStats(username, 'JUMP');
                                         }
                                         triggerPlaneDrop();
                                     } else {
                                         // İzleyici atlarsa sıraya ekle (isDrunk, isTarzan, isFake her zaman false)
                                         if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
                                             dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
+                                            addDropPoolLog(username, 'SİSTEM', 'Toplu atlayış (Uçak) için sıraya girdi.');
+                                            updateDropPoolStats(username, 'JUMP');
                                             console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
                                         } else {
                                             console.log(`[DropPool] ${username} zaten sırada.`);
@@ -1260,15 +1344,23 @@
                                 } else {
                                     if (isDiveCommand) {
                                         // Dalış modu (helikopter)
+                                        addDropPoolLog(username, 'ATLAYIŞ', 'Özel atlayış (Helikopter) başlattı.');
+                                        updateDropPoolStats(username, 'JUMP');
                                         triggerHelicopterDrop(username, customEmoteUrl);
                                     } else {
                                         // Normal, drunk, tarzan veya fake modda doğrudan düşür
+                                        let tip = 'Normal';
+                                        if(isDrunkCommand) tip = 'Sarhoş';
+                                        if(isTarzanCommand) tip = 'Tarzan';
+                                        if(isFakeCommand) tip = 'Sahte';
+                                        addDropPoolLog(username, 'ATLAYIŞ', `${tip} atlayış başlattı.`);
+                                        updateDropPoolStats(username, 'JUMP');
                                         spawnCharacter(username, customEmoteUrl, null, -50, false, isDrunkCommand, isTarzanCommand, isFakeCommand);
                                     }
                                 }
                             }
                         }
-                    } catch(e) {
+                    } catch (e) {
                         console.error('Mesaj işlenirken hata:', e);
                     }
                 });
@@ -1292,12 +1384,12 @@
 
             // forcedHeliNo varsa onu kullan, yoksa 1-9 arası rastgele helikopter seç
             const heliNo = forcedHeliNo !== null ? forcedHeliNo : Math.floor(Math.random() * 9) + 1;
-            
+
             const heli = document.createElement('img');
             heli.src = `Helicopter${heliNo}.png`;
             heli.style.position = 'absolute';
             heli.style.top = '20px'; // Biraz daha yukarı alındı (50px -> 20px)
-            heli.style.left = '-500px'; 
+            heli.style.left = '-500px';
             heli.style.width = '450px'; // İlk haline (300) göre 1.5x büyütüldü
             heli.style.zIndex = '100';
             heli.style.transition = 'left 5s linear';
@@ -1310,9 +1402,9 @@
 
             const startDropX = window.innerWidth * 0.15;
             const endDropX = window.innerWidth * 0.85;
-            
+
             const totalDistance = window.innerWidth + 1000; // -500 to w+500
-            const speed = totalDistance / 5000; 
+            const speed = totalDistance / 5000;
 
             const timeToStart = (startDropX - (-500)) / speed;
             const timeToEnd = (endDropX - (-500)) / speed;
@@ -1336,9 +1428,9 @@
         // --- TOPLU ATLAYIŞ UÇAK ANİMASYONU ---
         function triggerPlaneDrop() {
             if (dropTogetherQueue.length === 0) return;
-            
+
             isPlaneFlying = true;
-            
+
             // Eğer ekran kapalıysa arka planı uyandır
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -1357,7 +1449,7 @@
                 plane.src = 'plane1.png';
             }
             plane.style.position = 'absolute';
-            plane.style.top = '50px'; 
+            plane.style.top = '50px';
             plane.style.left = '-550px'; // Uçak daha da büyük olduğu için daha soldan başlasın
             plane.style.width = '500px'; // 250px'in 2 katı (2x büyütüldü)
             plane.style.zIndex = '100';
@@ -1373,7 +1465,7 @@
             // Uçak geçerken ekranın güvenli X alanında (örneğin %15 ile %85 arası) karakterleri bırakıcak
             const startDropX = window.innerWidth * 0.15;
             const endDropX = window.innerWidth * 0.85;
-            
+
             const totalDistance = window.innerWidth + 1100; // -550'den w+550'e (5 saniyede)
             const speed = totalDistance / 5000; // px per ms
 
@@ -1439,7 +1531,7 @@
         // --- ÖZEL TEST SENARYOSU (SADECE YENİ KARAKTERLER) ---
         window.testYeniler = () => {
             console.log("Sadece yeni eklenen 5 karakter test ediliyor...");
-            
+
             // Orjinal listeyi yedeğe alıp sadece yenileri bırakıyoruz
             const orjinalConfig = [...charConfigs];
             charConfigs.length = 0;
@@ -1470,12 +1562,12 @@
         // --- UÇAK İLE TOPLU ATLAYIŞ (DROP TOGETHER) TEST SENARYOSU ---
         window.testUcakAtlayisi = () => {
             console.log("Uçak test senaryosu başlatılıyor... 15 kişi sıraya ekleniyor.");
-            
+
             // Sırayı sahte izleyicilerle doldur
             isDropTogetherMode = true;
             dropTogetherQueue = [];
             const testIsimleri = ["Ahmet", "Mehmet", "Ayşe", "Fatma", "Ali", "Veli", "Canan", "Ece", "Kaan", "Cem", "Nur", "Burak", "Selin", "Oğuz", "Zeynep"];
-            
+
             testIsimleri.forEach(isim => {
                 dropTogetherQueue.push({ username: isim, customEmoteUrl: null });
             });
@@ -1494,22 +1586,22 @@
         window.testHelikopterler = () => {
             console.log("Helikopter test senaryosu başlatılıyor... 9 helikopter sırayla geçecek.");
             let count = 1;
-            
+
             const testLoop = () => {
                 if (count > 9) {
                     console.log("Tüm helikopter testleri tamamlandı.");
                     return;
                 }
-                
+
                 console.log(`Helikopter ${count} çağrılıyor...`);
                 // Helikopter numarasını (count) forcedHeliNo olarak gönder
                 triggerHelicopterDrop(`Diver${count}`, null, count);
                 count++;
-                
+
                 // Her helikopterin geçişi 5 sn sürüyor, diğeri 5.5 saniye sonra gelsin
                 setTimeout(testLoop, 5500);
             };
-            
+
             testLoop(); // Döngüyü başlat
         };
 
@@ -1525,7 +1617,7 @@
             console.log("Tarzan test senaryosu başlatıldı. Her 5 saniyede bir Tarzan atlayışı yapılacak.");
             // İlk atlayışı hemen yap
             spawnCharacter("TarzanTest", null, null, -50, false, false, true);
-            
+
             // Sonraki atlayışları 5 saniyede bir yap
             setInterval(() => {
                 spawnCharacter("TarzanTest", null, null, -50, false, false, true);
@@ -1534,13 +1626,13 @@
 
         // İsterseniz aşağıdaki satırın başındaki // işaretlerini kaldırarak sayfa açılır açılmaz testin başlamasını sağlayabilirsiniz:
         // window.testTarzan();
-        
+
         // --- FAKE TEST SENARYOSU ---
         window.testFake = () => {
             console.log("Fake test senaryosu başlatıldı. Her 4 saniyede bir Fake atlayışı yapılacak.");
             // İlk atlayışı hemen yap
             spawnCharacter("FakeTest", null, null, -50, false, false, false, true);
-            
+
             // Sonraki atlayışları 4 saniyede bir yap
             setInterval(() => {
                 spawnCharacter("FakeTest", null, null, -50, false, false, false, true);
@@ -1549,25 +1641,25 @@
 
         // Kullanıcının talebi üzerine anında test başlatıyoruz
         // window.testFake(); // Fake testini kapattık
-        
+
         // --- KINDERPLANE TEST SENARYOSU ---
         window.testKinderPlane = () => {
             console.log("Kinderplane testi başlatıldı.");
             // Kanal adını geçici olarak kafamkinder yapıyoruz ki kinderplane çıksın
-            window.channelName = "kafamkinder"; 
-            
+            window.channelName = "kafamkinder";
+
             // Sıraya sahte kullanıcılar ekle
             dropTogetherQueue.push({ username: "TestUser1", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false });
             dropTogetherQueue.push({ username: "TestUser2", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false });
             dropTogetherQueue.push({ username: "kafamkinder", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false });
-            
+
             // Uçağı çağır
             triggerPlaneDrop();
-            
+
             // İsterseniz belli aralıklarla tekrar etmesini sağlayabilirsiniz:
             // setInterval(() => { dropTogetherQueue.push({ username: "TestUser", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false }); triggerPlaneDrop(); }, 8000);
         };
-        
+
         // Uçağı test etmek için otomatik çalıştırıyoruz
         // window.testKinderPlane();
         // Sayfa açılır açılmaz tüm helikopterleri test etmek için:
