@@ -20,6 +20,10 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
         }
 
+        #leaderboard-container {
+            display: inline-block;
+        }
+
         .lb-title {
             font-size: 72px;
             font-weight: 700;
@@ -27,7 +31,8 @@
             margin: 0;
             padding-bottom: 8px;
             border-bottom: 3px solid rgba(255, 255, 255, 0.8);
-            display: inline-block;
+            display: block;
+            text-align: center;
         }
 
         .lb-list {
@@ -35,7 +40,7 @@
             display: grid;
             grid-template-columns: 16ch auto;
             row-gap: 24px;
-            column-gap: 20px;
+            column-gap: 0px;
             align-items: center;
             font-size: 56px;
             font-weight: 600;
@@ -94,7 +99,7 @@
                     
                     html += `
                         <div style="white-space: nowrap; ${glowStyle}">${rankStyled} <span style="color: ${getRankColor(i)};">${displayName}</span></div>
-                        <div style="white-space: nowrap; color: ${color}; font-weight: 800; text-align: right;">${num.toFixed(2)}${star}</div>
+                        <div style="white-space: nowrap; color: ${color}; font-weight: 800; text-align: left;">${num.toFixed(2)}${star}</div>
                     `;
                 } else {
                     html += `
@@ -117,6 +122,8 @@
             } catch (e) {
                 leaderboard = [];
             }
+
+
             renderLeaderboard();
         }
 
