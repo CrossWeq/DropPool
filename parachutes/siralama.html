@@ -91,7 +91,7 @@
                         ? item.username.substring(0, 15) + '...' 
                         : item.username;
 
-                    html += `<div class="lb-row">${rankStyled} ${displayName} <span style="color: ${color}; font-weight: 800;">${num.toFixed(2)}${star}</span></div>`;
+                    html += `<div class="lb-row">${rankStyled} <span style="color: ${getRankColor(i)};">${displayName}</span> <span style="color: ${color}; font-weight: 800;">${num.toFixed(2)}${star}</span></div>`;
                 } else {
                     html += `<div class="lb-row">${rankStyled}</div>`;
                 }
