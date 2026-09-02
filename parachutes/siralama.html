@@ -32,19 +32,14 @@
 
         .lb-list {
             margin-top: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
+            display: grid;
+            grid-template-columns: auto auto;
+            row-gap: 24px;
+            column-gap: 40px;
+            align-items: center;
             font-size: 56px;
             font-weight: 600;
             letter-spacing: 0.5px;
-        }
-
-        .lb-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -69,7 +64,7 @@
 
         function getRankColor(index) {
             if (index === 0) return '#FFD700'; // Altın (Gold)
-            if (index === 1) return '#E4E4E4'; // Gümüş (Silver)
+            if (index === 1) return '#F0F0F0'; // Gümüş (Silver)
             if (index === 2) return '#b87333'; // Bronz (Bronze)
             return '#FFFFFF'; // 4. ve 5. için Beyaz
         }
@@ -94,16 +89,18 @@
                         ? item.username.substring(0, 15) + '...' 
                         : item.username;
 
-                    const glowStyle = i === 0 ? 'text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.5);' : '';
+                    const glowStyle = i === 0 ? 'text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.5);' : 
+                                      i === 1 ? 'text-shadow: 0 0 15px rgba(240, 240, 240, 0.8), 0 0 25px rgba(240, 240, 240, 0.5);' : '';
                     
-                    html += `<div class="lb-row">
-                        <div style="${glowStyle}">${rankStyled} <span style="color: ${getRankColor(i)};">${displayName}</span></div>
-                        <span style="color: ${color}; font-weight: 800; margin-left: 30px;">${num.toFixed(2)}${star}</span>
-                    </div>`;
+                    html += `
+                        <div style="white-space: nowrap; ${glowStyle}">${rankStyled} <span style="color: ${getRankColor(i)};">${displayName}</span></div>
+                        <div style="white-space: nowrap; color: ${color}; font-weight: 800; text-align: right;">${num.toFixed(2)}${star}</div>
+                    `;
                 } else {
-                    html += `<div class="lb-row">
-                        <div>${rankStyled}</div>
-                    </div>`;
+                    html += `
+                        <div style="white-space: nowrap;">${rankStyled}</div>
+                        <div></div>
+                    `;
                 }
             }
             listEl.innerHTML = html;
