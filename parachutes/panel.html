@@ -766,6 +766,15 @@
             }
         }
 
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('helpModal');
+                if (!modal.classList.contains('hidden')) {
+                    toggleHelpModal();
+                }
+            }
+        });
+
     </script>
 </body>
 </html>
