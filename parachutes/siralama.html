@@ -33,7 +33,7 @@
         .lb-list {
             margin-top: 24px;
             display: grid;
-            grid-template-columns: auto auto;
+            grid-template-columns: 23ch auto;
             row-gap: 24px;
             column-gap: 40px;
             align-items: center;
@@ -64,7 +64,7 @@
 
         function getRankColor(index) {
             if (index === 0) return '#FFD700'; // Altın (Gold)
-            if (index === 1) return '#F0F0F0'; // Gümüş (Silver)
+            if (index === 1) return '#D8D8D8'; // Gümüş (Silver)
             if (index === 2) return '#b87333'; // Bronz (Bronze)
             return '#FFFFFF'; // 4. ve 5. için Beyaz
         }
@@ -90,7 +90,7 @@
                         : item.username;
 
                     const glowStyle = i === 0 ? 'text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.5);' : 
-                                      i === 1 ? 'text-shadow: 0 0 15px rgba(240, 240, 240, 0.8), 0 0 25px rgba(240, 240, 240, 0.5);' : '';
+                                      i === 1 ? 'text-shadow: 0 0 15px rgba(216, 216, 216, 0.8), 0 0 25px rgba(216, 216, 216, 0.5);' : '';
                     
                     html += `
                         <div style="white-space: nowrap; ${glowStyle}">${rankStyled} <span style="color: ${getRankColor(i)};">${displayName}</span></div>
