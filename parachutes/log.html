@@ -64,6 +64,8 @@
                                     <tr class="text-xs uppercase tracking-wider text-gray-400">
                                         <th class="px-6 py-4 font-semibold" data-i18n="thUser">Kullanıcı Adı</th>
                                         <th class="px-6 py-4 font-semibold text-center" data-i18n="thJumps">Toplam Atlayış</th>
+                                        <th class="px-6 py-4 font-semibold text-center" data-i18n="thHitRate">İsabet Oranı</th>
+                                        <th class="px-6 py-4 font-semibold text-right" data-i18n="thTotalScore">Toplam Puan</th>
                                         <th class="px-6 py-4 font-semibold text-right" data-i18n="thScore">Rekor Puan</th>
                                     </tr>
                                 </thead>
@@ -132,6 +134,8 @@
             allPlayers: { tr: "Tüm Oyuncular", en: "All Players" },
             thUser: { tr: "Kullanıcı Adı", en: "Username" },
             thJumps: { tr: "Toplam Atlayış", en: "Total Drops" },
+            thHitRate: { tr: "İsabet Oranı", en: "Hit Rate" },
+            thTotalScore: { tr: "Toplam Puan", en: "Total Score" },
             thScore: { tr: "Rekor Puan", en: "Best Score" },
             noStats: { tr: "Henüz istatistik bulunmuyor.", en: "No statistics available yet." },
             top10: { tr: "Tüm Zamanların Top 10'u", en: "All-Time Top 10" },
@@ -299,14 +303,18 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filteredUsers = users.filter(u => u.username.toLowerCase().includes(query));
             
-            filteredUsers.sort((a,b) => b.jumps - a.jumps);
+            filteredUsers.sort((a,b) => b.maxScore - a.maxScore);
             
             let statsHtml = '';
             filteredUsers.forEach(u => {
+                let hitRate = u.jumps > 0 ? ((u.hits || 0) / u.jumps) * 100 : 0;
+                let totalScore = u.totalScore || 0;
                 statsHtml += `
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${u.username}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-blue-400 font-bold">${u.jumps}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-purple-400 font-bold">%${hitRate.toFixed(1)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-yellow-400 font-bold">${totalScore.toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-green-400 font-bold">${u.maxScore.toFixed(2)}</td>
                     </tr>
                 `;

@@ -216,14 +216,18 @@
                 
                 const lowerUser = username.toLowerCase();
                 if (!stats[lowerUser]) {
-                    stats[lowerUser] = { username: username, jumps: 0, maxScore: 0 };
+                    stats[lowerUser] = { username: username, jumps: 0, maxScore: 0, hits: 0, totalScore: 0 };
                 } else {
                     stats[lowerUser].username = username; // Update casing just in case
+                    if (stats[lowerUser].hits === undefined) stats[lowerUser].hits = 0;
+                    if (stats[lowerUser].totalScore === undefined) stats[lowerUser].totalScore = 0;
                 }
                 
                 if (type === 'JUMP') {
                     stats[lowerUser].jumps += 1;
                 } else if (type === 'SCORE') {
+                    stats[lowerUser].hits += 1;
+                    stats[lowerUser].totalScore += score;
                     if (score > stats[lowerUser].maxScore) {
                         stats[lowerUser].maxScore = score;
                     }
