@@ -10,7 +10,6 @@
 
 ## 🚀 Özellikler / Features
 
-- 🌐 **İki Dil Desteği (Bi-lingual):** Türkçe ve İngilizce kurulum paneli ve istatistik ekranı. (TR/EN Setup Panel & Stats Screen)
 - 🎨 **Özelleştirilebilir Temalar (Custom Themes):** İlkbahar, Sonbahar, Kış ve Cehennem temaları. (Spring, Autumn, Winter, Hell)
 - 🪂 **Renk Seçenekleri (Parachute Colors):** İzleyiciler için 8 farklı havalı paraşüt rengi. (8 different parachute colors)
 - 😂 **Kick Emote Desteği:** İzleyiciler komutla birlikte bir Kick emoteu yazdığında o emote ekranda düşen karakter olur! GIF/WEBP dahil.
@@ -19,6 +18,7 @@
 - 📊 **Kalıcı İstatistik Merkezi (Persistent Stats):** Tüm zamanların atlayış sayıları, isabet oranları, toplam ve rekor puanlar ile son atlayış tarihi/saati kalıcı olarak saklanır.
 - 🪖 **Çoklu Atlayış Modları:** Dive, Drunk, Tarzan, Fake ve Random gibi birbirinden farklı 5 özel atlayış modu.
 - 🌊 **Zemin Şeffaflığı:** İsteğe bağlı olarak zemin görselleri gizlenip sadece havuz görünür hale getirilebilir.
+- 🌐 İki Dil Desteği (Bi-lingual): Türkçe ve İngilizce kurulum paneli ve istatistik ekranı. (TR/EN Setup Panel & Stats Screen)
 
 ---
 
