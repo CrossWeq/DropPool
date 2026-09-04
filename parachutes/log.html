@@ -65,8 +65,9 @@
                                         <th class="px-6 py-4 font-semibold" data-i18n="thUser">Kullanıcı Adı</th>
                                         <th class="px-6 py-4 font-semibold text-center" data-i18n="thJumps">Toplam Atlayış</th>
                                         <th class="px-6 py-4 font-semibold text-center" data-i18n="thHitRate">İsabet Oranı</th>
-                                        <th class="px-6 py-4 font-semibold text-right" data-i18n="thTotalScore">Toplam Puan</th>
-                                        <th class="px-6 py-4 font-semibold text-right" data-i18n="thScore">Rekor Puan</th>
+                                        <th class="px-6 py-4 font-semibold text-center" data-i18n="thTotalScore">Toplam Puan</th>
+                                        <th class="px-6 py-4 font-semibold text-center" data-i18n="thScore">Rekor Puan</th>
+                                        <th class="px-6 py-4 font-semibold text-right" data-i18n="thLastJump">Son Atlayış</th>
                                     </tr>
                                 </thead>
                                 <tbody id="statsTableBody" class="divide-y divide-gray-800/50 text-sm">
@@ -134,9 +135,10 @@
             allPlayers: { tr: "Tüm Oyuncular", en: "All Players" },
             thUser: { tr: "Kullanıcı Adı", en: "Username" },
             thJumps: { tr: "Toplam Atlayış", en: "Total Drops" },
-            thHitRate: { tr: "İsabet Oranı", en: "Hit Rate" },
+            thHitRate: { tr: "İsabet Oranı", en: "HIT SCORE" },
             thTotalScore: { tr: "Toplam Puan", en: "Total Score" },
             thScore: { tr: "Rekor Puan", en: "Best Score" },
+            thLastJump: { tr: "Son Atlayış", en: "Last Drop" },
             noStats: { tr: "Henüz istatistik bulunmuyor.", en: "No statistics available yet." },
             top10: { tr: "Tüm Zamanların Top 10'u", en: "All-Time Top 10" },
             logLimit: { tr: "Sadece son 500 olay (Zaman Tüneli)", en: "Only last 500 events (Timeline)" },
@@ -309,13 +311,15 @@
             filteredUsers.forEach(u => {
                 let hitRate = u.jumps > 0 ? ((u.hits || 0) / u.jumps) * 100 : 0;
                 let totalScore = u.totalScore || 0;
+                let lastJumpTime = u.lastJumpTime || '-';
                 statsHtml += `
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${u.username}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-blue-400 font-bold">${u.jumps}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-purple-400 font-bold">%${hitRate.toFixed(1)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-yellow-400 font-bold">${totalScore.toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-green-400 font-bold">${u.maxScore.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-yellow-400 font-bold">${totalScore.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-green-400 font-bold">${u.maxScore.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-500 font-mono text-xs">${lastJumpTime}</td>
                     </tr>
                 `;
             });

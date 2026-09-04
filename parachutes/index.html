@@ -222,6 +222,9 @@
                     if (stats[lowerUser].hits === undefined) stats[lowerUser].hits = 0;
                     if (stats[lowerUser].totalScore === undefined) stats[lowerUser].totalScore = 0;
                 }
+                const now = new Date();
+                const dateTimeString = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                stats[lowerUser].lastJumpTime = dateTimeString;
                 
                 if (type === 'JUMP') {
                     stats[lowerUser].jumps += 1;
