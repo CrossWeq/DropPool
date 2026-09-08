@@ -123,8 +123,8 @@
             if (typeof pool !== 'undefined' && pool.render && pool.render.sprite) {
                 pool.render.sprite.texture = randomTheme.pool;
 
-                // Havuza özel scale varsa onu kullan, yoksa standart 0.14 kullan
-                const scale = randomTheme.poolScale !== undefined ? randomTheme.poolScale : 0.14;
+                // Havuza özel scale varsa onu kullan, yoksa tanımlı poolSpriteScale'i kullan
+                const scale = randomTheme.poolScale !== undefined ? randomTheme.poolScale : poolSpriteScale;
                 pool.render.sprite.xScale = scale;
                 pool.render.sprite.yScale = scale;
             }
