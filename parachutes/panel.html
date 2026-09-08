@@ -145,15 +145,42 @@
             </div>
 
             <!-- Ekstra Ayarlar -->
-            <div class="flex items-center justify-between bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-gray-300" data-i18n="bgToggleTitle">Zemin Görselleri</label>
-                    <p class="text-xs text-gray-500" data-i18n="bgToggleDesc">Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.</p>
+            <div class="space-y-3">
+                <!-- Zemin Görselleri Toggle -->
+                <div class="flex items-center justify-between bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-300" data-i18n="bgToggleTitle">Zemin Görselleri</label>
+                        <p class="text-xs text-gray-500" data-i18n="bgToggleDesc">Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="bgToggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="bgToggle" class="sr-only peer" checked>
-                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-                </label>
+
+                <!-- Havuz Boyutu -->
+                <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
+                    <div class="space-y-1 mb-3">
+                        <label class="text-sm font-medium text-gray-300" data-i18n="poolSizeTitle">Havuz Boyutu</label>
+                        <p class="text-xs text-gray-500" data-i18n="poolSizeDesc">Havuzun ekrandaki büyüklüğünü ayarlayın.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <label class="flex-1 cursor-pointer group">
+                            <input type="radio" name="poolSize" id="poolSizeNormal" value="1" checked class="sr-only peer">
+                            <div class="flex items-center justify-center gap-2 border border-gray-700/50 rounded-xl px-4 py-3 text-sm font-medium text-gray-400 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:text-cyan-400 peer-checked:bg-cyan-500/10 hover:border-gray-500 hover:text-gray-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg>
+                                <span data-i18n="poolSizeNormal">Normal</span>
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer group">
+                            <input type="radio" name="poolSize" id="poolSizeSmall" value="0" class="sr-only peer">
+                            <div class="flex items-center justify-center gap-2 border border-gray-700/50 rounded-xl px-4 py-3 text-sm font-medium text-gray-400 transition-all duration-200 peer-checked:border-indigo-500 peer-checked:text-indigo-400 peer-checked:bg-indigo-500/10 hover:border-gray-500 hover:text-gray-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" stroke-width="2"/></svg>
+                                <span data-i18n="poolSizeSmall">Küçük</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <!-- Paraşütler -->
@@ -251,6 +278,10 @@
             subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
             bgToggleTitle: { tr: "Zemin Görselleri", en: "Floor Visuals" },
             bgToggleDesc: { tr: "Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.", en: "If disabled, only the pool is visible and the floor becomes transparent." },
+            poolSizeTitle: { tr: "Havuz Boyutu", en: "Pool Size" },
+            poolSizeDesc: { tr: "Havuzun ekrandaki büyüklüğünü ayarlayın.", en: "Adjust the pool size on screen." },
+            poolSizeNormal: { tr: "Normal", en: "Normal" },
+            poolSizeSmall: { tr: "Küçük", en: "Small" },
             channel: { tr: "Kick Kanal Adı", en: "Kick Channel Name" },
             cmd: { tr: "Tetikleyici Komut", en: "Trigger Command" },
             cd: { tr: "Kullanıcı Bekleme Süresi (Saniye)", en: "User Cooldown (Seconds)" },
@@ -396,6 +427,10 @@
 
             // Update placeholder
             document.getElementById('channelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
+
+            // Update pool size labels
+            document.querySelectorAll('[data-i18n="poolSizeNormal"]').forEach(el => el.innerText = i18n.poolSizeNormal[lang]);
+            document.querySelectorAll('[data-i18n="poolSizeSmall"]').forEach(el => el.innerText = i18n.poolSizeSmall[lang]);
 
             // Update dynamically generated names without destroying checkbox state
             themes.forEach(t => t.name = themeNames[t.id][lang]);
@@ -637,12 +672,14 @@
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
             
             const bgToggle = document.getElementById('bgToggle').checked ? 1 : 0;
+            const poolSizeVal = document.querySelector('input[name="poolSize"]:checked').value;
             
             const overlayParams = new URLSearchParams({
                 kanal: channel,
                 cmd: cmd,
                 cd: cooldown,
                 bg: bgToggle,
+                ps: poolSizeVal,
                 t: selectedThemes.join(','),
                 p: selectedParachutes.join(',')
             });

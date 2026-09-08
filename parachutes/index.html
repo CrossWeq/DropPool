@@ -71,6 +71,10 @@
         const activeParachutesParams = urlParams.get('p') ? urlParams.get('p').split(',') : ['11', '12', '13', '14', '15', '16', '17', '18'];
         const activeParachutes = activeParachutesParams.map(Number);
 
+        // Havuz boyutu: ps=0 → küçük (yarı boyut), ps=1 veya parametre yok → normal (mevcut linkler bozulmaz)
+        const poolSizeParam = urlParams.get('ps');
+        const isSmallPool = poolSizeParam === '0';
+
         const userCooldowns = new Map();
 
         function checkCooldown(username) {
@@ -305,9 +309,9 @@
         });
 
         // Havuz Görseli ve Hitbox Ayarları (Görsel biraz daha küçültüldü)
-        const poolSpriteScale = 0.14;
-        const poolHitboxRadiusX = 120; // Görsel havuzun su yüzeyi yarıçapı (~240px genişlik)
-        const poolHitboxRadiusY = 32;  // Havuzun elips derinliği
+        const poolSpriteScale = isSmallPool ? 0.07 : 0.14;
+        const poolHitboxRadiusX = isSmallPool ? 60 : 120; // Görsel havuzun su yüzeyi yarıçapı (~240px genişlik)
+        const poolHitboxRadiusY = isSmallPool ? 16 : 32;  // Havuzun elips derinliği
 
         // Havuzun sağa sola rastgele (random) doğması için güvenli X ekseni aralığı
         const poolMargin = poolHitboxRadiusX + 60;
