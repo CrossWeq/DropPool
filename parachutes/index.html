@@ -27,6 +27,29 @@
             height: 100vh;
         }
 
+        /* Küçük mod zemin div'leri */
+        .bg-split-left, .bg-split-right {
+            position: fixed;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-position-y: bottom;
+            z-index: -1; /* Havuzun her zaman ön planda (canvas üstte) olması için -1 yapıldı */
+            pointer-events: none;
+        }
+        .bg-split-left {
+            left: 0;
+            /* Sağ kenardan hafif aşarak tam ortada birleşsin */
+            background-position-x: left;
+            /* clip: soldaki görselin sağ yarısından kesiyoruz */
+            clip-path: inset(0 0 0 0);
+        }
+        .bg-split-right {
+            right: 0;
+            background-position-x: right;
+        }
+
         @keyframes heliBobbing {
             0% {
                 transform: translateY(0px) rotate(0deg);
@@ -71,7 +94,7 @@
         const activeParachutesParams = urlParams.get('p') ? urlParams.get('p').split(',') : ['11', '12', '13', '14', '15', '16', '17', '18'];
         const activeParachutes = activeParachutesParams.map(Number);
 
-        // Havuz boyutu: ps=0 → küçük (yarı boyut), ps=1 veya parametre yok → normal (mevcut linkler bozulmaz)
+        // Havuz boyutu: ps=0 → küçük, ps=1 veya parametre yok → normal (mevcut linkler bozulmaz)
         const poolSizeParam = urlParams.get('ps');
         const isSmallPool = poolSizeParam === '0';
 
@@ -113,10 +136,70 @@
             const randomTheme = listToUse[Math.floor(Math.random() * listToUse.length)];
 
             if (showBackground) {
-                document.body.style.backgroundImage = `url('${randomTheme.bg}')`;
-                document.body.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
+                if (isSmallPool) {
+                    // Küçük mod: body background'ı temizle, iki ayrı div ile zemin oluştur
+                    document.body.style.backgroundImage = 'none';
+
+                    // Eski div'leri temizle
+                    const oldLeft = document.getElementById('bg-left');
+                    const oldRight = document.getElementById('bg-right');
+                    if (oldLeft) oldLeft.remove();
+                    if (oldRight) oldRight.remove();
+
+                    // Görselin gerçek boyutunu ölçmek için geçici Image kullan
+                    const img = new Image();
+                    img.src = randomTheme.bg;
+                    img.onload = () => {
+                        const naturalW = img.naturalWidth;
+                        const naturalH = img.naturalHeight;
+
+                        // %60 boyutlu görselin piksel boyutları
+                        const scaledW = naturalW * 0.60;
+                        const scaledH = naturalH * 0.60;
+
+                        // Görselin sağ kenar ortadan taşıyor mu? Evet: sol div sağdan kesin
+                        // Ekranın yarısı = window.innerWidth / 2
+                        // Sol div: sola yapıştır, sağ kenarı ekran ortasında bitsin
+                        // Sağ div: sağa yapıştır, sol kenarı ekran ortasında bitsin
+                        // Her iki div'in clip noktası: görselin ortada çakıştığı kısım budur
+
+                        const bgSize = `${scaledW}px ${scaledH}px`;
+                        const bgYPos = `calc(100% + ${Math.round(randomTheme.bgOffset * 0.60)}px)`;
+
+                        // Sol div
+                        const leftDiv = document.createElement('div');
+                        leftDiv.id = 'bg-left';
+                        leftDiv.className = 'bg-split-left';
+                        leftDiv.style.backgroundImage = `url('${randomTheme.bg}')`;
+                        leftDiv.style.backgroundSize = bgSize;
+                        leftDiv.style.backgroundPosition = `left ${bgYPos}`; // soldan hizala
+                        document.body.appendChild(leftDiv);
+
+                        // Sağ div
+                        const rightDiv = document.createElement('div');
+                        rightDiv.id = 'bg-right';
+                        rightDiv.className = 'bg-split-right';
+                        rightDiv.style.backgroundImage = `url('${randomTheme.bg}')`;
+                        rightDiv.style.backgroundSize = bgSize;
+                        rightDiv.style.backgroundPosition = `right ${bgYPos}`; // sağdan hizala
+                        document.body.appendChild(rightDiv);
+                    };
+                } else {
+                    // Normal mod: eski iki parçalı div varsa temizle, body'e tek background yap
+                    const oldLeft = document.getElementById('bg-left');
+                    const oldRight = document.getElementById('bg-right');
+                    if (oldLeft) oldLeft.remove();
+                    if (oldRight) oldRight.remove();
+
+                    document.body.style.backgroundImage = `url('${randomTheme.bg}')`;
+                    document.body.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
+                }
             } else {
                 document.body.style.backgroundImage = 'none';
+                const oldLeft = document.getElementById('bg-left');
+                const oldRight = document.getElementById('bg-right');
+                if (oldLeft) oldLeft.remove();
+                if (oldRight) oldRight.remove();
             }
 
             // Eğer pool objesi daha önceden oluşturulmuşsa görselini de değiştir
