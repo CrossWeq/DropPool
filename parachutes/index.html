@@ -309,15 +309,16 @@
         });
 
         // Havuz Görseli ve Hitbox Ayarları (Görsel biraz daha küçültüldü)
-        const poolSpriteScale = isSmallPool ? 0.07 : 0.14;
-        const poolHitboxRadiusX = isSmallPool ? 60 : 120; // Görsel havuzun su yüzeyi yarıçapı (~240px genişlik)
-        const poolHitboxRadiusY = isSmallPool ? 16 : 32;  // Havuzun elips derinliği
+        const poolSpriteScale = isSmallPool ? 0.105 : 0.14; // %75'e çıkarıldı
+        const poolHitboxRadiusX = isSmallPool ? 90 : 120; // 120 * 0.75
+        const poolHitboxRadiusY = isSmallPool ? 24 : 32;  // 32 * 0.75
 
         // Havuzun sağa sola rastgele (random) doğması için güvenli X ekseni aralığı
         const poolMargin = poolHitboxRadiusX + 60;
         const randomPoolX = Math.random() * (width - poolMargin * 2) + poolMargin;
+        const poolY = height - (isSmallPool ? 26 : 35); // Küçük modda daha aşağı konumlanarak havada kalması engellendi
 
-        const pool = Bodies.circle(randomPoolX, height - 35, poolHitboxRadiusX, {
+        const pool = Bodies.circle(randomPoolX, poolY, poolHitboxRadiusX, {
             isStatic: true,
             isSensor: false,
             label: 'hedefZemin',
@@ -341,7 +342,7 @@
         // İstendiğinde havuzun yerini tekrar rastgele değiştirmek için global fonksiyon
         window.randomizePoolPosition = function () {
             const newX = Math.random() * (width - poolMargin * 2) + poolMargin;
-            Matter.Body.setPosition(pool, { x: newX, y: height - 35 });
+            Matter.Body.setPosition(pool, { x: newX, y: poolY });
             console.log("Havuz yeni rastgele konuma taşındı: X =", newX);
         };
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
@@ -429,8 +430,8 @@
                 customDomElement.src = customEmoteUrl;
                 customDomElement.className = 'custom-emote';
                 customDomElement.style.position = 'absolute';
-                customDomElement.style.width = '72px';
-                customDomElement.style.height = '72px';
+                customDomElement.style.width = isSmallPool ? '54px' : '72px';
+                customDomElement.style.height = isSmallPool ? '54px' : '72px';
                 customDomElement.style.objectFit = 'contain';
                 customDomElement.style.left = '-1000px';
                 customDomElement.style.top = '-1000px';
@@ -440,7 +441,15 @@
                 document.body.appendChild(customDomElement);
 
             } else {
-                randomChar = charConfigs[Math.floor(Math.random() * charConfigs.length)];
+                let baseChar = charConfigs[Math.floor(Math.random() * charConfigs.length)];
+                randomChar = { ...baseChar }; // Referansla değiştirmemek için kopyalıyoruz
+            }
+
+            if (isSmallPool) {
+                randomChar.radius = randomChar.radius * 0.75;
+                if (randomChar.scale) randomChar.scale = randomChar.scale * 0.75;
+                if (randomChar.yOffset) randomChar.yOffset = randomChar.yOffset * 0.75;
+                if (randomChar.nameYOffset) randomChar.nameYOffset = randomChar.nameYOffset * 0.75;
             }
 
             // Karakter objesini oluştururken görselin (resmin) boyutuna uygun bir fiziksel çap (radius) veriyoruz ki yere batmasın.
@@ -795,7 +804,8 @@
                             body.render.sprite.yOffset = 0.8; // Paraşütü karakterin üstüne taşır
 
                             // 15-18 arası paraşütler ~1300px olduğu için hedef boyutunu orantılıyoruz (~200px olmaları için)
-                            const targetScale = parasutNo >= 15 ? 0.15 : 1.0;
+                            let targetScale = parasutNo >= 15 ? 0.15 : 1.0;
+                            if (isSmallPool) targetScale *= 0.75;
                             body.plugin.targetParachuteScale = targetScale;
 
                             body.render.sprite.xScale = 0.02; // Animasyon için küçük başla
@@ -1058,7 +1068,7 @@
                     if (body.plugin.hasJetpack) {
                         let jetpackImg = charImagesMap['jetback.png'];
                         if (jetpackImg && jetpackImg.complete) {
-                            let jpScale = 0.075; // 0.06 * 1.2 = 0.075 (1.2x büyütüldü)
+                            let jpScale = isSmallPool ? 0.056 : 0.075; // 0.06 * 1.2 = 0.075 (1.2x büyütüldü)
                             let jpWidth = jetpackImg.width * jpScale;
                             let jpHeight = jetpackImg.height * jpScale;
                             context.translate(body.position.x, body.position.y);
@@ -1092,17 +1102,17 @@
                     const isLeader = (body === currentKing);
 
                     // Kullanıcı Adını Yazdır
-                    const fontSize = isLeader ? 23 : 18; // Boyutlar 1.2x büyütüldü
+                    const fontSize = isLeader ? (isSmallPool ? 17 : 23) : (isSmallPool ? 13 : 18); // Boyutlar 1.2x büyütüldü
                     // Karakter boyutları farklı olduğu için ismin yüksekliğini görselin tepesine (visual radius) göre dinamik belirliyoruz
                     const visualRadius = (body.circleRadius || 30) - (body.plugin.charYOffset || 0);
-                    const nameOffsetY = (isLeader ? (visualRadius + 28) : (visualRadius + 18)) + (body.plugin.nameYOffset || 0); // Özel karakter offset'i varsa ekle
+                    const nameOffsetY = (isLeader ? (visualRadius + (isSmallPool ? 21 : 28)) : (visualRadius + (isSmallPool ? 13 : 18))) + (body.plugin.nameYOffset || 0); // Özel karakter offset'i varsa ekle
 
                     context.font = `600 ${fontSize}px "Outfit", sans-serif`;
                     context.textAlign = "center"; // Puan ile karakter isminin hizada (ortalı) durması için
                     context.fillStyle = 'white';
                     context.shadowColor = 'rgba(0, 0, 0, 0.6)';
                     context.shadowBlur = 3;
-                    context.lineWidth = 2; // 3px'ten 2px'e düşürülerek kabalığı alındı
+                    context.lineWidth = isSmallPool ? 1.5 : 2; // 3px'ten 2px'e düşürülerek kabalığı alındı
 
                     // Etrafına ince siyah kontur çiz
                     context.strokeText(body.plugin.username, body.position.x, body.position.y - nameOffsetY);
@@ -1111,8 +1121,9 @@
 
                     // Eğer yere düşmüş ve puanı belli olmuşsa (null değilse) puanını da yazdır
                     if (body.plugin.score !== undefined && body.plugin.score !== null) {
-                        context.font = '700 23px "Outfit", sans-serif'; // Daha zarif ve modern
-                        context.lineWidth = 2;
+                        const scoreFontSize = isSmallPool ? 17 : 23;
+                        context.font = `700 ${scoreFontSize}px "Outfit", sans-serif`; // Daha zarif ve modern
+                        context.lineWidth = isSmallPool ? 1.5 : 2;
 
                         const numScore = parseFloat(body.plugin.score);
                         // Renk Kuralları:
@@ -1134,7 +1145,7 @@
                         }
 
                         // Puan boyutu 27px olduğu için ismin üzerine taşmasın diye aralığı 40'a çıkararak yukarı taşıdık
-                        const scoreOffsetY = nameOffsetY + 40;
+                        const scoreOffsetY = nameOffsetY + (isSmallPool ? 30 : 40);
 
                         context.strokeText(scoreText, body.position.x, body.position.y - scoreOffsetY);
                         context.fillText(scoreText, body.position.x, body.position.y - scoreOffsetY);
@@ -1400,9 +1411,9 @@
             const heli = document.createElement('img');
             heli.src = `Helicopter${heliNo}.png`;
             heli.style.position = 'absolute';
-            heli.style.top = '20px'; // Biraz daha yukarı alındı (50px -> 20px)
+            heli.style.top = isSmallPool ? '15px' : '20px'; // Biraz daha yukarı alındı (50px -> 20px)
             heli.style.left = '-500px';
-            heli.style.width = '450px'; // İlk haline (300) göre 1.5x büyütüldü
+            heli.style.width = isSmallPool ? '337px' : '450px'; // İlk haline (300) göre 1.5x büyütüldü
             heli.style.zIndex = '100';
             heli.style.transition = 'left 5s linear';
             heli.style.animation = 'heliBobbing 3.5s infinite ease-in-out';
@@ -1461,9 +1472,9 @@
                 plane.src = 'plane1.png';
             }
             plane.style.position = 'absolute';
-            plane.style.top = '50px';
+            plane.style.top = isSmallPool ? '37px' : '50px';
             plane.style.left = '-550px'; // Uçak daha da büyük olduğu için daha soldan başlasın
-            plane.style.width = '500px'; // 250px'in 2 katı (2x büyütüldü)
+            plane.style.width = isSmallPool ? '375px' : '500px'; // 250px'in 2 katı (2x büyütüldü)
             plane.style.zIndex = '100';
             plane.style.transition = 'left 5s linear';
             // Havacılık hissi için sağa doğru ilerlerken düz durmasını sağla (Görsel yönüne göre değiştirebilirsiniz)
