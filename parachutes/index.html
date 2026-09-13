@@ -202,7 +202,7 @@
                 if (oldRight) oldRight.remove();
             }
 
-            // Eğer pool objesi daha önceden oluşturulmuşsa görselini de değiştir
+            // Eğer pool objesi daha önceden oluşturulmuşsa görselini ve konumunu güncelle
             if (typeof pool !== 'undefined' && pool.render && pool.render.sprite) {
                 pool.render.sprite.texture = randomTheme.pool;
 
@@ -210,6 +210,11 @@
                 const scale = randomTheme.poolScale !== undefined ? randomTheme.poolScale : poolSpriteScale;
                 pool.render.sprite.xScale = scale;
                 pool.render.sprite.yScale = scale;
+
+                // Havuzu her oyun açılışında rastgele bir X konumuna taşı
+                const newPoolX = Math.random() * (width - poolMargin * 2) + poolMargin;
+                Matter.Body.setPosition(pool, { x: newPoolX, y: poolY });
+                console.log("Havuz yeni rastgele konuma taşındı: X =", newPoolX);
             }
             console.log("Yeni takım teması uygulandı:", randomTheme.bg, "Offset:", randomTheme.bgOffset);
         }
