@@ -51,7 +51,7 @@
 
 <body>
     <div id="leaderboard-container">
-        <div class="lb-title">Atla Sıralaması</div>
+        <div class="lb-title" id="lb-title-text">Atla Sıralaması</div>
         <div class="lb-list" id="leaderboard-list">
             <!-- Dinamik doldurulacak -->
         </div>
@@ -123,6 +123,14 @@
                 leaderboard = [];
             }
 
+            // Başlığı da localStorage'dan yükle (eğer kaydedilmişse)
+            try {
+                const savedTitle = localStorage.getItem('droppool_leaderboard_title');
+                if (savedTitle) {
+                    const titleEl = document.getElementById('lb-title-text');
+                    if (titleEl) titleEl.textContent = savedTitle;
+                }
+            } catch(e) {}
 
             renderLeaderboard();
         }
@@ -135,6 +143,13 @@
             } else if (event.data && event.data.type === 'LEADERBOARD_RESET') {
                 leaderboard = [];
                 renderLeaderboard();
+            } else if (event.data && event.data.type === 'TITLE_UPDATE') {
+                const titleEl = document.getElementById('lb-title-text');
+                if (titleEl && event.data.title) {
+                    titleEl.textContent = event.data.title;
+                    // Başlığı localStorage'a da kaydet (siralama.html yenilenince hatırlasın)
+                    try { localStorage.setItem('droppool_leaderboard_title', event.data.title); } catch(e) {}
+                }
             }
         };
 

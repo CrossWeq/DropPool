@@ -87,6 +87,17 @@
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
+        const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
+
+        // Tetikleyici kelimeyi başlık için hazırla (baştaki !, / gibi özel karakterleri kaldır, ilk harfi büyüt)
+        function getTriggerWord(cmd) {
+            let word = cmd.trim().replace(/^[!\/@#$%^&*]+/, ''); // Baştaki özel karakterleri sil
+            if (!word) word = 'Atla';
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        }
+        const triggerWord = getTriggerWord(commandStr);
+        const rankingWord = overlayLang === 'en' ? 'Ranking' : 'Sıralaması';
+        const leaderboardTitle = `${triggerWord} ${rankingWord}`;
 
         const activeThemesParams = urlParams.get('t') ? urlParams.get('t').split(',') : ['0', '1', '2', '3'];
         const activeThemesIndices = activeThemesParams.map(Number);
@@ -233,6 +244,8 @@
             localStorage.removeItem('droppool_leaderboard');
         } catch (e) { }
         syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
+        // Başlık bilgisini siralama.html'e gönder (sayfa yenilenince de güncellenir)
+        syncChannel.postMessage({ type: 'TITLE_UPDATE', title: leaderboardTitle });
 
         function updateLeaderboard(username, score) {
             score = parseFloat(score);
