@@ -465,7 +465,7 @@
             { file: 'characterdog2.png', scale: 0.200, radius: 44, yOffset: 0 },
             { file: 'charactersticth.png', scale: 0.180, radius: 40, yOffset: 0 } // Çok az küçültüldü
         ];
-        // Manuel çizim için resimleri önceden yüklüyoruz
+        // Manuel çizim için karakter resimlerini önceden yüklüyoruz
         charConfigs.forEach(cfg => {
             let img = new Image();
             img.src = cfg.file;
@@ -475,6 +475,35 @@
         let jetpackImg = new Image();
         jetpackImg.src = 'jetback.png';
         charImagesMap['jetback.png'] = jetpackImg;
+
+        // --- ÖNDEN YÜKLEME (PRELOAD): Paraşüt, zemin, havuz, helikopter, uçak ---
+        // Bu görseller ilk kullanımda fizik döngüsü içinde yüklenirse donmaya (freeze) yol açar.
+        // Sayfa açılışında hepsini tarayıcı önbelleğine alıyoruz.
+        (function preloadAllAssets() {
+            const filesToPreload = [
+                // Tüm paraşütler (15-18 arası büyük dosyalar — en kritikleri bunlar)
+                'parasut11.png', 'parasut12.png', 'parasut13.png', 'parasut14.png',
+                'parasut15.png', 'parasut16.png', 'parasut17.png', 'parasut18.png',
+                // Zemin görselleri
+                'pixelgrass.png', 'pixelautumn.png', 'pixelice.png', 'pixelhell.png',
+                // Havuz görselleri
+                'pixelpool.png', 'pixelpoolautumn.png', 'pixelpoolice.png', 'pixelpoolhell.png',
+                // Helikopterler
+                'Helicopter1.png', 'Helicopter2.png', 'Helicopter3.png', 'Helicopter4.png',
+                'Helicopter5.png', 'Helicopter6.png', 'Helicopter7.png', 'Helicopter8.png',
+                'Helicopter9.png',
+                // Uçaklar
+                'plane1.png', 'kinderplane2.png'
+            ];
+            filesToPreload.forEach(file => {
+                const img = new Image();
+                img.src = file;
+                // charImagesMap'e de ekleyelim ki Matter.js sprite cache'i ile çakışmasın
+                charImagesMap[file] = img;
+            });
+            console.log('[DropPool] Tüm görseller önceden yükleniyor:', filesToPreload.length, 'dosya');
+        })();
+        // --- ÖNDEN YÜKLEME SONU ---
 
         Composite.add(world, [leftWall, rightWall, ground, pool]);
 
