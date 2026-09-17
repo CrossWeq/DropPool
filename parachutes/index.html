@@ -1435,6 +1435,7 @@
 
                         const msgLower = message.toLowerCase();
                         const cmdLower = commandStr.toLowerCase();
+                        const altCmd = '!drop';
 
                         // Dive komutu kontrolü
                         let isDiveCommand = false;
@@ -1443,22 +1444,48 @@
                         let isTarzanCommand = false;
                         let isFakeCommand = false;
 
-                        if (msgLower === cmdLower + " fake" || msgLower === cmdLower + "fake" || msgLower.startsWith(cmdLower + " fake ") || msgLower.startsWith(cmdLower + "fake ") || msgLower.startsWith(cmdLower + " fake[") || msgLower.startsWith(cmdLower + "fake[")) {
+                        const _checkCmd = (base) => [
+                            [base + ' fake', base + 'fake', base + ' fake ', base + 'fake ', base + ' fake[', base + 'fake['],
+                            [base + ' dive', base + 'dive', base + ' dive ', base + 'dive ', base + ' dive[', base + 'dive['],
+                            [base + ' drunk', base + 'drunk', base + ' drunk ', base + 'drunk ', base + ' drunk[', base + 'drunk['],
+                            [base + ' tarzan', base + 'tarzan', base + ' tarzan ', base + 'tarzan ', base + ' tarzan[', base + 'tarzan['],
+                            [base + ' random', base + 'random', base + ' random ', base + 'random ', base + ' random[', base + 'random['],
+                            [base]
+                        ];
+
+                        const _matchVariant = (base) => {
+                            const sets = _checkCmd(base);
+                            for (let si = 0; si < sets.length; si++) {
+                                const s = sets[si];
+                                for (let j = 0; j < s.length; j++) {
+                                    const pat = s[j];
+                                    if (pat.endsWith('[') || pat.endsWith(' ') ? msgLower.startsWith(pat) : msgLower === pat) {
+                                        return si;
+                                    }
+                                }
+                            }
+                            return -1;
+                        };
+
+                        let variantIdx = _matchVariant(cmdLower);
+                        if (variantIdx === -1 && cmdLower !== altCmd) variantIdx = _matchVariant(altCmd);
+
+                        if (variantIdx === 0) {
                             isFakeCommand = true;
-                        } else if (msgLower === cmdLower + " dive" || msgLower === cmdLower + "dive" || msgLower.startsWith(cmdLower + " dive ") || msgLower.startsWith(cmdLower + "dive ") || msgLower.startsWith(cmdLower + " dive[") || msgLower.startsWith(cmdLower + "dive[")) {
+                        } else if (variantIdx === 1) {
                             isDiveCommand = true;
-                        } else if (msgLower === cmdLower + " drunk" || msgLower === cmdLower + "drunk" || msgLower.startsWith(cmdLower + " drunk ") || msgLower.startsWith(cmdLower + "drunk ") || msgLower.startsWith(cmdLower + " drunk[") || msgLower.startsWith(cmdLower + "drunk[")) {
+                        } else if (variantIdx === 2) {
                             isDrunkCommand = true;
-                        } else if (msgLower === cmdLower + " tarzan" || msgLower === cmdLower + "tarzan" || msgLower.startsWith(cmdLower + " tarzan ") || msgLower.startsWith(cmdLower + "tarzan ") || msgLower.startsWith(cmdLower + " tarzan[") || msgLower.startsWith(cmdLower + "tarzan[")) {
+                        } else if (variantIdx === 3) {
                             isTarzanCommand = true;
-                        } else if (msgLower === cmdLower + " random" || msgLower === cmdLower + "random" || msgLower.startsWith(cmdLower + " random ") || msgLower.startsWith(cmdLower + "random ") || msgLower.startsWith(cmdLower + " random[") || msgLower.startsWith(cmdLower + "random[")) {
+                        } else if (variantIdx === 4) {
                             const r = Math.floor(Math.random() * 5);
                             if (r === 0) isNormalDropCommand = true;
                             else if (r === 1) isDiveCommand = true;
                             else if (r === 2) isDrunkCommand = true;
                             else if (r === 3) isTarzanCommand = true;
                             else if (r === 4) isFakeCommand = true;
-                        } else if (msgLower === cmdLower || msgLower.startsWith(cmdLower + " ") || msgLower.startsWith(cmdLower + "[")) {
+                        } else if (variantIdx === 5) {
                             isNormalDropCommand = true;
                         }
 
