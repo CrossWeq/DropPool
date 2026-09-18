@@ -1445,12 +1445,12 @@
                         let isFakeCommand = false;
 
                         const _checkCmd = (base) => [
-                            [base + ' fake', base + 'fake', base + ' fake ', base + 'fake ', base + ' fake[', base + 'fake['],
-                            [base + ' dive', base + 'dive', base + ' dive ', base + 'dive ', base + ' dive[', base + 'dive['],
-                            [base + ' drunk', base + 'drunk', base + ' drunk ', base + 'drunk ', base + ' drunk[', base + 'drunk['],
-                            [base + ' tarzan', base + 'tarzan', base + ' tarzan ', base + 'tarzan ', base + ' tarzan[', base + 'tarzan['],
-                            [base + ' random', base + 'random', base + ' random ', base + 'random ', base + ' random[', base + 'random['],
-                            [base]
+                            [base + ' fake', base + 'fake', base + ' fake ', base + 'fake ', base + ' fake[', base + 'fake[', base + ' fake [', base + 'fake ['],
+                            [base + ' dive', base + 'dive', base + ' dive ', base + 'dive ', base + ' dive[', base + 'dive[', base + ' dive [', base + 'dive ['],
+                            [base + ' drunk', base + 'drunk', base + ' drunk ', base + 'drunk ', base + ' drunk[', base + 'drunk[', base + ' drunk [', base + 'drunk ['],
+                            [base + ' tarzan', base + 'tarzan', base + ' tarzan ', base + 'tarzan ', base + ' tarzan[', base + 'tarzan[', base + ' tarzan [', base + 'tarzan ['],
+                            [base + ' random', base + 'random', base + ' random ', base + 'random ', base + ' random[', base + 'random[', base + ' random [', base + 'random ['],
+                            [base, base + ' [', base + '[']
                         ];
 
                         const _matchVariant = (base) => {
@@ -1459,7 +1459,8 @@
                                 const s = sets[si];
                                 for (let j = 0; j < s.length; j++) {
                                     const pat = s[j];
-                                    if (pat.endsWith('[') || pat.endsWith(' ') ? msgLower.startsWith(pat) : msgLower === pat) {
+                                    // Boşluk, '[' veya ' [' ile biten kalıplar → startsWith ile kontrol et
+                                    if (pat.endsWith('[') || pat.endsWith(' ') || pat.endsWith(' [') ? msgLower.startsWith(pat) : msgLower === pat) {
                                         return si;
                                     }
                                 }
