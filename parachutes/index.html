@@ -89,6 +89,27 @@
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
         const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
 
+        // --- DOĞUM GÜNÜ TEMASI KONTROLÜ ---
+        const birthMonth = parseInt(urlParams.get('bm'));
+        const birthDay = parseInt(urlParams.get('bd'));
+        let isBirthdayMode = false;
+        
+        if (!isNaN(birthMonth) && !isNaN(birthDay)) {
+            const today = new Date();
+            const currentMonth = today.getMonth() + 1;
+            const currentDay = today.getDate();
+            
+            // Artık yıl olmayan yıllarda 29 Şubat için 28 Şubat esnekliği
+            const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+            const targetDay = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear())) ? 28 : birthDay;
+            
+            if (currentMonth === birthMonth && currentDay === targetDay) {
+                isBirthdayMode = true;
+                console.log("Bugün yayıncının doğum günü! Doğum günü teması aktif!");
+            }
+        }
+        window.isBirthdayMode = isBirthdayMode; // global erişim için
+
         // Tetikleyici kelimeyi başlık için hazırla (baştaki !, / gibi özel karakterleri kaldır, ilk harfi büyüt)
         function getTriggerWord(cmd) {
             let word = cmd.trim().replace(/^[!\/@#$%^&*]+/, ''); // Baştaki özel karakterleri sil
@@ -142,9 +163,18 @@
         }
 
         function applyRandomTheme() {
-            const activeThemesArr = themes.filter((t, index) => activeThemesIndices.includes(index));
-            const listToUse = activeThemesArr.length > 0 ? activeThemesArr : themes;
-            const randomTheme = listToUse[Math.floor(Math.random() * listToUse.length)];
+            let randomTheme;
+            if (isBirthdayMode) {
+                // Doğum günü temasında zemin pixelgrass, havuz ise rastgele bir pasta (cake1 - cake5) olur
+                const randomCakeNum = Math.floor(Math.random() * 5) + 1;
+                // Pastalar havuzla aynı boyutta görünsün diye özel scale (ölçek) uyguluyoruz
+                const cakeScale = isSmallPool ? 0.20 : 0.32; 
+                randomTheme = { bg: 'pixelgrass.png', pool: `party/cake${randomCakeNum}.png`, bgOffset: 150, poolScale: cakeScale };
+            } else {
+                const activeThemesArr = themes.filter((t, index) => activeThemesIndices.includes(index));
+                const listToUse = activeThemesArr.length > 0 ? activeThemesArr : themes;
+                randomTheme = listToUse[Math.floor(Math.random() * listToUse.length)];
+            }
 
             if (showBackground) {
                 if (isSmallPool) {
@@ -459,14 +489,28 @@
             { file: 'chractercat.png', scale: 0.030, radius: 20, yOffset: -2 },
             { file: 'chracterchef.png', scale: 0.100, radius: 30, yOffset: 2 },
             // Yeni Eklenen Karakterler
-            { file: 'characterfrog.png', scale: 0.053, radius: 36, yOffset: 0 }, // 1.5x büyütüldü
+            { file: 'characterfrog.png', scale: 0.058, radius: 36, yOffset: 0 }, // 1.1x büyütüldü (eski 0.053)
             { file: 'charactercat3.png', scale: 0.100, radius: 25, yOffset: 0 }, // 1.1x küçültüldü
             { file: 'charactercat2.png', scale: 0.200, radius: 44, yOffset: 0 }, // Daha da büyütüldü
             { file: 'characterdog2.png', scale: 0.200, radius: 44, yOffset: 0 },
             { file: 'charactersticth.png', scale: 0.180, radius: 40, yOffset: 0 } // Çok az küçültüldü
         ];
+
+        // --- DOĞUM GÜNÜ PARTİ KARAKTERLERİ ---
+        // Yeni görsellerin hepsi muhtemelen aynı boyutta dışa aktarıldığı için, farklı scale değerleri bazılarını devasa, bazılarını minicik yaptı.
+        // Hepsine ortak ve dengeli bir scale/radius veriyoruz:
+        const partyCharConfigs = [
+            { file: 'party/partycharactercat.png', scale: 0.200, radius: 35, yOffset: 0 }, // 1.1x küçültüldü
+            { file: 'party/partycharactercat2.png', scale: 0.080, radius: 35, yOffset: 0 },
+            { file: 'party/partycharactercat3.png', scale: 0.110, radius: 35, yOffset: 0 }, // 1.1x büyütüldü
+            { file: 'party/partycharacterchef.png', scale: 0.250, radius: 35, yOffset: 0 }, // 2.5x büyütüldü
+            { file: 'party/partycharacterdog.png', scale: 0.100, radius: 35, yOffset: 0 },
+            { file: 'party/partycharacterfrog.png', scale: 0.160, radius: 35, yOffset: 0 }, // 1.6x büyütüldü
+            { file: 'party/partycharactersticth.png', scale: 0.200, radius: 35, yOffset: 0 } // 2.5x büyütüldü
+        ];
+
         // Manuel çizim için karakter resimlerini önceden yüklüyoruz
-        charConfigs.forEach(cfg => {
+        [...charConfigs, ...partyCharConfigs].forEach(cfg => {
             let img = new Image();
             img.src = cfg.file;
             charImagesMap[cfg.file] = img;
@@ -571,7 +615,12 @@
                 document.body.appendChild(customDomElement);
 
             } else {
-                let baseChar = charConfigs[Math.floor(Math.random() * charConfigs.length)];
+                let baseChar;
+                if (isBirthdayMode) {
+                    baseChar = partyCharConfigs[Math.floor(Math.random() * partyCharConfigs.length)];
+                } else {
+                    baseChar = charConfigs[Math.floor(Math.random() * charConfigs.length)];
+                }
                 randomChar = { ...baseChar }; // Referansla değiştirmemek için kopyalıyoruz
             }
 
@@ -927,14 +976,20 @@
                             body.plugin.parachuteOpening = true; // Açılış animasyonunu başlat
 
                             // Kullanıcının panelden seçtiği aktif paraşütler arasından rastgele birini seç
-                            const listToUse = activeParachutes.length > 0 ? activeParachutes : [11];
-                            const parasutNo = listToUse[Math.floor(Math.random() * listToUse.length)];
+                            let targetScale = 1.0;
+                            
+                            if (isBirthdayMode) {
+                                body.render.sprite.texture = 'party/partybaloons.png';
+                                targetScale = 0.43; // 0.36'dan 1.2x daha büyütüldü
+                            } else {
+                                const listToUse = activeParachutes.length > 0 ? activeParachutes : [11];
+                                const parasutNo = listToUse[Math.floor(Math.random() * listToUse.length)];
+                                body.render.sprite.texture = `parasut${parasutNo}.png`;
+                                targetScale = parasutNo >= 15 ? 0.15 : 1.0;
+                            }
 
-                            body.render.sprite.texture = `parasut${parasutNo}.png`;
                             body.render.sprite.yOffset = 0.8; // Paraşütü karakterin üstüne taşır
 
-                            // 15-18 arası paraşütler ~1300px olduğu için hedef boyutunu orantılıyoruz (~200px olmaları için)
-                            let targetScale = parasutNo >= 15 ? 0.15 : 1.0;
                             if (isSmallPool) targetScale *= 0.60;
                             body.plugin.targetParachuteScale = targetScale;
 
@@ -1163,7 +1218,8 @@
             const bodies = Composite.allBodies(world);
 
             // Havuzun merkezindeki su yüzeyine belirgin transparan "CrossWeq" yazısı
-            if (typeof pool !== 'undefined' && pool) {
+            // Sadece doğum günü (party) modu DEĞİLSE görünsün
+            if (typeof pool !== 'undefined' && pool && !isBirthdayMode) {
                 context.save();
                 context.textAlign = 'center';
                 context.textBaseline = 'middle';
@@ -1843,6 +1899,25 @@
 
         // Uçağı test etmek için otomatik çalıştırıyoruz
         // window.testKinderPlane();
+
+        // --- DOĞUM GÜNÜ PARTİ TEST SENARYOSU ---
+        window.testParty = () => {
+            console.log("Party test senaryosu başlatıldı. Her 2 saniyede bir karakter atlayacak.");
+            let testCounter = 1;
+            
+            // İlk atlayışı anında yap
+            spawnCharacter(`TestKullanicisi${testCounter}`, null, null, -50, false, false, false);
+
+            // Ardından her 2 saniyede bir atlat
+            setInterval(() => {
+                testCounter++;
+                spawnCharacter(`TestKullanicisi${testCounter}`, null, null, -50, false, false, false);
+            }, 2000);
+        };
+
+        // Kullanıcının isteği üzerine testi anında başlatıyoruz:
+        // window.testParty(); // Test durduruldu
+
         // Sayfa açılır açılmaz tüm helikopterleri test etmek için:
         /*
         setTimeout(() => {

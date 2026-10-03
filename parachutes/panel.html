@@ -181,6 +181,38 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- Doğum Günü Teması -->
+                <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
+                    <div class="space-y-1 mb-3">
+                        <label class="text-sm font-medium text-gray-300" data-i18n="birthdayTitle">Doğum Günü Teması (Opsiyonel)</label>
+                        <p class="text-xs text-gray-500" data-i18n="birthdayDesc">Doğum tarihinizde (sadece gün ve ay) otomatik olarak özel doğum günü teması aktif olur.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <select id="birthMonth" class="w-full bg-black/50 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-400">
+                                <option value="" data-i18n="monthSelect">Ay Seçin</option>
+                                <option value="1" data-i18n="m1">Ocak</option>
+                                <option value="2" data-i18n="m2">Şubat</option>
+                                <option value="3" data-i18n="m3">Mart</option>
+                                <option value="4" data-i18n="m4">Nisan</option>
+                                <option value="5" data-i18n="m5">Mayıs</option>
+                                <option value="6" data-i18n="m6">Haziran</option>
+                                <option value="7" data-i18n="m7">Temmuz</option>
+                                <option value="8" data-i18n="m8">Ağustos</option>
+                                <option value="9" data-i18n="m9">Eylül</option>
+                                <option value="10" data-i18n="m10">Ekim</option>
+                                <option value="11" data-i18n="m11">Kasım</option>
+                                <option value="12" data-i18n="m12">Aralık</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <select id="birthDay" disabled class="w-full bg-black/50 border border-gray-700/50 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-400 disabled:opacity-50">
+                                <option value="" data-i18n="daySelect">Gün Seçin</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Paraşütler -->
@@ -301,7 +333,23 @@
             copied: { tr: "Kopyalandı!", en: "Copied!" },
             alert1: { tr: "Lütfen en az 1 tema seçin!", en: "Please select at least 1 theme!" },
             alert2: { tr: "Lütfen en az 1 paraşüt seçin!", en: "Please select at least 1 parachute!" },
-            helpTitle: { tr: "Nasıl Kurulur & Özellikler", en: "How to Install & Features" }
+            helpTitle: { tr: "Nasıl Kurulur & Özellikler", en: "How to Install & Features" },
+            birthdayTitle: { tr: "Doğum Günü Teması (Opsiyonel)", en: "Birthday Theme (Optional)" },
+            birthdayDesc: { tr: "Doğum tarihinizde (sadece gün ve ay) otomatik olarak özel doğum günü teması aktif olur.", en: "On your birthday (day and month only), the special birthday theme activates automatically." },
+            monthSelect: { tr: "Ay Seçin", en: "Select Month" },
+            daySelect: { tr: "Gün Seçin", en: "Select Day" },
+            m1: { tr: "Ocak", en: "January" },
+            m2: { tr: "Şubat", en: "February" },
+            m3: { tr: "Mart", en: "March" },
+            m4: { tr: "Nisan", en: "April" },
+            m5: { tr: "Mayıs", en: "May" },
+            m6: { tr: "Haziran", en: "June" },
+            m7: { tr: "Temmuz", en: "July" },
+            m8: { tr: "Ağustos", en: "August" },
+            m9: { tr: "Eylül", en: "September" },
+            m10: { tr: "Ekim", en: "October" },
+            m11: { tr: "Kasım", en: "November" },
+            m12: { tr: "Aralık", en: "December" }
         };
 
         const getHelpContent = (cmd, lang) => {
@@ -341,6 +389,11 @@
                     <li>YA DA OBS'te 'Paneller -> Özel Tarayıcı Yuvaları' kısmına ekleyip paneli OBS içine gömebilirsiniz.</li>
                     <li>Buradan kimin kaç kez atladığını, rekor puanlarını, Canlı Olay Akışını ve Tüm Zamanların Top 10'u tablosunu görebilirsiniz.</li>
                 </ul>
+
+                <h3 class="text-lg font-semibold text-white mt-4">🎂 Doğum Günü Teması</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li>Ayarlar kısmından doğum ayınızı ve gününüzü seçerseniz, belirlediğiniz tarihte yayın açtığınızda oyun otomatik olarak "Doğum Günü" konseptine bürünür!</li>
+                </ul>
             `;
             const en = `
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 How to Install?</h3>
@@ -377,6 +430,11 @@
                     <li>You can add this link as a 'Browser Source' from the sources section in OBS.</li>
                     <li>OR you can embed the panel into OBS by adding it via 'Docks -> Custom Browser Docks'.</li>
                     <li>Here you can see jump counts, record scores, Live Event Logs, and the All-Time Top 10 Leaderboard.</li>
+                </ul>
+
+                <h3 class="text-lg font-semibold text-white mt-4">🎂 Birthday Theme</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li>If you select your birth month and day in the settings, the game will automatically switch to the "Birthday" concept when you stream on that date!</li>
                 </ul>
             `;
             return lang === 'tr' ? tr : en;
@@ -549,6 +607,29 @@
                     channelError.classList.add('hidden');
                 }
             });
+
+            // Doğum günü dinamik gün doldurma
+            const birthMonthSelect = document.getElementById('birthMonth');
+            const birthDaySelect = document.getElementById('birthDay');
+            
+            birthMonthSelect.addEventListener('change', function() {
+                const month = parseInt(this.value);
+                birthDaySelect.innerHTML = `<option value="" data-i18n="daySelect">${i18n.daySelect[lang]}</option>`;
+                
+                if (!month) {
+                    birthDaySelect.disabled = true;
+                    return;
+                }
+                
+                birthDaySelect.disabled = false;
+                let daysInMonth = 31;
+                if (month === 2) daysInMonth = 29;
+                else if ([4, 6, 9, 11].includes(month)) daysInMonth = 30;
+                
+                for (let i = 1; i <= daysInMonth; i++) {
+                    birthDaySelect.innerHTML += `<option value="${i}">${i}</option>`;
+                }
+            });
         });
 
         const themes = [
@@ -674,6 +755,9 @@
             const bgToggle = document.getElementById('bgToggle').checked ? 1 : 0;
             const poolSizeVal = document.querySelector('input[name="poolSize"]:checked').value;
             
+            const birthMonth = document.getElementById('birthMonth').value;
+            const birthDay = document.getElementById('birthDay').value;
+            
             const overlayParams = new URLSearchParams({
                 kanal: channel,
                 cmd: cmd,
@@ -684,6 +768,11 @@
                 p: selectedParachutes.join(','),
                 lang: lang
             });
+
+            if (birthMonth && birthDay) {
+                overlayParams.append('bm', birthMonth);
+                overlayParams.append('bd', birthDay);
+            }
 
             const lbParams = new URLSearchParams({
                 kanal: channel
