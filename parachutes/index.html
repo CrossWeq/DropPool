@@ -99,24 +99,36 @@
         function checkBirthdayStatus() {
             if (!isNaN(birthMonth) && !isNaN(birthDay)) {
                 const today = new Date();
-                const currentMonth = today.getMonth() + 1;
-                const currentDay = today.getDate();
                 
                 // Artık yıl olmayan yıllarda 29 Şubat için 28 Şubat esnekliği
                 const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-                const targetDay = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear())) ? 28 : birthDay;
                 
-                if (currentMonth === birthMonth && currentDay === targetDay) {
+                // Bu yılın doğum günü tarihi
+                const targetDayThisYear = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear())) ? 28 : birthDay;
+                let birthdayThisYear = new Date(today.getFullYear(), birthMonth - 1, targetDayThisYear, 0, 0, 0);
+                
+                // Geçen yılın doğum günü tarihi (Yılbaşı geçişi - 31 Aralık gecesi - için gerekli)
+                const targetDayLastYear = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear() - 1)) ? 28 : birthDay;
+                let birthdayLastYear = new Date(today.getFullYear() - 1, birthMonth - 1, targetDayLastYear, 0, 0, 0);
+                
+                // Bitiş saatleri: Doğum gününden 30 saat sonra (Ertesi gün sabah 06:00)
+                let endDateThisYear = new Date(birthdayThisYear.getTime() + (30 * 60 * 60 * 1000));
+                let endDateLastYear = new Date(birthdayLastYear.getTime() + (30 * 60 * 60 * 1000));
+                
+                let isPartyTime = (today >= birthdayThisYear && today < endDateThisYear) || 
+                                  (today >= birthdayLastYear && today < endDateLastYear);
+                
+                if (isPartyTime) {
                     if (!isBirthdayMode) {
                         isBirthdayMode = true;
                         window.isBirthdayMode = true; // global erişim için
-                        console.log("Bugün yayıncının doğum günü! Doğum günü teması otomatik aktif edildi!");
+                        console.log("Bugün yayıncının doğum günü (veya kutlaması devam ediyor)! Doğum günü teması aktif!");
                     }
                 } else {
                     if (isBirthdayMode) {
                         isBirthdayMode = false;
                         window.isBirthdayMode = false; // global erişim için
-                        console.log("Doğum günü bitti, normal temaya dönülüyor.");
+                        console.log("Doğum günü kutlaması bitti, normal temaya dönülüyor.");
                     }
                 }
             }
@@ -1639,7 +1651,7 @@
                             [base + ' drunk', base + 'drunk', base + ' drunk ', base + 'drunk ', base + ' drunk[', base + 'drunk[', base + ' drunk [', base + 'drunk ['],
                             [base + ' tarzan', base + 'tarzan', base + ' tarzan ', base + 'tarzan ', base + ' tarzan[', base + 'tarzan[', base + ' tarzan [', base + 'tarzan ['],
                             [base + ' random', base + 'random', base + ' random ', base + 'random ', base + ' random[', base + 'random[', base + ' random [', base + 'random ['],
-                            [base, base + ' [', base + '[']
+                            [base + ' ', base + ' [', base + '[', base]
                         ];
 
                         const _matchVariant = (base) => {
