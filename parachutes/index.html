@@ -76,6 +76,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <!-- Pusher JS kütüphanesi (Kick Chat için) -->
     <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+    <!-- Canvas Confetti kütüphanesi (Doğum günü patlamaları için) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
@@ -94,21 +96,37 @@
         const birthDay = parseInt(urlParams.get('bd'));
         let isBirthdayMode = false;
         
-        if (!isNaN(birthMonth) && !isNaN(birthDay)) {
-            const today = new Date();
-            const currentMonth = today.getMonth() + 1;
-            const currentDay = today.getDate();
-            
-            // Artık yıl olmayan yıllarda 29 Şubat için 28 Şubat esnekliği
-            const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-            const targetDay = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear())) ? 28 : birthDay;
-            
-            if (currentMonth === birthMonth && currentDay === targetDay) {
-                isBirthdayMode = true;
-                console.log("Bugün yayıncının doğum günü! Doğum günü teması aktif!");
+        function checkBirthdayStatus() {
+            if (!isNaN(birthMonth) && !isNaN(birthDay)) {
+                const today = new Date();
+                const currentMonth = today.getMonth() + 1;
+                const currentDay = today.getDate();
+                
+                // Artık yıl olmayan yıllarda 29 Şubat için 28 Şubat esnekliği
+                const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+                const targetDay = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear())) ? 28 : birthDay;
+                
+                if (currentMonth === birthMonth && currentDay === targetDay) {
+                    if (!isBirthdayMode) {
+                        isBirthdayMode = true;
+                        window.isBirthdayMode = true; // global erişim için
+                        console.log("Bugün yayıncının doğum günü! Doğum günü teması otomatik aktif edildi!");
+                    }
+                } else {
+                    if (isBirthdayMode) {
+                        isBirthdayMode = false;
+                        window.isBirthdayMode = false; // global erişim için
+                        console.log("Doğum günü bitti, normal temaya dönülüyor.");
+                    }
+                }
             }
         }
-        window.isBirthdayMode = isBirthdayMode; // global erişim için
+
+        // Sayfa ilk yüklendiğinde bir kez kontrol et
+        checkBirthdayStatus();
+        
+        // Gece 00:00 geçişlerini yakalamak için her 1 dakikada (60000 ms) bir tarihi gizlice kontrol et
+        setInterval(checkBirthdayStatus, 60000);
 
         // Tetikleyici kelimeyi başlık için hazırla (baştaki !, / gibi özel karakterleri kaldır, ilk harfi büyüt)
         function getTriggerWord(cmd) {
@@ -1158,6 +1176,54 @@
                         addDropPoolLog(characterBody.plugin.username, 'PUAN', `${calculatedScore} puan aldı (Havuza indi).`);
                         updateDropPoolStats(characterBody.plugin.username, 'SCORE', calculatedScore);
 
+                        // --- 95-98 ARASI İÇİN KONFETİ (Effect 3 - Geliştirilmiş) ---
+                        if (calculatedScore >= 95 && calculatedScore < 99 && typeof confetti === 'function') {
+                            // Sağdan ve soldan daha uzağa (startVelocity: 80) fırlayan stadyum topu
+                            const cannons = { particleCount: 100, spread: 55, startVelocity: 80, zIndex: 9999, colors: ['#FFD700', '#FF69B4', '#00FFFF', '#32CD32', '#FF4500'] };
+                            confetti({ ...cannons, angle: 60, origin: { x: 0, y: 1 } });
+                            confetti({ ...cannons, angle: 120, origin: { x: 1, y: 1 } });
+                        }
+
+                        // --- 99 ÜSTÜ EFSANEVİ ATLAYIŞ İÇİN ÖZEL EFEKT ---
+                        if (calculatedScore >= 99 && typeof confetti === 'function') {
+                            // 1. Ekranın tam ortasında devasa "Altın ve Beyaz" yıldız patlaması
+                            confetti({
+                                particleCount: 200,
+                                spread: 160,
+                                startVelocity: 60,
+                                origin: { x: 0.5, y: 0.5 },
+                                colors: ['#FFD700', '#FFFFFF', '#FFA500'],
+                                shapes: ['star'],
+                                ticks: 350, // Şelalenin bitişiyle aynı ana denk gelmesi (senkron) için ömrü uzatıldı
+                                zIndex: 9999
+                            });
+                            
+                            // 2. Ardından 2 saniye boyunca altın şelalesi (Festival Yağmuru)
+                            const duration = 2000;
+                            const end = Date.now() + duration;
+                            (function frame() {
+                                confetti({
+                                    particleCount: 5,
+                                    angle: -60,
+                                    spread: 55,
+                                    origin: { x: 0, y: 0 },
+                                    colors: ['#FFD700', '#FFFFFF'],
+                                    zIndex: 9999
+                                });
+                                confetti({
+                                    particleCount: 5,
+                                    angle: -120,
+                                    spread: 55,
+                                    origin: { x: 1, y: 0 },
+                                    colors: ['#FFD700', '#FFFFFF'],
+                                    zIndex: 9999
+                                });
+                                if (Date.now() < end) {
+                                    requestAnimationFrame(frame);
+                                }
+                            }());
+                        }
+
                         // Kral Mekaniği (Mevcut kralın puanını al, yoksa -1 say)
                         let currentKingScore = (currentKing && currentKing.plugin && currentKing.plugin.score) ? parseFloat(currentKing.plugin.score) : -1;
 
@@ -1166,6 +1232,21 @@
                             finalScore = clampedScore.toFixed(2);
                             waitTime = 30000; // Kral 30 saniye bekleyecek
 
+                            // --- YENİ LİDER KONFETİSİ (Effect 2) ---
+                            // Sadece mesafesi biraz azaltılmış (startVelocity: 35) havuzdan fışkırma
+                            if (typeof confetti === 'function') {
+                                let poolX = 0.5;
+                                if (typeof pool !== 'undefined' && pool) poolX = pool.position.x / window.innerWidth;
+                                confetti({
+                                    particleCount: 120,
+                                    spread: 60,
+                                    startVelocity: 35, // Daha da azaltıldı (eski 45'ti)
+                                    origin: { x: poolX, y: 1 },
+                                    colors: ['#FFD700', '#FF69B4', '#00FFFF', '#32CD32', '#FF4500'],
+                                    zIndex: 9999
+                                });
+                            }
+
                             // Eğer içeride eski bir kral varsa süresini beklemeden hemen sil
                             if (currentKing) {
                                 if (currentKing.plugin.removeTimer) clearTimeout(currentKing.plugin.removeTimer);
@@ -1173,6 +1254,7 @@
                             }
 
                             currentKing = characterBody; // Yeni kral artık bu kişi
+
 
                             // Kralın süresi: 30 saniye sonra gidecek
                             characterBody.plugin.removeTimer = setTimeout(() => {
@@ -1213,6 +1295,9 @@
         });
 
         // --- 7. KULLANICI İSİMLERİ VE PUANLARI ÇİZİMİ ---
+        const trailParticles = [];
+        const trailColors = ['#FFD700', '#FF69B4', '#00FFFF', '#32CD32', '#FF4500']; // Altın, Pembe, Cam Göbeği, Yeşil, Turuncu
+
         Events.on(render, 'afterRender', function () {
             const context = render.context;
             const bodies = Composite.allBodies(world);
@@ -1244,6 +1329,23 @@
             for (let i = 0; i < bodies.length; i++) {
                 const body = bodies[i];
                 if (body.label === 'karakter' && body.plugin && body.plugin.username) {
+
+                    // --- PARTİ IŞILTILI KUYRUK ÜRETİMİ ---
+                    if (isBirthdayMode && !body.plugin.landed) {
+                        // Havada düşerken her karede %40 şansla meteor izi / parti ışıltısı üret
+                        if (Math.random() < 0.4) {
+                            trailParticles.push({
+                                x: body.position.x + (Math.random() - 0.5) * 30, // Karakter genişliğinde rastgele X
+                                y: body.position.y - 15, // Karakterin hemen arka/üst kısmından çıksın
+                                vx: (Math.random() - 0.5) * 1.5, // Hafif sağa sola saçılma
+                                vy: Math.random() * -1.5 - 0.5,  // Yukarıya (geriye) doğru uçuşma
+                                life: 1, // Yaşam süresi (Şeffaflık)
+                                size: Math.random() * 3 + 1.5, // Parçacık boyutu
+                                color: trailColors[Math.floor(Math.random() * trailColors.length)]
+                            });
+                        }
+                    }
+
                     // Karakterleri her zaman manuel olarak çiziyoruz, böylece paraşüt açıldığında veya yere değdiğinde asla yok olmuyorlar.
                     context.save();
                     // Karakterin kendi şeffaflığını (ballOpacity) kullan (Paraşütün silinme animasyonu karaktere yansımasın)
@@ -1340,6 +1442,36 @@
                     // Gölgeleri kapat (diğer çizimleri etkilememesi için)
                     context.shadowBlur = 0;
                 }
+            }
+
+            // --- PARTİ IŞILTILI KUYRUK ÇİZİMİ ---
+            if (isBirthdayMode) {
+                context.save();
+                context.shadowBlur = 5; // Parçacıklara (Glow) parlama efekti
+                
+                for (let i = trailParticles.length - 1; i >= 0; i--) {
+                    let p = trailParticles[i];
+                    p.life -= 0.015; // Yavaşça sönme
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Ömrü biten parçacığı listeden temizle
+                    if (p.life <= 0) {
+                        trailParticles.splice(i, 1);
+                        continue;
+                    }
+
+                    // Şeffaflığı ve renkleri ayarla
+                    context.globalAlpha = p.life;
+                    context.fillStyle = p.color;
+                    context.shadowColor = p.color; // Kendi renginde parlasın
+                    
+                    // Parçacığı (yuvarlak yıldız) çiz
+                    context.beginPath();
+                    context.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+                    context.fill();
+                }
+                context.restore();
             }
         });
 
@@ -1924,6 +2056,8 @@
             window.testHelikopterler();
         }, 1000);
         */
+
+
 
     </script>
 </body>
