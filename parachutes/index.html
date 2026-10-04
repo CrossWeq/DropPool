@@ -1478,6 +1478,7 @@
         // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
         // Saniyede bir kez ekranda hiç karakter kaldı mı kontrol et
         let overlayIdleTimerRef = null;
+        let activeVehicles = 0; // Helikopter veya uçak havada mı?
         setInterval(() => {
             if (typeof Composite !== 'undefined' && typeof world !== 'undefined') {
                 // Sahnede herhangi bir karakter (kral dahil) var mı kontrol et
@@ -1493,7 +1494,7 @@
                 });
 
                 // Eğer sahnede HİÇ karakter kalmadıysa ve overlay açıksa 5 saniyelik zamanlayıcıyı başlat
-                if (activeChars === 0 && isOverlayVisible) {
+                if (activeChars === 0 && activeVehicles === 0 && isOverlayVisible) {
                     if (!overlayIdleTimerRef) {
                         overlayIdleTimerRef = setTimeout(() => {
                             isOverlayVisible = false;
@@ -1516,8 +1517,8 @@
                             }, 1500);
                         }, 5000); // 5 saniye bekle
                     }
-                } else if (activeChars > 0 && overlayIdleTimerRef) {
-                    // Ekranda karakter varsa (biri yeni atladıysa) gizleme işlemini iptal et
+                } else if ((activeChars > 0 || activeVehicles > 0) && overlayIdleTimerRef) {
+                    // Ekranda karakter varsa (veya araç uçuyorsa) gizleme işlemini iptal et
                     clearTimeout(overlayIdleTimerRef);
                     overlayIdleTimerRef = null;
                 }
@@ -1741,6 +1742,8 @@
 
         // --- HELİKOPTER (DIVE) ANİMASYONU ---
         function triggerHelicopterDrop(username, customEmoteUrl, forcedHeliNo = null) {
+            activeVehicles++; // Araç sayısını artır
+
             // Eğer ekran kapalıysa arka planı uyandır
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -1791,6 +1794,7 @@
 
             setTimeout(() => {
                 if (heli.parentNode) heli.parentNode.removeChild(heli);
+                activeVehicles--; // Araç sayısını azalt
             }, 5000);
         }
 
@@ -1798,6 +1802,7 @@
         function triggerPlaneDrop() {
             if (dropTogetherQueue.length === 0) return;
 
+            activeVehicles++; // Araç sayısını artır
             isPlaneFlying = true;
 
             // Eğer ekran kapalıysa arka planı uyandır
@@ -1862,6 +1867,7 @@
             setTimeout(() => {
                 if (plane.parentNode) plane.parentNode.removeChild(plane);
                 isPlaneFlying = false;
+                activeVehicles--; // Araç sayısını azalt
             }, 5000);
         }
 
