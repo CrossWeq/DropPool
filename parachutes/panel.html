@@ -158,6 +158,18 @@
                     </label>
                 </div>
 
+                <!-- Karakter Efekti Toggle -->
+                <div class="flex items-center justify-between bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-300" data-i18n="trailToggleTitle">Karakter Efekti</label>
+                        <p class="text-xs text-gray-500" data-i18n="trailToggleDesc">Kapatırsanız düşen karakterlerin arkasındaki renkli ışıltı efekti görünmez.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="trailToggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
+                </div>
+
                 <!-- Havuz Boyutu -->
                 <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
                     <div class="space-y-1 mb-3">
@@ -310,6 +322,8 @@
             subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
             bgToggleTitle: { tr: "Zemin Görselleri", en: "Floor Visuals" },
             bgToggleDesc: { tr: "Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.", en: "If disabled, only the pool is visible and the floor becomes transparent." },
+            trailToggleTitle: { tr: "Karakter Efekti", en: "Character Effect" },
+            trailToggleDesc: { tr: "Kapatırsanız düşen karakterlerin arkasındaki renkli ışıltı efekti görünmez.", en: "If disabled, the colorful glow effect behind falling characters is hidden." },
             poolSizeTitle: { tr: "Oyun Boyutu", en: "Game Size" },
             poolSizeDesc: { tr: "Havuzun, karakterlerin ve tüm objelerin ekrandaki büyüklüğünü ayarlayın.", en: "Adjust the screen size of the pool, characters, and all objects." },
             poolSizeNormal: { tr: "Normal", en: "Normal" },
@@ -374,6 +388,7 @@
                     <li><strong>Rastgele Atlayış (Random):</strong> <code>${cmd} random</code> yazıldığında, normal, dive, drunk, tarzan veya fake modlarından biri tamamen rastgele seçilerek uygulanır.</li>
                     <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
+                    <li><strong>Karakter Efekti:</strong> Düşen her karakterin arkasında onu takip eden ışıltılı ve renkli bir meteor izi efekti görünür.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
@@ -416,6 +431,7 @@
                     <li><strong>Random Drop:</strong> Typing <code>${cmd} random</code> will randomly select and apply one of the normal, dive, drunk, tarzan, or fake modes.</li>
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
+                    <li><strong>Character Effect:</strong> Every falling character leaves a glowing, colorful meteor trail effect behind them.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
@@ -753,6 +769,7 @@
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
             
             const bgToggle = document.getElementById('bgToggle').checked ? 1 : 0;
+            const trailToggle = document.getElementById('trailToggle').checked ? 1 : 0;
             const poolSizeVal = document.querySelector('input[name="poolSize"]:checked').value;
             
             const birthMonth = document.getElementById('birthMonth').value;
@@ -763,6 +780,7 @@
                 cmd: cmd,
                 cd: cooldown,
                 bg: bgToggle,
+                tr: trailToggle,
                 ps: poolSizeVal,
                 t: selectedThemes.join(','),
                 p: selectedParachutes.join(','),

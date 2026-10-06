@@ -28,16 +28,19 @@
         }
 
         /* Küçük mod zemin div'leri */
-        .bg-split-left, .bg-split-right {
+        .bg-split-left,
+        .bg-split-right {
             position: fixed;
             top: 0;
             width: 50%;
             height: 100%;
             background-repeat: no-repeat;
             background-position-y: bottom;
-            z-index: -1; /* Havuzun her zaman ön planda (canvas üstte) olması için -1 yapıldı */
+            z-index: -1;
+            /* Havuzun her zaman ön planda (canvas üstte) olması için -1 yapıldı */
             pointer-events: none;
         }
+
         .bg-split-left {
             left: 0;
             /* Sağ kenardan hafif aşarak tam ortada birleşsin */
@@ -45,6 +48,7 @@
             /* clip: soldaki görselin sağ yarısından kesiyoruz */
             clip-path: inset(0 0 0 0);
         }
+
         .bg-split-right {
             right: 0;
             background-position-x: right;
@@ -89,35 +93,36 @@
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
+        const showTrail = urlParams.get('tr') !== '0'; // Varsayılan olarak true (1)
         const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
 
         // --- DOĞUM GÜNÜ TEMASI KONTROLÜ ---
         const birthMonth = parseInt(urlParams.get('bm'));
         const birthDay = parseInt(urlParams.get('bd'));
         let isBirthdayMode = false;
-        
+
         function checkBirthdayStatus() {
             if (!isNaN(birthMonth) && !isNaN(birthDay)) {
                 const today = new Date();
-                
+
                 // Artık yıl olmayan yıllarda 29 Şubat için 28 Şubat esnekliği
                 const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
-                
+
                 // Bu yılın doğum günü tarihi
                 const targetDayThisYear = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear())) ? 28 : birthDay;
                 let birthdayThisYear = new Date(today.getFullYear(), birthMonth - 1, targetDayThisYear, 0, 0, 0);
-                
+
                 // Geçen yılın doğum günü tarihi (Yılbaşı geçişi - 31 Aralık gecesi - için gerekli)
                 const targetDayLastYear = (birthMonth === 2 && birthDay === 29 && !isLeapYear(today.getFullYear() - 1)) ? 28 : birthDay;
                 let birthdayLastYear = new Date(today.getFullYear() - 1, birthMonth - 1, targetDayLastYear, 0, 0, 0);
-                
+
                 // Bitiş saatleri: Doğum gününden 30 saat sonra (Ertesi gün sabah 06:00)
                 let endDateThisYear = new Date(birthdayThisYear.getTime() + (30 * 60 * 60 * 1000));
                 let endDateLastYear = new Date(birthdayLastYear.getTime() + (30 * 60 * 60 * 1000));
-                
-                let isPartyTime = (today >= birthdayThisYear && today < endDateThisYear) || 
-                                  (today >= birthdayLastYear && today < endDateLastYear);
-                
+
+                let isPartyTime = (today >= birthdayThisYear && today < endDateThisYear) ||
+                    (today >= birthdayLastYear && today < endDateLastYear);
+
                 if (isPartyTime) {
                     if (!isBirthdayMode) {
                         isBirthdayMode = true;
@@ -136,7 +141,7 @@
 
         // Sayfa ilk yüklendiğinde bir kez kontrol et
         checkBirthdayStatus();
-        
+
         // Gece 00:00 geçişlerini yakalamak için her 1 dakikada (60000 ms) bir tarihi gizlice kontrol et
         setInterval(checkBirthdayStatus, 60000);
 
@@ -198,7 +203,7 @@
                 // Doğum günü temasında zemin pixelgrass, havuz ise rastgele bir pasta (cake1 - cake5) olur
                 const randomCakeNum = Math.floor(Math.random() * 5) + 1;
                 // Pastalar havuzla aynı boyutta görünsün diye özel scale (ölçek) uyguluyoruz
-                const cakeScale = isSmallPool ? 0.20 : 0.32; 
+                const cakeScale = isSmallPool ? 0.20 : 0.32;
                 randomTheme = { bg: 'pixelgrass.png', pool: `party/cake${randomCakeNum}.png`, bgOffset: 150, poolScale: cakeScale };
             } else {
                 const activeThemesArr = themes.filter((t, index) => activeThemesIndices.includes(index));
@@ -296,6 +301,7 @@
 
         // --- TOPLU ATLAYIŞ (DROP TOGETHER) DURUM DEĞİŞKENLERİ ---
         let isDropTogetherMode = false;
+        let isMeteorMode = false;
         let dropTogetherQueue = [];
         let isPlaneFlying = false;
 
@@ -344,14 +350,14 @@
         function addDropPoolLog(username, action, detail) {
             const now = new Date();
             const timeString = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
+
             const logEntry = {
                 time: timeString,
                 username: username,
                 action: action,
                 detail: detail
             };
-            
+
             try {
                 let logs = [];
                 const existing = localStorage.getItem('droppool_logs');
@@ -359,14 +365,14 @@
                     logs = JSON.parse(existing);
                 }
                 logs.push(logEntry);
-                
+
                 if (logs.length > 500) {
                     logs = logs.slice(logs.length - 500);
                 }
-                
+
                 localStorage.setItem('droppool_logs', JSON.stringify(logs));
                 syncChannel.postMessage({ type: 'NEW_LOG', log: logEntry });
-            } catch(e) {
+            } catch (e) {
                 console.error("Log kaydetme hatası:", e);
             }
         }
@@ -378,7 +384,7 @@
                 if (existing) {
                     stats = JSON.parse(existing);
                 }
-                
+
                 const lowerUser = username.toLowerCase();
                 const now = new Date();
                 const dateTimeString = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
@@ -391,7 +397,7 @@
                     if (stats[lowerUser].totalScore === undefined) stats[lowerUser].totalScore = 0;
                     stats[lowerUser].lastJumpTime = dateTimeString;
                 }
-                
+
                 if (type === 'JUMP') {
                     stats[lowerUser].jumps += 1;
                 } else if (type === 'SCORE') {
@@ -401,10 +407,10 @@
                         stats[lowerUser].maxScore = score;
                     }
                 }
-                
+
                 localStorage.setItem('droppool_stats', JSON.stringify(stats));
                 syncChannel.postMessage({ type: 'STATS_UPDATE', stats: stats });
-            } catch(e) {
+            } catch (e) {
                 console.error("Stats kaydetme hatası:", e);
             }
         }
@@ -582,7 +588,7 @@
         Composite.add(world, [leftWall, rightWall, ground, pool]);
 
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
-        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false, isDrunk = false, isTarzan = false, isFake = false) {
+        function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false, isDrunk = false, isTarzan = false, isFake = false, isMeteor = false, meteorVx = null, meteorVy = null) {
             // Eğer ekran kapalıysa aç ve yeni tema belirle
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
@@ -598,6 +604,11 @@
             let actualSpawnY = spawnY;
             // Rastgele X pozisyonu (kenarlara çok yakın olmasın)
             let randomX = spawnX !== null ? spawnX : (Math.random() * (width - 100) + 50);
+
+            if (isMeteor) {
+                randomX = Math.random() * (width - 100) + 50;
+                actualSpawnY = -200 - Math.random() * 200; // Ekranın oldukça üstünden başlasın
+            }
 
             let tarzanAnchorX = 0;
             let tarzanAnchorY = -50;
@@ -686,11 +697,20 @@
                     isDive: isDive,
                     isDrunk: isDrunk,
                     isTarzan: isTarzan,
-                    isFake: isFake
+                    isFake: isFake,
+                    isMeteor: isMeteor
                 }
             });
 
             Composite.add(world, character);
+
+            if (isMeteor) {
+                // Başlangıç hızı: Ortak açı için meteorVx/meteorVy kullanılır, verilmemişse rastgele üretilir.
+                // Hızı biraz düşürdük: vy eskiden 20-35 idi, şimdi 12-18 arası. vx orantılı.
+                let vx = meteorVx !== null ? meteorVx : ((Math.random() - 0.5) * 6);
+                let vy = meteorVy !== null ? meteorVy : (12 + Math.random() * 6);
+                Matter.Body.setVelocity(character, { x: vx, y: vy });
+            }
 
             if (isTarzan) {
                 // Karaktere başlangıç ivmesi ver: sarkaç daha hızlı başlasın
@@ -721,7 +741,7 @@
                 character.plugin.tarzanReleased = false;
                 // Bazen çok erken bıraktığı için süre tekrar biraz artırıldı (600ms - 1200ms)
                 character.plugin.tarzanReleaseTimer = engine.timing.timestamp + 600 + (Math.random() * 600);
-            } else {
+            } else if (!isMeteor) {
                 // Başlangıçta sağa veya sola rastgele yatay bir kuvvet uygula (dümdüz düşmemesi için)
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass;
                 Body.applyForce(character, { x: character.position.x, y: character.position.y }, { x: randomForceX, y: 0 });
@@ -747,6 +767,15 @@
                             Matter.Body.setVelocity(body, { x: 0, y: body.velocity.y }); // Sağa sola sapmayı (savrulmayı) tamamen engelle, dümdüz insin
                         }
                         continue; // Paraşüt açılma sınırlarını ve sarkaçları tamamen pas geç
+                    }
+
+                    // --- METEOR MODU İÇİN ÖZEL DAVRANIŞ ---
+                    if (body.plugin.isMeteor) {
+                        if (!body.plugin.landed) {
+                            let angle = Math.atan2(body.velocity.y, body.velocity.x) - Math.PI / 2;
+                            Matter.Body.setAngle(body, angle);
+                        }
+                        continue; // Paraşüt ve sarkaçları tamamen pas geç
                     }
 
                     // --- FAKE MODU İÇİN ÖZEL DAVRANIŞ ---
@@ -1007,7 +1036,7 @@
 
                             // Kullanıcının panelden seçtiği aktif paraşütler arasından rastgele birini seç
                             let targetScale = 1.0;
-                            
+
                             if (isBirthdayMode) {
                                 body.render.sprite.texture = 'party/partybaloons.png';
                                 targetScale = 0.43; // 0.36'dan 1.2x daha büyütüldü
@@ -1209,7 +1238,7 @@
                                 ticks: 350, // Şelalenin bitişiyle aynı ana denk gelmesi (senkron) için ömrü uzatıldı
                                 zIndex: 9999
                             });
-                            
+
                             // 2. Ardından 2 saniye boyunca altın şelalesi (Festival Yağmuru)
                             const duration = 2000;
                             const end = Date.now() + duration;
@@ -1336,6 +1365,36 @@
                 context.restore();
             }
 
+            // --- PARTİ IŞILTILI KUYRUK ÇİZİMİ ---
+            if (showTrail) {
+                context.save();
+                context.shadowBlur = 5; // Parçacıklara (Glow) parlama efekti
+
+                for (let i = trailParticles.length - 1; i >= 0; i--) {
+                    let p = trailParticles[i];
+                    p.life -= p.decay || 0.0215; // Meteorlar için özel decay varsa onu kullan
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Ömrü biten parçacığı listeden temizle
+                    if (p.life <= 0) {
+                        trailParticles.splice(i, 1);
+                        continue;
+                    }
+
+                    // Şeffaflığı ve renkleri ayarla
+                    context.globalAlpha = p.life;
+                    context.fillStyle = p.color;
+                    context.shadowColor = p.color; // Kendi renginde parlasın
+
+                    // Parçacığı (yuvarlak yıldız) çiz
+                    context.beginPath();
+                    context.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+                    context.fill();
+                }
+                context.restore();
+            }
+
             context.textAlign = 'center';
 
             for (let i = 0; i < bodies.length; i++) {
@@ -1343,9 +1402,24 @@
                 if (body.label === 'karakter' && body.plugin && body.plugin.username) {
 
                     // --- PARTİ IŞILTILI KUYRUK ÜRETİMİ ---
-                    if (isBirthdayMode && !body.plugin.landed) {
-                        // Havada düşerken her karede %40 şansla meteor izi / parti ışıltısı üret
-                        if (Math.random() < 0.4) {
+                    if (showTrail && !body.plugin.landed) {
+                        if (body.plugin.isMeteor) {
+                            // Alev efektli, daha yoğun ve kırmızı tonlarda kuyruk
+                            for (let m = 0; m < 2; m++) {
+                                trailParticles.push({
+                                    x: body.position.x + (Math.random() - 0.5) * (body.circleRadius * 1.5),
+                                    y: body.position.y - 10,
+                                    vx: (Math.random() - 0.5) * 2,
+                                    vy: Math.random() * -3 - 1,
+                                    life: 1,
+                                    decay: 0.06, // Yarı yarıya (hatta biraz daha fazla) daha kısa sürede kaybolur
+                                    size: Math.random() * 5 + 3,
+                                    // %80 Kırmızı, %16 Turuncu, %4 Sarı
+                                    color: Math.random() > 0.2 ? '#ff1a00' : (Math.random() > 0.2 ? '#ff6600' : '#ffcc00')
+                                });
+                            }
+                        } else if (Math.random() < 0.4) {
+                            // Havada düşerken her karede %40 şansla normal meteor izi / parti ışıltısı üret
                             trailParticles.push({
                                 x: body.position.x + (Math.random() - 0.5) * 30, // Karakter genişliğinde rastgele X
                                 y: body.position.y - 15, // Karakterin hemen arka/üst kısmından çıksın
@@ -1456,35 +1530,7 @@
                 }
             }
 
-            // --- PARTİ IŞILTILI KUYRUK ÇİZİMİ ---
-            if (isBirthdayMode) {
-                context.save();
-                context.shadowBlur = 5; // Parçacıklara (Glow) parlama efekti
-                
-                for (let i = trailParticles.length - 1; i >= 0; i--) {
-                    let p = trailParticles[i];
-                    p.life -= 0.015; // Yavaşça sönme
-                    p.x += p.vx;
-                    p.y += p.vy;
-
-                    // Ömrü biten parçacığı listeden temizle
-                    if (p.life <= 0) {
-                        trailParticles.splice(i, 1);
-                        continue;
-                    }
-
-                    // Şeffaflığı ve renkleri ayarla
-                    context.globalAlpha = p.life;
-                    context.fillStyle = p.color;
-                    context.shadowColor = p.color; // Kendi renginde parlasın
-                    
-                    // Parçacığı (yuvarlak yıldız) çiz
-                    context.beginPath();
-                    context.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
-                    context.fill();
-                }
-                context.restore();
-            }
+            // Trail drawing moved to the beginning of afterRender to appear behind characters
         });
 
         // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
@@ -1618,6 +1664,7 @@
                         if (message.toLowerCase() === '!resetdrop' && username.toLowerCase() === channelName.toLowerCase()) {
                             userCooldowns.clear();
                             isDropTogetherMode = false;
+                            isMeteorMode = false;
                             dropTogetherQueue = [];
                             addDropPoolLog(username, 'SİSTEM', '!resetdrop ile tüm süreleri ve sıralamayı sıfırladı.');
                             console.log('[DropPool] !resetdrop komutu alındı — tüm bekleme süreleri sıfırlandı ve toplu atlama iptal edildi.');
@@ -1627,10 +1674,22 @@
                         // Yayıncı !droptogether yazarsa toplu atlayış moduna geç
                         if (message.toLowerCase() === '!droptogether' && username.toLowerCase() === channelName.toLowerCase()) {
                             isDropTogetherMode = true;
+                            isMeteorMode = false;
                             dropTogetherQueue = [];
                             userCooldowns.clear();
                             addDropPoolLog(username, 'SİSTEM', '!droptogether modunu aktif etti.');
                             console.log('[DropPool] Toplu atlayış (Drop Together) modu AKTİF! İzleyiciler sıraya alınıyor. Tüm beklemeler sıfırlandı.');
+                            return;
+                        }
+
+                        // Yayıncı !meteor yazarsa meteor yağmuru moduna geç
+                        if (message.toLowerCase() === '!meteor' && username.toLowerCase() === channelName.toLowerCase()) {
+                            isMeteorMode = true;
+                            isDropTogetherMode = false;
+                            dropTogetherQueue = [];
+                            userCooldowns.clear();
+                            addDropPoolLog(username, 'SİSTEM', '!meteor modunu aktif etti.');
+                            console.log('[DropPool] Meteor Yağmuru modu AKTİF! İzleyiciler sıraya alınıyor. Tüm beklemeler sıfırlandı.');
                             return;
                         }
 
@@ -1701,22 +1760,28 @@
                                     customEmoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
                                 }
 
-                                if (isDropTogetherMode) {
+                                if (isDropTogetherMode || isMeteorMode) {
                                     // Toplu atlayışta dive dahil tüm özel komutlar yoksayılır ve default atlayış yapılır. (Emote hariç)
                                     if (username.toLowerCase() === channelName.toLowerCase()) {
-                                        // Yayıncı atlarsa uçağı tetikle ve modu kapat
+                                        // Yayıncı atlarsa modu kapat ve aksiyonu başlat
+                                        let currentMode = isMeteorMode ? 'meteor' : 'plane';
                                         isDropTogetherMode = false;
+                                        isMeteorMode = false;
                                         if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
                                             dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
-                                            addDropPoolLog(username, 'SİSTEM', 'Toplu atlayış (Uçak) başlattı!');
+                                            addDropPoolLog(username, 'SİSTEM', currentMode === 'meteor' ? 'Meteor yağmuru başlattı!' : 'Toplu atlayış (Uçak) başlattı!');
                                             updateDropPoolStats(username, 'JUMP');
                                         }
-                                        triggerPlaneDrop();
+                                        if (currentMode === 'meteor') {
+                                            triggerMeteorShower();
+                                        } else {
+                                            triggerPlaneDrop();
+                                        }
                                     } else {
                                         // İzleyici atlarsa sıraya ekle (isDrunk, isTarzan, isFake her zaman false)
                                         if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
                                             dropTogetherQueue.push({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
-                                            addDropPoolLog(username, 'SİSTEM', 'Toplu atlayış (Uçak) için sıraya girdi.');
+                                            addDropPoolLog(username, 'SİSTEM', isMeteorMode ? 'Meteor yağmuru için sıraya girdi.' : 'Toplu atlayış (Uçak) için sıraya girdi.');
                                             updateDropPoolStats(username, 'JUMP');
                                             console.log(`[DropPool] Sıraya eklendi: ${username}. (Sıra uzunluğu: ${dropTogetherQueue.length})`);
                                         } else {
@@ -1732,9 +1797,9 @@
                                     } else {
                                         // Normal, drunk, tarzan veya fake modda doğrudan düşür
                                         let tip = 'Normal';
-                                        if(isDrunkCommand) tip = 'Sarhoş';
-                                        if(isTarzanCommand) tip = 'Tarzan';
-                                        if(isFakeCommand) tip = 'Sahte';
+                                        if (isDrunkCommand) tip = 'Sarhoş';
+                                        if (isTarzanCommand) tip = 'Tarzan';
+                                        if (isFakeCommand) tip = 'Sahte';
                                         addDropPoolLog(username, 'ATLAYIŞ', `${tip} atlayış başlattı.`);
                                         updateDropPoolStats(username, 'JUMP');
                                         spawnCharacter(username, customEmoteUrl, null, -50, false, isDrunkCommand, isTarzanCommand, isFakeCommand);
@@ -2051,10 +2116,51 @@
         // window.testKinderPlane();
 
         // --- DOĞUM GÜNÜ PARTİ TEST SENARYOSU ---
+        window.testMeteor = () => {
+            console.log("Meteor yağmuru test senaryosu başlatıldı.");
+            dropTogetherQueue = [
+                { username: "Meteor1", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false, isMeteor: true },
+                { username: "Meteor2", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false, isMeteor: true },
+                { username: "Meteor3", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false, isMeteor: true },
+                { username: "Meteor4", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false, isMeteor: true },
+                { username: "Meteor5", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false, isMeteor: true },
+                { username: "Yayıncı", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false, isMeteor: true }
+            ];
+            triggerMeteorShower();
+        };
+
+        function triggerMeteorShower() {
+            activeVehicles++; // Ekran kapanmasın diye aktif araç sayısını artır
+            let spawnDelay = 0;
+            const usersToSpawn = [...dropTogetherQueue];
+            dropTogetherQueue = [];
+
+            // Herkesin aynı açıyla düşmesi için bu yağmura özel ortak bir X ve Y hızı belirliyoruz.
+            // Hızı biraz düşürdük (Y ekseni 12 ile 18 arası).
+            let sharedVx = (Math.random() - 0.5) * 8;
+            let sharedVy = 12 + Math.random() * 6;
+
+            // Sırayı karıştır ki rastgele düşsünler
+            usersToSpawn.sort(() => Math.random() - 0.5);
+
+            usersToSpawn.forEach((user, index) => {
+                setTimeout(() => {
+                    spawnCharacter(user.username, user.customEmoteUrl, null, -50, false, false, false, false, true, sharedVx, sharedVy);
+                    if (index === usersToSpawn.length - 1) {
+                        setTimeout(() => {
+                            activeVehicles = Math.max(0, activeVehicles - 1);
+                        }, 3000);
+                    }
+                }, spawnDelay);
+
+                spawnDelay += Math.random() * 200 + 100; // 0.1s ile 0.3s arası rastgele aralıklarla fırlat
+            });
+        }
+
         window.testParty = () => {
             console.log("Party test senaryosu başlatıldı. Her 2 saniyede bir karakter atlayacak.");
             let testCounter = 1;
-            
+
             // İlk atlayışı anında yap
             spawnCharacter(`TestKullanicisi${testCounter}`, null, null, -50, false, false, false);
 
@@ -2075,6 +2181,7 @@
         }, 1000);
         */
 
+        // window.testMeteor() test senaryosu kullanıcı isteğiyle kapatıldı.
 
 
     </script>
