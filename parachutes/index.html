@@ -706,9 +706,9 @@
 
             if (isMeteor) {
                 // Başlangıç hızı: Ortak açı için meteorVx/meteorVy kullanılır, verilmemişse rastgele üretilir.
-                // Hızı biraz düşürdük: vy eskiden 20-35 idi, şimdi 12-18 arası. vx orantılı.
-                let vx = meteorVx !== null ? meteorVx : ((Math.random() - 0.5) * 6);
-                let vy = meteorVy !== null ? meteorVy : (12 + Math.random() * 6);
+                // Hızı %10 daha düşürdük:
+                let vx = meteorVx !== null ? meteorVx : ((Math.random() - 0.5) * 2.916);
+                let vy = meteorVy !== null ? meteorVy : (5.832 + Math.random() * 2.916);
                 Matter.Body.setVelocity(character, { x: vx, y: vy });
             }
 
@@ -1412,7 +1412,7 @@
                                     vx: (Math.random() - 0.5) * 2,
                                     vy: Math.random() * -3 - 1,
                                     life: 1,
-                                    decay: 0.06, // Yarı yarıya (hatta biraz daha fazla) daha kısa sürede kaybolur
+                                    decay: 0.066, // Yavaşlama sonrası kuyruğu %10 daha kısaltmak için ayarlandı
                                     size: Math.random() * 5 + 3,
                                     // %80 Kırmızı, %16 Turuncu, %4 Sarı
                                     color: Math.random() > 0.2 ? '#ff1a00' : (Math.random() > 0.2 ? '#ff6600' : '#ffcc00')
@@ -2136,9 +2136,9 @@
             dropTogetherQueue = [];
 
             // Herkesin aynı açıyla düşmesi için bu yağmura özel ortak bir X ve Y hızı belirliyoruz.
-            // Hızı biraz düşürdük (Y ekseni 12 ile 18 arası).
-            let sharedVx = (Math.random() - 0.5) * 8;
-            let sharedVy = 12 + Math.random() * 6;
+            // Hızı %10 daha düşürdük.
+            let sharedVx = (Math.random() - 0.5) * 3.888;
+            let sharedVy = 5.832 + Math.random() * 2.916;
 
             // Sırayı karıştır ki rastgele düşsünler
             usersToSpawn.sort(() => Math.random() - 0.5);
