@@ -872,6 +872,7 @@
                                     body.plugin.jetpackVelocityY = -(Math.random() * 5 + 10);
 
                                     body.collisionFilter = {
+                                        group: body.collisionFilter.group || 0,
                                         category: body.collisionFilter.category,
                                         mask: 0
                                     };
@@ -1550,9 +1551,21 @@
                 });
 
                 // Eğer sahnede HİÇ karakter kalmadıysa ve overlay açıksa 5 saniyelik zamanlayıcıyı başlat
+                // Sahne doluysa havuz/overlay kesinlikle görünür kalsın (kendini onarma)
+                if ((activeChars > 0 || activeVehicles > 0) && isOverlayVisible) {
+                    if (pool && pool.render && !pool.render.visible) pool.render.visible = true;
+                    if (document.body.style.opacity !== '1') {
+                        document.body.style.transition = 'none';
+                        document.body.style.opacity = '1';
+                    }
+                }
+
                 if (activeChars === 0 && activeVehicles === 0 && isOverlayVisible) {
                     if (!overlayIdleTimerRef) {
                         overlayIdleTimerRef = setTimeout(() => {
+                            overlayIdleTimerRef = null;
+                            // Bu 5 saniye içinde yeni biri atladıysa gizleme
+                            if (activeVehicles > 0 || Composite.allBodies(world).some(b => b.label === 'karakter')) return;
                             isOverlayVisible = false;
                             document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
                             document.body.style.opacity = '0';
