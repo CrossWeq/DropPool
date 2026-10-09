@@ -1340,6 +1340,16 @@
         const trailParticles = [];
         const trailColors = ['#FFD700', '#FF69B4', '#00FFFF', '#32CD32', '#FF4500']; // Altın, Pembe, Cam Göbeği, Yeşil, Turuncu
 
+        // Her karede canvas durumunu sıfırla: önceki karede çizim sırasında bir hata olsa bile
+        // dönüşüm (translate/rotate/alpha) kayması kalıcı olmasın (havuz/karakter kaybolmasını önler).
+        Events.on(render, 'beforeRender', function () {
+            const ctx = render.context;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            ctx.globalCompositeOperation = 'source-over';
+        });
+
         Events.on(render, 'afterRender', function () {
             const context = render.context;
             const bodies = Composite.allBodies(world);
@@ -1435,6 +1445,7 @@
 
                     // Karakterleri her zaman manuel olarak çiziyoruz, böylece paraşüt açıldığında veya yere değdiğinde asla yok olmuyorlar.
                     context.save();
+                    try {
                     // Karakterin kendi şeffaflığını (ballOpacity) kullan (Paraşütün silinme animasyonu karaktere yansımasın)
                     const opacity = body.plugin.ballOpacity !== undefined ? body.plugin.ballOpacity : 1;
                     context.globalAlpha = opacity;
@@ -1442,7 +1453,7 @@
                     // Jetpack'i karakterden önce (arkasına) çiz
                     if (body.plugin.hasJetpack) {
                         let jetpackImg = charImagesMap['jetback.png'];
-                        if (jetpackImg && jetpackImg.complete) {
+                        if (jetpackImg && jetpackImg.complete && jetpackImg.naturalWidth > 0) {
                             let jpScale = isSmallPool ? 0.045 : 0.075; // 0.075 * 0.60
                             let jpWidth = jetpackImg.width * jpScale;
                             let jpHeight = jetpackImg.height * jpScale;
@@ -1463,7 +1474,7 @@
                         el.style.opacity = opacity;
                     } else if (body.plugin.charTexture) {
                         let img = charImagesMap[body.plugin.charTexture];
-                        if (img && img.complete) {
+                        if (img && img.complete && img.naturalWidth > 0) {
                             let drawWidth = img.width * body.plugin.charScale;
                             let drawHeight = img.height * body.plugin.charScale;
                             context.translate(body.position.x, body.position.y + (body.plugin.charYOffset || 0));
@@ -1471,7 +1482,11 @@
                             context.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
                         }
                     }
-                    context.restore();
+                    } catch (drawErr) {
+                        console.error('Karakter çizim hatası:', drawErr);
+                    } finally {
+                        context.restore();
+                    }
 
                     // Lider (Kral) kontrolü
                     const isLeader = (body === currentKing);
