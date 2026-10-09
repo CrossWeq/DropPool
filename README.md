@@ -20,7 +20,9 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 - 📊 **Kalıcı İstatistik Merkezi (Persistent Stats):** Tüm zamanların atlayış sayıları, isabet oranları, toplam ve rekor puanlar ile son atlayış tarihi/saati kalıcı olarak saklanır.
 - 🪖 **Çoklu Atlayış Modları:** Dive, Drunk, Tarzan, Fake ve Random gibi birbirinden farklı 5 özel atlayış modu.
 - 🌊 **Zemin Şeffaflığı:** İsteğe bağlı olarak zemin görselleri gizlenip sadece havuz görünür hale getirilebilir.
-- 🌐 İki Dil Desteği (Bi-lingual): Türkçe ve İngilizce kurulum paneli ve istatistik ekranı. (TR/EN Setup Panel & Stats Screen)
+- ✨ **Karakter Efekti (Trail Effect):** Düşen her karakterin arkasında onu takip eden ışıltılı ve renkli bir meteor izi efekti görünür. Ayarlardan kapatılabilir. (Every falling character leaves a glowing meteor trail. Can be disabled in settings.)
+- 🌐 **İki Dil Desteği (Bi-lingual):** Türkçe ve İngilizce kurulum paneli ve istatistik ekranı. (TR/EN Setup Panel & Stats Screen)
+
 
 ---
 
@@ -78,6 +80,7 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 | Komut | Açıklama |
 |---|---|
 | `!droptogether` | **Toplu Atlayış (Kuyruk) Modunu** başlatır. İzleyiciler komut yazınca kuyruğa alınır. Yayıncı tekrar komut girdiğinde kendisi de sıraya eklenir ve devasa bir uçak kalkar, herkesi aynı anda atar. |
+| `!meteor` | **Meteor Yağmuru Modunu** başlatır. İşleyişi toplu atlayışla aynıdır ancak devasa uçak yerine herkes paraşütsüz, yüksek hızda ve kırmızı alev efektleriyle göktaşı gibi yere çakılır. |
 | `!resetdrop` | Tüm izleyicilerin bekleme sürelerini (cooldown) sıfırlar; varsa toplu atlayış kuyruğunu iptal eder ve temizler. |
 
 ---
@@ -99,6 +102,7 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 | Command | Description |
 |---|---|
 | `!droptogether` | Starts **Queue Mode**. Viewers who type the drop command are queued up. When the streamer types the command again, they join the queue and a massive plane immediately drops everyone at once. |
+| `!meteor` | Starts **Meteor Shower Mode**. Works like Queue Mode, but everyone crashes straight into the ground at high speeds without parachutes, leaving a red fire trail behind them. |
 | `!resetdrop` | Resets all viewer cooldowns and clears the drop queue if active. |
 
 ---
@@ -141,5 +145,3 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 Developed with ❤️ by **CrossWeq**
 
 İletişim / Contact: [crosweq204@gmail.com](mailto:crosweq204@gmail.com)
-
-
