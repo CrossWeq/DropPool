@@ -860,7 +860,7 @@
                                     body.plugin.parachuteOpening = false;
                                     body.plugin.parachuteClosing = false;
                                     if (body.render.sprite) {
-                                        delete body.render.sprite.texture;
+                                        body.render.sprite.texture = null;
                                     }
 
                                     body.plugin.hasJetpack = true;
@@ -871,11 +871,11 @@
                                     // Jetpack Y yönünde rastgele hız (örneğin -10 ile -15 arası)
                                     body.plugin.jetpackVelocityY = -(Math.random() * 5 + 10);
 
-                                    // Jetpack ile duvarlardan (ekran kenarlarından) geçebilmesi için çarpışmaları kapat
                                     body.collisionFilter = {
                                         category: body.collisionFilter.category,
                                         mask: 0
                                     };
+                                    continue; // Prevent parachute re-opening in the frame jetpack activates
                                 }
                             } else {
                                 // Jetpack devrede: Havaya ve rastgele bir açıyla uçuş
@@ -993,7 +993,7 @@
                             if (body.render.sprite.yOffset < -1.0 || body.render.opacity <= 0) {
                                 body.plugin.parachuteOpened = false; // Paraşüt tamamen kapandı
                                 // Paraşüt silinince sadece resmi biz çizmeye devam edeceğiz
-                                delete body.render.sprite.texture;
+                                body.render.sprite.texture = null;
                                 body.render.sprite.yOffset = 0;
                                 body.render.opacity = body.plugin.ballOpacity;
                             }
@@ -1112,7 +1112,7 @@
                                 if (body.render.sprite.xScale <= (0.1 * maxScale) || body.render.opacity <= 0) {
                                     body.plugin.parachuteClosing = false;
                                     body.plugin.parachuteOpened = false;
-                                    delete body.render.sprite.texture;
+                                    body.render.sprite.texture = null;
                                     body.render.sprite.yOffset = 0;
                                     body.render.opacity = 1;
                                     body.plugin.parachuteCooldown = engine.timing.timestamp + 300;
@@ -1340,8 +1340,9 @@
         const trailColors = ['#FFD700', '#FF69B4', '#00FFFF', '#32CD32', '#FF4500']; // Altın, Pembe, Cam Göbeği, Yeşil, Turuncu
 
         Events.on(render, 'afterRender', function () {
-            const context = render.context;
-            const bodies = Composite.allBodies(world);
+            try {
+                const context = render.context;
+                const bodies = Composite.allBodies(world);
 
             // Havuzun merkezindeki su yüzeyine belirgin transparan "CrossWeq" yazısı
             // Sadece doğum günü (party) modu DEĞİLSE görünsün
@@ -1529,8 +1530,12 @@
                     context.shadowBlur = 0;
                 }
             }
-
-            // Trail drawing moved to the beginning of afterRender to appear behind characters
+            } catch (e) {
+                console.error("Render loop error caught:", e);
+                if (render.context && render.context.restore) {
+                    try { render.context.restore(); } catch(err) {}
+                }
+            }
         });
 
         // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
