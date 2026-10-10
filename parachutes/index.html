@@ -304,6 +304,8 @@
         let isMeteorMode = false;
         let dropTogetherQueue = [];
         let isPlaneFlying = false;
+        // !resetdrop her çağrıldığında artırılır; eski (iptal edilmiş) gecikmeli işlemlerin etkisiz kalmasını sağlar
+        let sceneEpoch = 0;
 
         // Sayfa her açıldığında/yenilendiğinde sıralamayı sıfırla ve siralama.html'e bildir
         try {
@@ -1609,6 +1611,50 @@
             }
         }, 1000);
 
+        // --- 7.6 SAHNE SERT SIFIRLAMA (!resetdrop) ---
+        // Sayfayı yenilemiş gibi: ekrandaki tüm karakter, kral, havuz, uçak/helikopter silinir.
+        // Sıralama (leaderboard) ve istatistikler (stats) KORUNUR.
+        function hardResetScene() {
+            sceneEpoch++; // Bekleyen tüm gecikmeli spawn/araç işlemlerini geçersiz kıl
+
+            // Kalıcı objeler dışındaki her şeyi (karakterler, ip ağırlıkları vb.) fizik dünyasından sil
+            const keep = [leftWall, rightWall, ground, pool];
+            Composite.allBodies(world).forEach(b => {
+                if (keep.includes(b)) return;
+                if (b.plugin && b.plugin.removeTimer) clearTimeout(b.plugin.removeTimer);
+                if (b.plugin && b.plugin.domElement) b.plugin.domElement.remove();
+                Composite.remove(world, b);
+            });
+            Composite.allConstraints(world).forEach(c => Composite.remove(world, c));
+            currentKing = null;
+            trailParticles.length = 0;
+
+            // DOM temizliği: emote'lar, uçak ve helikopterler
+            document.querySelectorAll('.custom-emote, .droppool-vehicle').forEach(el => el.remove());
+            if (typeof confetti === 'function' && confetti.reset) {
+                try { confetti.reset(); } catch (e) { }
+            }
+
+            // Araç ve zamanlayıcı durumları
+            activeVehicles = 0;
+            isPlaneFlying = false;
+            if (overlayIdleTimerRef) {
+                clearTimeout(overlayIdleTimerRef);
+                overlayIdleTimerRef = null;
+            }
+
+            // Overlay'i anında gizle (sayfa yenilenmiş gibi boş ekran)
+            isOverlayVisible = false;
+            document.body.style.transition = 'none';
+            document.body.style.opacity = '0';
+            document.body.style.backgroundImage = 'none';
+            const bgLeft = document.getElementById('bg-left');
+            const bgRight = document.getElementById('bg-right');
+            if (bgLeft) bgLeft.remove();
+            if (bgRight) bgRight.remove();
+            pool.render.visible = false;
+        }
+
         // --- 8. KICK WEBSOCKET (GERÇEK ZAMANLI BAĞLANTI) ---
         async function setupKickChatListener() {
             if (!channelName || channelName === 'testkanal') {
@@ -1692,8 +1738,9 @@
                             isDropTogetherMode = false;
                             isMeteorMode = false;
                             dropTogetherQueue = [];
+                            hardResetScene(); // Ekrandaki her şeyi sayfa yenilenmiş gibi temizle (sıralama korunur)
                             addDropPoolLog(username, 'SİSTEM', '!resetdrop ile tüm süreleri ve sıralamayı sıfırladı.');
-                            console.log('[DropPool] !resetdrop komutu alındı — tüm bekleme süreleri sıfırlandı ve toplu atlama iptal edildi.');
+                            console.log('[DropPool] !resetdrop komutu alındı — bekleme süreleri sıfırlandı, toplu atlama iptal edildi ve sahne temizlendi.');
                             return;
                         }
 
@@ -1846,6 +1893,7 @@
         // --- HELİKOPTER (DIVE) ANİMASYONU ---
         function triggerHelicopterDrop(username, customEmoteUrl, forcedHeliNo = null) {
             activeVehicles++; // Araç sayısını artır
+            const epoch = sceneEpoch;
 
             // Eğer ekran kapalıysa arka planı uyandır
             if (!isOverlayVisible) {
@@ -1861,6 +1909,7 @@
             const heliNo = forcedHeliNo !== null ? forcedHeliNo : Math.floor(Math.random() * 9) + 1;
 
             const heli = document.createElement('img');
+            heli.className = 'droppool-vehicle';
             heli.src = `Helicopter${heliNo}.png`;
             heli.style.position = 'absolute';
             heli.style.top = isSmallPool ? '12px' : '20px'; // 20 * 0.6
@@ -1891,12 +1940,14 @@
             const expectedX = -500 + (speed * dropTime);
 
             setTimeout(() => {
+                if (epoch !== sceneEpoch) return; // !resetdrop ile iptal edildi
                 // Helikopterin (450px) alt merkezinden düşsün (expectedX + 225). Helikopter yukarı çıktığı için Y=120 oldu.
                 spawnCharacter(username, customEmoteUrl, expectedX + 225, 120, true);
             }, dropTime);
 
             setTimeout(() => {
                 if (heli.parentNode) heli.parentNode.removeChild(heli);
+                if (epoch !== sceneEpoch) return; // Sayaç zaten sıfırlandı
                 activeVehicles--; // Araç sayısını azalt
             }, 5000);
         }
@@ -1907,6 +1958,7 @@
 
             activeVehicles++; // Araç sayısını artır
             isPlaneFlying = true;
+            const epoch = sceneEpoch;
 
             // Eğer ekran kapalıysa arka planı uyandır
             if (!isOverlayVisible) {
@@ -1920,6 +1972,7 @@
 
             // Uçak görselini oluştur
             const plane = document.createElement('img');
+            plane.className = 'droppool-vehicle';
             if (typeof channelName !== 'undefined' && channelName.toLowerCase() === 'kafamkinder') {
                 plane.src = 'kinderplane2.png';
             } else {
@@ -1961,6 +2014,7 @@
                 const expectedX = -550 + (speed * dropTime);
 
                 setTimeout(() => {
+                    if (epoch !== sceneEpoch) return; // !resetdrop ile iptal edildi
                     // Uçağın gövde alt merkezinden düşsünler
                     spawnCharacter(user.username, user.customEmoteUrl, expectedX + (500 / 2), 150, false, user.isDrunk, user.isTarzan, user.isFake);
                 }, dropTime);
@@ -1969,6 +2023,7 @@
             // 5 saniye sonra uçağı domdan temizle
             setTimeout(() => {
                 if (plane.parentNode) plane.parentNode.removeChild(plane);
+                if (epoch !== sceneEpoch) return; // Durum zaten sıfırlandı
                 isPlaneFlying = false;
                 activeVehicles--; // Araç sayısını azalt
             }, 5000);
@@ -2157,6 +2212,7 @@
 
         function triggerMeteorShower() {
             activeVehicles++; // Ekran kapanmasın diye aktif araç sayısını artır
+            const epoch = sceneEpoch;
             let spawnDelay = 0;
             const usersToSpawn = [...dropTogetherQueue];
             dropTogetherQueue = [];
@@ -2171,9 +2227,11 @@
 
             usersToSpawn.forEach((user, index) => {
                 setTimeout(() => {
+                    if (epoch !== sceneEpoch) return; // !resetdrop ile iptal edildi
                     spawnCharacter(user.username, user.customEmoteUrl, null, -50, false, false, false, false, true, sharedVx, sharedVy);
                     if (index === usersToSpawn.length - 1) {
                         setTimeout(() => {
+                            if (epoch !== sceneEpoch) return; // Sayaç zaten sıfırlandı
                             activeVehicles = Math.max(0, activeVehicles - 1);
                         }, 3000);
                     }
