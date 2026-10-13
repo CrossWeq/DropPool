@@ -1448,42 +1448,42 @@
                     // Karakterleri her zaman manuel olarak çiziyoruz, böylece paraşüt açıldığında veya yere değdiğinde asla yok olmuyorlar.
                     context.save();
                     try {
-                    // Karakterin kendi şeffaflığını (ballOpacity) kullan (Paraşütün silinme animasyonu karaktere yansımasın)
-                    const opacity = body.plugin.ballOpacity !== undefined ? body.plugin.ballOpacity : 1;
-                    context.globalAlpha = opacity;
+                        // Karakterin kendi şeffaflığını (ballOpacity) kullan (Paraşütün silinme animasyonu karaktere yansımasın)
+                        const opacity = body.plugin.ballOpacity !== undefined ? body.plugin.ballOpacity : 1;
+                        context.globalAlpha = opacity;
 
-                    // Jetpack'i karakterden önce (arkasına) çiz
-                    if (body.plugin.hasJetpack) {
-                        let jetpackImg = charImagesMap['jetback.png'];
-                        if (jetpackImg && jetpackImg.complete && jetpackImg.naturalWidth > 0) {
-                            let jpScale = isSmallPool ? 0.045 : 0.075; // 0.075 * 0.60
-                            let jpWidth = jetpackImg.width * jpScale;
-                            let jpHeight = jetpackImg.height * jpScale;
-                            context.translate(body.position.x, body.position.y);
-                            context.rotate(body.angle);
-                            context.drawImage(jetpackImg, -jpWidth / 2, -jpHeight / 2 + 35, jpWidth, jpHeight); // +25'ten +35'e indirdik (daha aşağıda)
-                            context.rotate(-body.angle);
-                            context.translate(-body.position.x, -body.position.y);
+                        // Jetpack'i karakterden önce (arkasına) çiz
+                        if (body.plugin.hasJetpack) {
+                            let jetpackImg = charImagesMap['jetback.png'];
+                            if (jetpackImg && jetpackImg.complete && jetpackImg.naturalWidth > 0) {
+                                let jpScale = isSmallPool ? 0.045 : 0.075; // 0.075 * 0.60
+                                let jpWidth = jetpackImg.width * jpScale;
+                                let jpHeight = jetpackImg.height * jpScale;
+                                context.translate(body.position.x, body.position.y);
+                                context.rotate(body.angle);
+                                context.drawImage(jetpackImg, -jpWidth / 2, -jpHeight / 2 + 35, jpWidth, jpHeight); // +25'ten +35'e indirdik (daha aşağıda)
+                                context.rotate(-body.angle);
+                                context.translate(-body.position.x, -body.position.y);
+                            }
                         }
-                    }
 
-                    if (body.plugin.isCustom && body.plugin.domElement) {
-                        // DOM elementini güncelle (Animasyonlu GIF/WEBP desteği)
-                        const el = body.plugin.domElement;
-                        el.style.left = body.position.x + 'px';
-                        el.style.top = (body.position.y + (body.plugin.charYOffset || 0)) + 'px';
-                        el.style.transform = `translate(-50%, -50%) rotate(${body.angle}rad)`;
-                        el.style.opacity = opacity;
-                    } else if (body.plugin.charTexture) {
-                        let img = charImagesMap[body.plugin.charTexture];
-                        if (img && img.complete && img.naturalWidth > 0) {
-                            let drawWidth = img.width * body.plugin.charScale;
-                            let drawHeight = img.height * body.plugin.charScale;
-                            context.translate(body.position.x, body.position.y + (body.plugin.charYOffset || 0));
-                            context.rotate(body.angle);
-                            context.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                        if (body.plugin.isCustom && body.plugin.domElement) {
+                            // DOM elementini güncelle (Animasyonlu GIF/WEBP desteği)
+                            const el = body.plugin.domElement;
+                            el.style.left = body.position.x + 'px';
+                            el.style.top = (body.position.y + (body.plugin.charYOffset || 0)) + 'px';
+                            el.style.transform = `translate(-50%, -50%) rotate(${body.angle}rad)`;
+                            el.style.opacity = opacity;
+                        } else if (body.plugin.charTexture) {
+                            let img = charImagesMap[body.plugin.charTexture];
+                            if (img && img.complete && img.naturalWidth > 0) {
+                                let drawWidth = img.width * body.plugin.charScale;
+                                let drawHeight = img.height * body.plugin.charScale;
+                                context.translate(body.position.x, body.position.y + (body.plugin.charYOffset || 0));
+                                context.rotate(body.angle);
+                                context.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                            }
                         }
-                    }
                     } catch (drawErr) {
                         console.error('Karakter çizim hatası:', drawErr);
                     } finally {
@@ -1664,12 +1664,13 @@
 
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
-            // Chatroom ID'yi otomatik bulmak için sırayla deniyoruz
+            // Kanal ve chatroom ID'sini bul (Kick artık channel_id ile de çalışıyor)
+            const channelApi = `https://kick.com/api/v2/channels/${channelName}`;
             const apiTargets = [
-                `https://kick.com/api/v2/channels/${channelName}/chatroom`,
-                `https://corsproxy.io/?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
-                `https://api.allorigins.win/get?url=${encodeURIComponent('https://kick.com/api/v2/channels/' + channelName + '/chatroom')}`,
-                `https://api.codetabs.com/v1/proxy?quest=https://kick.com/api/v2/channels/${channelName}/chatroom`
+                channelApi,
+                `https://corsproxy.io/?url=${encodeURIComponent(channelApi)}`,
+                `https://api.allorigins.win/get?url=${encodeURIComponent(channelApi)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${channelApi}`
             ];
 
             let chatroomId = null;
@@ -1683,8 +1684,8 @@
                     const raw = await res.json();
                     // allorigins wrapper
                     const data = raw.contents ? JSON.parse(raw.contents) : raw;
-                    if (data && data.id) {
-                        chatroomId = data.id;
+                    if (data && data.chatroom && data.chatroom.id) {
+                        chatroomId = data.chatroom.id;
                         console.log('Chatroom ID bulundu:', chatroomId);
                         break;
                     }
@@ -1699,19 +1700,101 @@
             }
 
             try {
-                const pusher = new Pusher('32cbd69e4b950bf97679', {
-                    cluster: 'us2',
-                    forceTLS: true
-                });
+                // --- Kick Centrifugo (yeni gerçek zamanlı sistem) ---
+                // Kick'in token adresi ve WebSocket sunucusu yalnızca Origin: https://kick.com kabul ediyor.
+                // Bu yüzden ikisi de yerel köprü (kick-token-proxy.ps1) üzerinden geçer.
+                // Cloudflare Worker adresini buraya yazın (cloudflare-worker/worker.js). Boşsa yerel betik kullanılır.
+                const DEFAULT_BRIDGE = 'https://droppool-kick-bridge.crosweq204.workers.dev';
+                const BRIDGE = urlParams.get('proxy') || DEFAULT_BRIDGE || 'http://localhost:8787';
+                const KICK_WS_URL = BRIDGE.replace(/^http/, 'ws') + '/ws';
+                const TOKEN_URLS = [BRIDGE + '/token'];
+                const kickClientId = 'droppool-' + Math.random().toString(36).slice(2, 12);
 
-                const kickChannel = pusher.subscribe(`chatrooms.${chatroomId}.v2`);
-                console.log('Kick sohbetine başarıyla bağlanıldı ve dinleniyor...');
+                async function fetchKickToken() {
+                    for (const u of TOKEN_URLS) {
+                        try {
+                            const r = await fetch(u, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ client_id: kickClientId })
+                            });
+                            const j = await r.json();
+                            if (j && j.data && j.data.token) return j.data.token;
+                        } catch (e) {
+                            console.warn('[Kick] Token alınamadı:', u);
+                        }
+                    }
+                    return null;
+                }
+
+                // Pusher benzeri minimal arayüz: bind(event, cb) ve bind_global(cb)
+                const channelListeners = {};
+                let globalListener = null;
+                const kickChannel = {
+                    bind: (ev, cb) => { (channelListeners[ev] = channelListeners[ev] || []).push(cb); },
+                    bind_global: (cb) => { globalListener = cb; }
+                };
+
+                const subChannel = `chatrooms.${chatroomId}.v2`;
+                let kickWs = null;
+                let reconnectTimer = null;
+                let refreshTimer = null;
+                let retry = 0;
+
+                async function connectKick() {
+                    clearTimeout(reconnectTimer);
+                    clearTimeout(refreshTimer);
+                    const token = await fetchKickToken();
+                    if (!token) {
+                        console.error('[Kick] Bağlantı token\'ı alınamadı. kick-token-proxy.ps1 çalışıyor mu? (README)');
+                        retry++;
+                        reconnectTimer = setTimeout(connectKick, Math.min(30000, 3000 * retry));
+                        return;
+                    }
+                    const ws = new WebSocket(KICK_WS_URL);
+                    kickWs = ws;
+                    ws.onopen = () => ws.send(JSON.stringify({ id: 1, connect: { token, name: 'js' } }));
+                    ws.onmessage = (msg) => {
+                        String(msg.data).split('\n').forEach(line => {
+                            if (!line.trim()) return;
+                            let frame;
+                            try { frame = JSON.parse(line); } catch (e) { return; }
+                            if (Object.keys(frame).length === 0) { ws.send('{}'); return; } // ping -> pong
+                            if (frame.connect) {
+                                retry = 0;
+                                console.log('[Kick] Bağlantı kuruldu, abone olunuyor:', subChannel);
+                                ws.send(JSON.stringify({ id: 2, subscribe: { channel: subChannel } }));
+                                // Token süresi dolmadan yenile
+                                const ttl = (frame.connect.ttl || 2700) * 1000;
+                                refreshTimer = setTimeout(() => { try { ws.close(); } catch (e) { } }, ttl * 0.9);
+                            } else if (frame.id === 2 && frame.error) {
+                                console.error('[Kick] Abonelik HATASI:', frame.error);
+                            } else if (frame.id === 2) {
+                                console.log('[Kick] Abonelik BAŞARILI. Sohbet dinleniyor...');
+                            } else if (frame.push && frame.push.pub) {
+                                let payload = frame.push.pub.data;
+                                if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) { return; } }
+                                if (!payload || !payload.event) return;
+                                if (globalListener) globalListener(payload.event, payload.data);
+                                (channelListeners[payload.event] || []).forEach(cb => cb(payload.data));
+                            }
+                        });
+                    };
+                    ws.onerror = () => console.warn('[Kick] WebSocket hatası');
+                    ws.onclose = () => {
+                        if (kickWs !== ws) return;
+                        console.warn('[Kick] Bağlantı koptu, yeniden bağlanılıyor...');
+                        retry++;
+                        reconnectTimer = setTimeout(connectKick, Math.min(15000, 1000 * retry));
+                    };
+                }
+                connectKick();
 
                 // Tüm eventleri logla (debug amaçlı)
                 kickChannel.bind_global((eventName, rawData) => {
-                    if (eventName.startsWith('pusher:')) return; // Pusher sistem eventlerini gizle
-                    console.log('[Pusher Event]', eventName, rawData);
+                    console.log('[Kick Event]', eventName, rawData);
                 });
+
 
                 kickChannel.bind('App\\Events\\ChatMessageEvent', (rawData) => {
                     try {
