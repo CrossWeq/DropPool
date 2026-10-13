@@ -1706,7 +1706,7 @@
                 // Cloudflare Worker adresini buraya yazın (cloudflare-worker/worker.js). Boşsa yerel betik kullanılır.
                 const DEFAULT_BRIDGE = 'https://droppool-kick-bridge.crosweq204.workers.dev';
                 const BRIDGE = urlParams.get('proxy') || DEFAULT_BRIDGE || 'http://localhost:8787';
-                const KICK_WS_URL = BRIDGE.replace(/^http/, 'ws') + '/ws';
+                const KICK_WS_URL = BRIDGE.replace(/^http/, 'ws') + '/ws?channel=' + encodeURIComponent(channelName || '');
                 const TOKEN_URLS = [BRIDGE + '/token'];
                 const kickClientId = 'droppool-' + Math.random().toString(36).slice(2, 12);
 
