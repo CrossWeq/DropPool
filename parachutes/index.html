@@ -1725,12 +1725,12 @@
                                 if (data && data.now) {
                                     lastTimestamp = data.now;
                                 }
-                            } else {
-                                await new Promise(r => setTimeout(r, 1500));
                             }
                         } catch (e) {
-                            await new Promise(r => setTimeout(r, 1500));
+                            console.warn('[Kick Poll]', e);
                         }
+                        // Her poll arasında 1 saniye bekle
+                        await new Promise(r => setTimeout(r, 1000));
                     }
                 }
                 startKickPolling();
