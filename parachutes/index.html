@@ -78,6 +78,8 @@
     </style>
     <!-- Matter.js fizik motoru CDN üzerinden dahil ediliyor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <!-- Pusher JS kütüphanesi (Kick Canlı Sohbet için) -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
     <!-- Canvas Confetti kütüphanesi (Doğum günü patlamaları için) -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -1692,50 +1694,28 @@
             }
 
             try {
-                // Worker üzerinden Kick mesajlarını anlık olarak dinle (Long-Polling)
-                const channelListeners = {};
-                const kickChannel = {
-                    bind: (ev, cb) => { (channelListeners[ev] = channelListeners[ev] || []).push(cb); },
-                    bind_global: (cb) => { channelListeners['*'] = [cb]; }
+                // --- Canlı Pusher WebSocket Bağlantısı (Kotasız ve Anlık) ---
+                const pusherConfig = data.pusher || {
+                    key: 'f42163022b68a9746049',
+                    cluster: 'eu',
+                    channel: `droppool-${broadcasterId}`
                 };
 
-                let lastTimestamp = 0;
-                let isPolling = true;
-                const seenMessageIds = new Set();
+                console.log('[Kick] Pusher WebSocket bağlantısı kuruluyor...');
+                const pusher = new Pusher(pusherConfig.key, {
+                    cluster: pusherConfig.cluster,
+                    forceTLS: true
+                });
 
-                async function startKickPolling() {
-                    console.log('[Kick] Sohbet dinleyicisi başlatıldı...');
-                    while (isPolling) {
-                        try {
-                            const res = await fetch(`${KICK_API_WORKER}/poll?id=${broadcasterId}&after=${lastTimestamp}`);
-                            const data = await res.json().catch(() => ({}));
-                            if (res.ok) {
-                                if (data && data.messages && data.messages.length > 0) {
-                                    for (const msg of data.messages) {
-                                        const mId = msg.message_id || (msg.content + '_' + (msg.sender && msg.sender.username));
-                                        if (seenMessageIds.has(mId)) continue;
-                                        seenMessageIds.add(mId);
-                                        if (seenMessageIds.size > 500) seenMessageIds.clear();
+                pusher.connection.bind('connected', () => {
+                    console.log('[Kick] Pusher WebSocket BAĞLANDI! Sohbet canlı dinleniyor...');
+                });
 
-                                        console.log('[Kick Chat Geldi]:', msg);
-                                        (channelListeners['*'] || []).forEach(cb => cb('chat.message.sent', msg));
-                                        (channelListeners['chat.message.sent'] || []).forEach(cb => cb(msg));
-                                    }
-                                }
-                                if (data && data.now) {
-                                    lastTimestamp = data.now;
-                                }
-                            } else {
-                                console.error('[Kick Poll Sunucu Hatası]:', data.error || data);
-                            }
-                        } catch (e) {
-                            console.warn('[Kick Poll]', e);
-                        }
-                        // Her poll arasında 1.5 saniye bekle
-                        await new Promise(r => setTimeout(r, 1500));
-                    }
-                }
-                startKickPolling();
+                pusher.connection.bind('error', (err) => {
+                    console.warn('[Kick Pusher Hatası]', err);
+                });
+
+                const kickChannel = pusher.subscribe(pusherConfig.channel);
 
                 // Tüm eventleri logla (debug amaçlı)
                 kickChannel.bind_global((eventName, rawData) => {
