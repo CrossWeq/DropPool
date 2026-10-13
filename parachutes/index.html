@@ -1708,8 +1708,8 @@
                     while (isPolling) {
                         try {
                             const res = await fetch(`${KICK_API_WORKER}/poll?id=${broadcasterId}&after=${lastTimestamp}`);
+                            const data = await res.json().catch(() => ({}));
                             if (res.ok) {
-                                const data = await res.json();
                                 if (data && data.messages && data.messages.length > 0) {
                                     for (const msg of data.messages) {
                                         const mId = msg.message_id || (msg.content + '_' + (msg.sender && msg.sender.username));
@@ -1725,12 +1725,14 @@
                                 if (data && data.now) {
                                     lastTimestamp = data.now;
                                 }
+                            } else {
+                                console.error('[Kick Poll Sunucu Hatası]:', data.error || data);
                             }
                         } catch (e) {
                             console.warn('[Kick Poll]', e);
                         }
-                        // Her poll arasında 1 saniye bekle
-                        await new Promise(r => setTimeout(r, 1000));
+                        // Her poll arasında 1.5 saniye bekle
+                        await new Promise(r => setTimeout(r, 1500));
                     }
                 }
                 startKickPolling();
