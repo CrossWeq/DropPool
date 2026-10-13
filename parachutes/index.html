@@ -1672,12 +1672,14 @@
 
             // Worker'ı kanal için abone ettir ve broadcaster_user_id'yi al
             let broadcasterId = null;
+            let subscribeData = null;
             for (let attempt = 1; attempt <= 3 && !broadcasterId; attempt++) {
                 try {
                     const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}`);
                     const data = await res.json();
                     if (data && data.id) {
                         broadcasterId = data.id;
+                        subscribeData = data;
                         console.log('[Kick] Kanal abone edildi, broadcaster ID:', broadcasterId);
                     } else {
                         console.error('[Kick] Abonelik hatası:', data);
@@ -1695,7 +1697,7 @@
 
             try {
                 // --- Canlı Pusher WebSocket Bağlantısı (Kotasız ve Anlık) ---
-                const pusherConfig = data.pusher || {
+                const pusherConfig = (subscribeData && subscribeData.pusher) || {
                     key: 'f42163022b68a9746049',
                     cluster: 'eu',
                     channel: `droppool-${broadcasterId}`
