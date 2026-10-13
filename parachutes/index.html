@@ -78,8 +78,7 @@
     </style>
     <!-- Matter.js fizik motoru CDN üzerinden dahil ediliyor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <!-- Pusher JS kütüphanesi (Kick Chat için) -->
-    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+
     <!-- Canvas Confetti kütüphanesi (Doğum günü patlamaları için) -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
@@ -1664,50 +1663,70 @@
 
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
-            // Kanal ve chatroom ID'sini bul (Kick artık channel_id ile de çalışıyor)
-            const channelApi = `https://kick.com/api/v2/channels/${channelName}`;
-            const apiTargets = [
-                channelApi,
-                `https://corsproxy.io/?url=${encodeURIComponent(channelApi)}`,
-                `https://api.allorigins.win/get?url=${encodeURIComponent(channelApi)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${channelApi}`
-            ];
+            // --- Kick resmi API (webhook) ---
+            // Worker (kick-api-worker/worker.js) deploy edildikten sonra adresini buraya yazın
+            // ya da overlay linkine ?api=https://... ekleyin.
+            const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
 
-            let chatroomId = null;
-            for (const url of apiTargets) {
+            // Worker'ı kanal için abone ettir ve broadcaster_user_id'yi al
+            let broadcasterId = null;
+            for (let attempt = 1; attempt <= 3 && !broadcasterId; attempt++) {
                 try {
-                    console.log('Deneniyor:', url);
-                    const ctrl = new AbortController();
-                    const tid = setTimeout(() => ctrl.abort(), 7000);
-                    const res = await fetch(url, { signal: ctrl.signal });
-                    clearTimeout(tid);
-                    const raw = await res.json();
-                    // allorigins wrapper
-                    const data = raw.contents ? JSON.parse(raw.contents) : raw;
-                    if (data && data.chatroom && data.chatroom.id) {
-                        chatroomId = data.chatroom.id;
-                        console.log('Chatroom ID bulundu:', chatroomId);
-                        break;
+                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}`);
+                    const data = await res.json();
+                    if (data && data.id) {
+                        broadcasterId = data.id;
+                        console.log('[Kick] Kanal abone edildi, broadcaster ID:', broadcasterId);
+                    } else {
+                        console.error('[Kick] Abonelik hatası:', data);
                     }
                 } catch (e) {
-                    console.warn('Bu kaynak başarısız, diğerine geçiliyor...');
+                    console.warn('[Kick] Worker\'a ulaşılamadı, tekrar deneniyor...', e);
                 }
+                if (!broadcasterId) await new Promise(r => setTimeout(r, 2000 * attempt));
             }
 
-            if (!chatroomId) {
-                console.error('Chatroom ID bulunamadı. Tüm kaynaklar engellendi.');
+            if (!broadcasterId) {
+                console.error('[Kick] Broadcaster ID alınamadı. Worker adresi doğru mu? (README)');
                 return;
             }
 
             try {
-                // --- Kick'in kendi Pusher WebSocket'i (doğrudan bağlantı, ara sunucu yok) ---
-                const pusher = new Pusher('32cbd69e4b950bf97679', {
-                    cluster: 'us2',
-                    forceTLS: true
-                });
-                const kickChannel = pusher.subscribe(`chatrooms.${chatroomId}.v2`);
-                pusher.connection.bind('connected', () => console.log('[Kick] Pusher bağlantısı kuruldu, sohbet dinleniyor...'));
-                pusher.connection.bind('error', (e) => console.warn('[Kick] Pusher hatası', e));
+                // Worker üzerinden Kick mesajlarını anlık olarak dinle (Long-Polling)
+                const channelListeners = {};
+                const kickChannel = {
+                    bind: (ev, cb) => { (channelListeners[ev] = channelListeners[ev] || []).push(cb); },
+                    bind_global: (cb) => { channelListeners['*'] = [cb]; }
+                };
+
+                let lastTimestamp = Date.now();
+                let isPolling = true;
+
+                async function startKickPolling() {
+                    console.log('[Kick] Sohbet dinleyicisi başlatıldı...');
+                    while (isPolling) {
+                        try {
+                            const res = await fetch(`${KICK_API_WORKER}/poll?id=${broadcasterId}&after=${lastTimestamp}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data && data.messages && data.messages.length > 0) {
+                                    for (const msg of data.messages) {
+                                        (channelListeners['*'] || []).forEach(cb => cb('chat.message.sent', msg));
+                                        (channelListeners['chat.message.sent'] || []).forEach(cb => cb(msg));
+                                    }
+                                }
+                                if (data && data.now) {
+                                    lastTimestamp = data.now;
+                                }
+                            } else {
+                                await new Promise(r => setTimeout(r, 2000));
+                            }
+                        } catch (e) {
+                            await new Promise(r => setTimeout(r, 2000));
+                        }
+                    }
+                }
+                startKickPolling();
 
                 // Tüm eventleri logla (debug amaçlı)
                 kickChannel.bind_global((eventName, rawData) => {
@@ -1715,7 +1734,7 @@
                 });
 
 
-                kickChannel.bind('App\\Events\\ChatMessageEvent', (rawData) => {
+                kickChannel.bind('chat.message.sent', (rawData) => {
                     try {
                         // Bazen data string olarak gelir, bazen obje — ikisini de handle ediyoruz
                         let eventData = rawData;
