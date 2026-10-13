@@ -1699,8 +1699,9 @@
                     bind_global: (cb) => { channelListeners['*'] = [cb]; }
                 };
 
-                let lastTimestamp = Date.now();
+                let lastTimestamp = 0;
                 let isPolling = true;
+                const seenMessageIds = new Set();
 
                 async function startKickPolling() {
                     console.log('[Kick] Sohbet dinleyicisi başlatıldı...');
@@ -1711,6 +1712,12 @@
                                 const data = await res.json();
                                 if (data && data.messages && data.messages.length > 0) {
                                     for (const msg of data.messages) {
+                                        const mId = msg.message_id || (msg.content + '_' + (msg.sender && msg.sender.username));
+                                        if (seenMessageIds.has(mId)) continue;
+                                        seenMessageIds.add(mId);
+                                        if (seenMessageIds.size > 500) seenMessageIds.clear();
+
+                                        console.log('[Kick Chat Geldi]:', msg);
                                         (channelListeners['*'] || []).forEach(cb => cb('chat.message.sent', msg));
                                         (channelListeners['chat.message.sent'] || []).forEach(cb => cb(msg));
                                     }
@@ -1719,10 +1726,10 @@
                                     lastTimestamp = data.now;
                                 }
                             } else {
-                                await new Promise(r => setTimeout(r, 2000));
+                                await new Promise(r => setTimeout(r, 1500));
                             }
                         } catch (e) {
-                            await new Promise(r => setTimeout(r, 2000));
+                            await new Promise(r => setTimeout(r, 1500));
                         }
                     }
                 }
