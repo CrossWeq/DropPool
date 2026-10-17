@@ -90,7 +90,8 @@
     <script>
         // --- 1. AYARLAR VE DEĞİŞKENLER ---
         const urlParams = new URLSearchParams(window.location.search);
-        const channelName = urlParams.get('kanal') || 'testkanal';
+        const rawChannelName = urlParams.get('kanal') || 'testkanal';
+        const channelName = rawChannelName.replace(/^https?:\/\/(www\.)?kick\.com\//i, '').replace(/^@+/, '').trim();
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
@@ -193,6 +194,8 @@
         document.body.style.opacity = '0'; // Başlangıçta gizli
         document.body.style.transition = 'none'; // İlk başta geçiş yok
 
+        let overlayIdleTimerRef = null;
+        let activeVehicles = 0; // Helikopter veya uçak havada mı?
         let overlayIdleTimer = null;
         // Idle timer'a artık gerek yok çünkü aktif karakter bittiğinde kapanıyor, ama fonksiyonu boş bırakıyoruz
         function resetIdleTimer() {
@@ -300,13 +303,113 @@
         const syncChannel = new BroadcastChannel('droppool_channel');
         let leaderboard = []; // Her sayfa yenilendiğinde sıfırdan başlar
 
-        // --- TOPLU ATLAYIŞ (DROP TOGETHER) DURUM DEĞİŞKENLERİ ---
+        // --- TOPLU ATLAYIŞ (DROP TOGETHER) VE GERİ SAYIM DEĞİŞKENLERİ ---
         let isDropTogetherMode = false;
         let isMeteorMode = false;
+        // Aktif toplu atlayış/meteor oturumunu kimin başlattığı: 'broadcaster' | 'admin' | null. Sadece sahibi kaldırabilir.
+        let modeOwner = null;
         let dropTogetherQueue = [];
         let isPlaneFlying = false;
-        // !resetdrop her çağrıldığında artırılır; eski (iptal edilmiş) gecikmeli işlemlerin etkisiz kalmasını sağlar
+        // !resetdrop her çağrıldığında artırılır; eski (iptal edilmiş) gecikmeli işlemlerin ve zamanlayıcıların etkisiz kalmasını sağlar
         let sceneEpoch = 0;
+
+        // Otomatik süreli atlayış durum değişkenleri (!droptogether 100, !admindroptogether 20 vb.)
+        let countdownTimerId = null;
+        let countdownTargetEpoch = 0;
+        let countdownModeKind = null; // 'plane' | 'meteor'
+        let countdownByAdmin = false;
+        let countdownInitiator = null;
+
+        function wakeOverlay() {
+            if (!isOverlayVisible) {
+                isOverlayVisible = true;
+                if (typeof pool !== 'undefined' && pool && pool.render) pool.render.visible = true;
+                if (typeof applyRandomTheme === 'function') applyRandomTheme();
+                document.body.style.transition = 'none';
+                document.body.style.opacity = '1';
+                console.log("[DropPool] Overlay açıldı.");
+            }
+            if (overlayIdleTimerRef) {
+                clearTimeout(overlayIdleTimerRef);
+                overlayIdleTimerRef = null;
+            }
+        }
+
+        function clearCountdown() {
+            if (countdownTimerId) {
+                clearTimeout(countdownTimerId);
+                countdownTimerId = null;
+            }
+            countdownTargetEpoch = 0;
+            countdownModeKind = null;
+            countdownByAdmin = false;
+            countdownInitiator = null;
+        }
+
+        function executeAutoDrop(kind, byAdmin, initiatorUser) {
+            if (sceneEpoch !== countdownTargetEpoch) return;
+
+            const isMeteor = (kind === 'meteor');
+            const streamerName = (typeof channelName === 'string' && channelName) ? channelName : initiatorUser;
+
+            if (byAdmin) {
+                // Admin başlattıysa: Admin, Yayıncı ve chatten !atla yazan izleyiciler katılır
+                if (initiatorUser && !dropTogetherQueue.some(u => u.username.toLowerCase() === initiatorUser.toLowerCase())) {
+                    dropTogetherQueue.unshift({
+                        username: initiatorUser,
+                        customEmoteUrl: null,
+                        isDrunk: false,
+                        isTarzan: false,
+                        isFake: false
+                    });
+                    addDropPoolLog(initiatorUser, 'SİSTEM', isMeteor ? 'Admin meteor yağmuruna otomatik eklendi.' : 'Admin toplu atlayışa otomatik eklendi.');
+                    updateDropPoolStats(initiatorUser, 'JUMP');
+                }
+                if (streamerName && !dropTogetherQueue.some(u => u.username.toLowerCase() === streamerName.toLowerCase())) {
+                    dropTogetherQueue.unshift({
+                        username: streamerName,
+                        customEmoteUrl: null,
+                        isDrunk: false,
+                        isTarzan: false,
+                        isFake: false
+                    });
+                    addDropPoolLog(streamerName, 'SİSTEM', isMeteor ? 'Yayıncı meteor yağmuruna otomatik eklendi.' : 'Yayıncı toplu atlayışa otomatik eklendi.');
+                    updateDropPoolStats(streamerName, 'JUMP');
+                }
+            } else {
+                // Yayıncı başlattıysa: Yayıncı otomatik katılır
+                const streamerFinal = initiatorUser || streamerName;
+                if (streamerFinal && !dropTogetherQueue.some(u => u.username.toLowerCase() === streamerFinal.toLowerCase())) {
+                    dropTogetherQueue.unshift({
+                        username: streamerFinal,
+                        customEmoteUrl: null,
+                        isDrunk: false,
+                        isTarzan: false,
+                        isFake: false
+                    });
+                    addDropPoolLog(streamerFinal, 'SİSTEM', isMeteor ? 'Yayıncı meteor yağmuruna otomatik eklendi.' : 'Yayıncı toplu atlayışa otomatik eklendi.');
+                    updateDropPoolStats(streamerFinal, 'JUMP');
+                }
+            }
+
+            clearCountdown();
+            isDropTogetherMode = false;
+            isMeteorMode = false;
+            modeOwner = null;
+
+            if (dropTogetherQueue.length === 0) {
+                console.log('[DropPool] Kuyrukta kimse yok, otomatik atlayış iptal edildi.');
+                return;
+            }
+
+            addDropPoolLog('SİSTEM', 'SİSTEM', isMeteor ? 'Süre doldu! Otomatik meteor yağmuru başladı.' : 'Süre doldu! Otomatik toplu atlayış (uçak) havalandı.');
+
+            if (isMeteor) {
+                triggerMeteorShower();
+            } else {
+                triggerPlaneDrop();
+            }
+        }
 
         // Sayfa her açıldığında/yenilendiğinde sıralamayı sıfırla ve siralama.html'e bildir
         try {
@@ -593,14 +696,7 @@
         // --- 4. KARAKTER SPAWN FONKSİYONU ---
         function spawnCharacter(username, customEmoteUrl = null, spawnX = null, spawnY = -50, isDive = false, isDrunk = false, isTarzan = false, isFake = false, isMeteor = false, meteorVx = null, meteorVy = null) {
             // Eğer ekran kapalıysa aç ve yeni tema belirle
-            if (!isOverlayVisible) {
-                isOverlayVisible = true;
-                pool.render.visible = true; // Havuzu görünür yap
-                applyRandomTheme();
-                document.body.style.transition = 'none'; // Tak diye ekrana çıksın
-                document.body.style.opacity = '1';
-                console.log("Yeni oyun başladı, overlay açılıyor!");
-            }
+            wakeOverlay();
             // Her yeni kişi düştüğünde boşta kalma süresini sıfırla (60dk zamanlayıcısı)
             resetIdleTimer();
 
@@ -1552,8 +1648,6 @@
 
         // --- 7.5 OVERLAY GİZLEME KONTROLÜ (BOŞTA KALMA DURUMU) ---
         // Saniyede bir kez ekranda hiç karakter kaldı mı kontrol et
-        let overlayIdleTimerRef = null;
-        let activeVehicles = 0; // Helikopter veya uçak havada mı?
         setInterval(() => {
             if (typeof Composite !== 'undefined' && typeof world !== 'undefined') {
                 // Sahnede herhangi bir karakter (kral dahil) var mı kontrol et
@@ -1568,9 +1662,11 @@
                     }
                 });
 
-                // Eğer sahnede HİÇ karakter kalmadıysa ve overlay açıksa 5 saniyelik zamanlayıcıyı başlat
-                // Sahne doluysa havuz/overlay kesinlikle görünür kalsın (kendini onarma)
-                if ((activeChars > 0 || activeVehicles > 0) && isOverlayVisible) {
+                // Toplu atlayış veya geri sayım modu aktifse ekran kapanmamalı
+                const isWaitingGroupDrop = isDropTogetherMode || isMeteorMode || countdownTimerId !== null;
+
+                // Eğer sahnede karakter/araç varsa veya geri sayım/toplu atlayış aktifse havuz açık kalsın
+                if ((activeChars > 0 || activeVehicles > 0 || isWaitingGroupDrop) && isOverlayVisible) {
                     if (pool && pool.render && !pool.render.visible) pool.render.visible = true;
                     if (document.body.style.opacity !== '1') {
                         document.body.style.transition = 'none';
@@ -1578,12 +1674,12 @@
                     }
                 }
 
-                if (activeChars === 0 && activeVehicles === 0 && isOverlayVisible) {
+                if (activeChars === 0 && activeVehicles === 0 && !isWaitingGroupDrop && isOverlayVisible) {
                     if (!overlayIdleTimerRef) {
                         overlayIdleTimerRef = setTimeout(() => {
                             overlayIdleTimerRef = null;
-                            // Bu 5 saniye içinde yeni biri atladıysa gizleme
-                            if (activeVehicles > 0 || Composite.allBodies(world).some(b => b.label === 'karakter')) return;
+                            // Bu 5 saniye içinde yeni biri atladıysa veya geri sayım başladıysa gizleme
+                            if (activeVehicles > 0 || isDropTogetherMode || isMeteorMode || countdownTimerId !== null || Composite.allBodies(world).some(b => b.label === 'karakter')) return;
                             isOverlayVisible = false;
                             document.body.style.transition = 'opacity 1.5s ease-in-out'; // Kaybolurken yumuşak kaybolsun
                             document.body.style.opacity = '0';
@@ -1604,8 +1700,8 @@
                             }, 1500);
                         }, 5000); // 5 saniye bekle
                     }
-                } else if ((activeChars > 0 || activeVehicles > 0) && overlayIdleTimerRef) {
-                    // Ekranda karakter varsa (veya araç uçuyorsa) gizleme işlemini iptal et
+                } else if ((activeChars > 0 || activeVehicles > 0 || isWaitingGroupDrop) && overlayIdleTimerRef) {
+                    // Ekranda karakter varsa (veya araç uçuyorsa veya geri sayım bekleniyorsa) gizleme işlemini iptal et
                     clearTimeout(overlayIdleTimerRef);
                     overlayIdleTimerRef = null;
                 }
@@ -1617,6 +1713,7 @@
         // Sıralama (leaderboard) ve istatistikler (stats) KORUNUR.
         function hardResetScene() {
             sceneEpoch++; // Bekleyen tüm gecikmeli spawn/araç işlemlerini geçersiz kıl
+            clearCountdown(); // Varsa aktif geri sayım zamanlayıcısını ve HUD'ını derhal durdur
 
             // Kalıcı objeler dışındaki her şeyi (karakterler, ip ağırlıkları vb.) fizik dünyasından sil
             const keep = [leftWall, rightWall, ground, pool];
@@ -1739,43 +1836,146 @@
                         if (!eventData) return;
 
                         const message = (eventData.content || '').trim();
-                        const username = eventData.sender ? eventData.sender.username : null;
+                        const senderObj = eventData.sender || {};
+                        const username = senderObj.username || (typeof eventData.sender === 'string' ? eventData.sender : null);
+                        const senderUserId = senderObj.user_id || eventData.sender_user_id || null;
+                        const isBroadcasterFlag = senderObj.is_broadcaster;
+                        // is_admin bayrağını sadece imzalı webhook'u doğrulayan Worker üretir (ADMIN_KICK_USERS)
+                        const isAdmin = senderObj.is_admin === true;
 
                         if (!message || !username) return;
                         console.log(`[Chat] ${username}: ${message}`);
 
-                        // Yayıncı !resetdrop yazarsa tüm bekleme süreleri sıfırlanır
-                        if (message.toLowerCase() === '!resetdrop' && username.toLowerCase() === channelName.toLowerCase()) {
+                        // Yayıncı doğrulama (benzer isimli sahte hesaplara karşı sadece ID/bayrak güvenilir):
+                        // 1. Worker'dan gelen is_broadcaster bayrağı varsa sadece ona güvenilir
+                        // 2. Sayısal Broadcaster ID eşleşmesi (sender.user_id === broadcasterId)
+                        // 3. Eski worker (bayrak yok) için: birebir aynı kullanıcı adı
+                        const isBroadcaster = () => {
+                            if (typeof isBroadcasterFlag === 'boolean') return isBroadcasterFlag;
+                            if (senderUserId && broadcasterId && String(senderUserId) === String(broadcasterId)) return true;
+                            return Boolean(username && channelName && username.toLowerCase() === channelName.toLowerCase());
+                        };
+                        // Aktif oturumu sadece onu başlatan kişi (yayıncı ya da admin) kaldırabilir; diğerleri sıraya katılır.
+                        const canLaunch = () => (modeOwner === 'admin') ? isAdmin : isBroadcaster();
+                        const lowerMsg = message.toLowerCase();
+
+                        const doReset = (tag) => {
+                            clearCountdown();
                             userCooldowns.clear();
                             isDropTogetherMode = false;
                             isMeteorMode = false;
+                            modeOwner = null;
                             dropTogetherQueue = [];
                             hardResetScene(); // Ekrandaki her şeyi sayfa yenilenmiş gibi temizle (sıralama korunur)
-                            addDropPoolLog(username, 'SİSTEM', '!resetdrop ile tüm süreleri ve sıralamayı sıfırladı.');
-                            console.log('[DropPool] !resetdrop komutu alındı — bekleme süreleri sıfırlandı, toplu atlama iptal edildi ve sahne temizlendi.');
+                            addDropPoolLog(username, 'SİSTEM', `${tag} ile tüm süreleri ve sıralamayı sıfırladı.`);
+                            console.log(`[DropPool] ${tag} komutu alındı — bekleme süreleri sıfırlandı, toplu atlama iptal edildi ve sahne temizlendi.`);
+                        };
+
+                        // kind: 'plane' | 'meteor'. byAdmin: komutu admin mi yazdı.
+                        // durationSec: 0 ise manuel mod, > 0 ise belirtilen saniye sonra otomatik atlayış.
+                        // Kurallar:
+                        //  - Yayıncının açtığı oturum aktifken admin komutu sayılmaz.
+                        //  - Aynı sahibin aynı modu tekrar yazması:
+                        //      * Eğer yeni bir süre (durationSec > 0) verildiyse süreyi günceller (sıra korunur).
+                        //      * Süre verilmediyse etkisizdir (liste sıfırlanmaz, uçak kalkmaz).
+                        //  - Yayıncı, admin oturumunun üzerine yazarsa oturumu devralır; sıradakiler korunur.
+                        const startMode = (kind, tag, byAdmin, durationSec = 0) => {
+                            const owner = byAdmin ? 'admin' : 'broadcaster';
+                            const active = isDropTogetherMode || isMeteorMode;
+                            const sameKind = (kind === 'meteor') ? isMeteorMode : isDropTogetherMode;
+
+                            if (byAdmin && active && modeOwner === 'broadcaster') {
+                                console.log(`[DropPool] ${tag} yok sayıldı: yayıncının başlattığı oturum aktif.`);
+                                return;
+                            }
+
+                            // Aynı sahip aynı modu tekrar yazdı
+                            if (active && modeOwner === owner && sameKind) {
+                                if (durationSec > 0) {
+                                    clearCountdown();
+                                    countdownTargetEpoch = sceneEpoch;
+                                    countdownModeKind = kind;
+                                    countdownByAdmin = byAdmin;
+                                    countdownInitiator = username;
+
+                                    countdownTimerId = setTimeout(() => {
+                                        countdownTimerId = null;
+                                        if (countdownTargetEpoch !== sceneEpoch) return;
+                                        executeAutoDrop(kind, byAdmin, username);
+                                    }, durationSec * 1000);
+
+                                    addDropPoolLog(username, 'SİSTEM', `${tag} süresi ${durationSec} saniye olarak güncellendi.`);
+                                    console.log(`[DropPool] ${tag} süresi ${durationSec}s olarak güncellendi. (Sıra korundu, uzunluk: ${dropTogetherQueue.length})`);
+                                    return;
+                                }
+                                console.log(`[DropPool] ${tag} tekrar yazıldı, mod zaten aktif — yok sayıldı. Başlatmak için atlama komutunu yazın.`);
+                                return;
+                            }
+
+                            // Önceki sayaç varsa durdur
+                            clearCountdown();
+
+                            const takeover = !byAdmin && active && modeOwner === 'admin';
+                            isDropTogetherMode = (kind === 'plane');
+                            isMeteorMode = (kind === 'meteor');
+                            modeOwner = owner;
+                            if (!takeover) dropTogetherQueue = [];
+                            userCooldowns.clear();
+
+                            // Eğer süre verildiyse arka planda süreli atlayışı başlat (ekranda sayaç gösterilmez)
+                            if (durationSec > 0) {
+                                countdownTargetEpoch = sceneEpoch;
+                                countdownModeKind = kind;
+                                countdownByAdmin = byAdmin;
+                                countdownInitiator = username;
+
+                                countdownTimerId = setTimeout(() => {
+                                    countdownTimerId = null;
+                                    if (countdownTargetEpoch !== sceneEpoch) return;
+                                    executeAutoDrop(kind, byAdmin, username);
+                                }, durationSec * 1000);
+                            }
+
+                            const logMsg = durationSec > 0
+                                ? (takeover ? `${tag} ${durationSec}s ile admin oturumunu devraldı (${durationSec}s otomatik).` : `${tag} ${durationSec}s modunu aktif etti (${durationSec} sn sonra otomatik atlayış).`)
+                                : (takeover ? `${tag} ile admin oturumunu devraldı (sıra korundu).` : `${tag} modunu aktif etti.`);
+
+                            addDropPoolLog(username, 'SİSTEM', logMsg);
+                            console.log(`[DropPool] ${kind === 'meteor' ? 'Meteor Yağmuru' : 'Toplu atlayış (Drop Together)'} modu AKTİF (${owner})${durationSec > 0 ? ` [${durationSec}s sayaç]` : ''}${takeover ? ' — devralındı, sıra korundu' : ''}. İzleyiciler sıraya alınıyor.`);
+                        };
+
+                        // Sıfırlama komutları: !resetdrop ve !adminresetdrop
+                        if ((lowerMsg === '!resetdrop' || lowerMsg.startsWith('!resetdrop ')) && isBroadcaster()) {
+                            doReset('!resetdrop');
+                            return;
+                        }
+                        if ((lowerMsg === '!adminresetdrop' || lowerMsg.startsWith('!adminresetdrop ')) && isAdmin) {
+                            doReset('!adminresetdrop');
                             return;
                         }
 
-                        // Yayıncı !droptogether yazarsa toplu atlayış moduna geç
-                        if (message.toLowerCase() === '!droptogether' && username.toLowerCase() === channelName.toLowerCase()) {
-                            isDropTogetherMode = true;
-                            isMeteorMode = false;
-                            dropTogetherQueue = [];
-                            userCooldowns.clear();
-                            addDropPoolLog(username, 'SİSTEM', '!droptogether modunu aktif etti.');
-                            console.log('[DropPool] Toplu atlayış (Drop Together) modu AKTİF! İzleyiciler sıraya alınıyor. Tüm beklemeler sıfırlandı.');
-                            return;
-                        }
+                        // Toplu atlayış ve meteor komutları (isteğe bağlı saniye parametreli: !droptogether 100, !admindroptogether 20 vb.)
+                        const modeCmdMatch = lowerMsg.match(/^!(droptogether|admindroptogether|meteor|adminmeteor)(?:\s+(\d+)(?:s|sn|sec)?)?$/);
+                        if (modeCmdMatch) {
+                            const cName = modeCmdMatch[1];
+                            const dur = modeCmdMatch[2] ? parseInt(modeCmdMatch[2], 10) : 0;
 
-                        // Yayıncı !meteor yazarsa meteor yağmuru moduna geç
-                        if (message.toLowerCase() === '!meteor' && username.toLowerCase() === channelName.toLowerCase()) {
-                            isMeteorMode = true;
-                            isDropTogetherMode = false;
-                            dropTogetherQueue = [];
-                            userCooldowns.clear();
-                            addDropPoolLog(username, 'SİSTEM', '!meteor modunu aktif etti.');
-                            console.log('[DropPool] Meteor Yağmuru modu AKTİF! İzleyiciler sıraya alınıyor. Tüm beklemeler sıfırlandı.');
-                            return;
+                            if (cName === 'droptogether' && isBroadcaster()) {
+                                startMode('plane', '!droptogether', false, dur);
+                                return;
+                            }
+                            if (cName === 'meteor' && isBroadcaster()) {
+                                startMode('meteor', '!meteor', false, dur);
+                                return;
+                            }
+                            if (cName === 'admindroptogether' && isAdmin) {
+                                startMode('plane', '!admindroptogether', true, dur);
+                                return;
+                            }
+                            if (cName === 'adminmeteor' && isAdmin) {
+                                startMode('meteor', '!adminmeteor', true, dur);
+                                return;
+                            }
                         }
 
                         const msgLower = message.toLowerCase();
@@ -1847,11 +2047,13 @@
 
                                 if (isDropTogetherMode || isMeteorMode) {
                                     // Toplu atlayışta dive dahil tüm özel komutlar yoksayılır ve default atlayış yapılır. (Emote hariç)
-                                    if (username.toLowerCase() === channelName.toLowerCase()) {
-                                        // Yayıncı atlarsa modu kapat ve aksiyonu başlat
+                                    if (canLaunch()) {
+                                        // Oturumu başlatan kişi atlarsa modu kapat ve aksiyonu başlat
                                         let currentMode = isMeteorMode ? 'meteor' : 'plane';
                                         isDropTogetherMode = false;
                                         isMeteorMode = false;
+                                        modeOwner = null;
+                                        clearCountdown(); // Varsa aktif geri sayımı derhal iptal et
                                         if (!dropTogetherQueue.some(u => u.username.toLowerCase() === username.toLowerCase())) {
                                             dropTogetherQueue.unshift({ username, customEmoteUrl, isDrunk: false, isTarzan: false, isFake: false });
                                             addDropPoolLog(username, 'SİSTEM', currentMode === 'meteor' ? 'Meteor yağmuru başlattı!' : 'Toplu atlayış (Uçak) başlattı!');
@@ -1973,13 +2175,7 @@
             const epoch = sceneEpoch;
 
             // Eğer ekran kapalıysa arka planı uyandır
-            if (!isOverlayVisible) {
-                isOverlayVisible = true;
-                pool.render.visible = true;
-                applyRandomTheme();
-                document.body.style.transition = 'none';
-                document.body.style.opacity = '1';
-            }
+            wakeOverlay();
             resetIdleTimer();
 
             // Uçak görselini oluştur
@@ -2122,6 +2318,29 @@
             triggerPlaneDrop();
         };
 
+        // --- SÜRELİ ATLAYIŞ TEST SENARYOSU ---
+        window.testGeriSayim = (sec = 10, mode = 'plane', byAdmin = false) => {
+            console.log(`[Test] ${sec} saniyelik ${mode} (${byAdmin ? 'admin' : 'yayıncı'}) atlayışı başlatılıyor (ekranda sayaç gösterilmez)...`);
+            clearCountdown();
+            isDropTogetherMode = (mode === 'plane');
+            isMeteorMode = (mode === 'meteor');
+            modeOwner = byAdmin ? 'admin' : 'broadcaster';
+            dropTogetherQueue = [
+                { username: "TestIzleyici1", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false },
+                { username: "TestIzleyici2", customEmoteUrl: null, isDrunk: false, isTarzan: false, isFake: false }
+            ];
+            countdownTargetEpoch = sceneEpoch;
+            countdownModeKind = mode;
+            countdownByAdmin = byAdmin;
+            countdownInitiator = byAdmin ? "AdminUser" : (channelName || "Yayıncı");
+
+            countdownTimerId = setTimeout(() => {
+                countdownTimerId = null;
+                if (countdownTargetEpoch !== sceneEpoch) return;
+                executeAutoDrop(mode, byAdmin, countdownInitiator);
+            }, sec * 1000);
+        };
+
         // --- HELİKOPTER DIVE TEST SENARYOSU ---
         window.testHelikopter = () => {
             console.log("Tekli helikopter (bobbing) testi başlatılıyor...");
@@ -2223,6 +2442,7 @@
         };
 
         function triggerMeteorShower() {
+            wakeOverlay();
             activeVehicles++; // Ekran kapanmasın diye aktif araç sayısını artır
             const epoch = sceneEpoch;
             let spawnDelay = 0;

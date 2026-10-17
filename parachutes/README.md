@@ -77,9 +77,9 @@
 
 | Komut | Açıklama |
 |---|---|
-| `!droptogether` | **Toplu Atlayış (Kuyruk) Modunu** başlatır. İzleyiciler komut yazınca kuyruğa alınır. Yayıncı tekrar komut girdiğinde kendisi de sıraya eklenir ve devasa bir uçak kalkar, herkesi aynı anda atar. |
-| `!meteor` | **Meteor Yağmuru Modunu** başlatır. İşleyişi toplu atlayışla aynıdır ancak devasa uçak yerine herkes paraşütsüz, yüksek hızda ve kırmızı alev efektleriyle göktaşı gibi yere çakılır. |
-| `!resetdrop` | Tüm izleyicilerin bekleme sürelerini (cooldown) sıfırlar; toplu atlayış kuyruğunu iptal eder ve ekrandaki karakter, havuz, uçak ve helikopterleri sayfa yenilenmiş gibi temizler (sıralama korunur). |
+| `!droptogether [saniye]` | **Toplu Atlayış (Kuyruk) Modunu** başlatır. Sayı girilirse (örn: `!droptogether 100`) belirtilen süre sonra yayıncı otomatik dahil edilir ve devasa uçak herkesi aynı anda atar. Sayı yazılmazsa manuel modda çalışır (yayıncı `!atla` yazana kadar bekler). |
+| `!meteor [saniye]` | **Meteor Yağmuru Modunu** başlatır (örn: `!meteor 60`). Belirtilen süre bitince veya yayıncı `!atla` yazınca herkes paraşütsüz, göktaşı aleviyle aynı anda yere çakılır. |
+| `!resetdrop` | Bekleme sürelerini sıfırlar, varsa aktif toplu atlayışı ve kuyruğu iptal eder, ekrandaki araçları ve karakterleri anında temizler. |
 
 ---
 
@@ -99,9 +99,9 @@
 
 | Command | Description |
 |---|---|
-| `!droptogether` | Starts **Queue Mode**. Viewers who type the drop command are queued up. When the streamer types the command again, they join the queue and a massive plane immediately drops everyone at once. |
-| `!meteor` | Starts **Meteor Shower Mode**. Works like Queue Mode, but everyone crashes straight into the ground at high speeds without parachutes, leaving a red fire trail behind them. |
-| `!resetdrop` | Resets all viewer cooldowns, cancels the drop queue, and clears characters, pool, planes and helicopters from the screen like a page refresh (leaderboard is kept). |
+| `!droptogether [seconds]` | Starts **Queue Mode**. When a duration is specified (e.g. `!droptogether 100`), the drop triggers automatically after that time, including the broadcaster. Without a number, it waits until the broadcaster types `!drop`. |
+| `!meteor [seconds]` | Starts **Meteor Shower Mode** (e.g. `!meteor 60`). When time expires or streamer drops, everyone crashes down at high speeds without parachutes like fiery meteors. |
+| `!resetdrop` | Resets all viewer cooldowns, cancels ongoing group drops and queues, and clears characters and vehicles from the screen. |
 
 ---
 

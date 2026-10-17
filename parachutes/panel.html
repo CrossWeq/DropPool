@@ -393,9 +393,9 @@
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Yayıncı Komutları (Sadece Yayıncı)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!droptogether</code> - Toplu atlayış kuyruğunu (Queue) başlatır. İzleyiciler <code>${cmd}</code> yazdığında sıraya girer. Yayıncı atlama komutunu (<code>${cmd}</code>) yazdığında hem kendisi de sıraya eklenir hem de devasa bir uçak anında kalkar, sıradaki herkes aynı anda uçağın altından atlar.</li>
-                    <li><code>!meteor</code> - Meteor Yağmuru modunu başlatır. Mantığı toplu atlayışla aynıdır ancak herkes paraşütsüz, çok hızlı ve kırmızı alev efektleriyle göktaşı gibi yere çakılır.</li>
-                    <li><code>!resetdrop</code> - Chat'ten yazıldığında herkesin bekleme süresini (cooldown) sıfırlar ve varsa toplu atlayış sırasını temizler. Herkes anında tekrar atlayabilir.</li>
+                    <li><code>!droptogether</code> veya <code>!droptogether [saniye]</code> - Toplu atlayış kuyruğunu başlatır. Örneğin <code>!droptogether 100</code> yazılırsa 100 saniye sonra devasa uçak otomatik kalkar ve yayıncı da dahil sıradaki herkes aynı anda atlar. Sayı yazılmazsa yayıncı atlama komutunu (<code>${cmd}</code>) yazana kadar sırayı toplar ve o an kaldırır.</li>
+                    <li><code>!meteor</code> veya <code>!meteor [saniye]</code> - Meteor Yağmuru modunu başlatır (örn: <code>!meteor 60</code>). Herkes paraşütsüz, alevler içinde göktaşı gibi hızla düşer.</li>
+                    <li><code>!resetdrop</code> - Chat'ten yazıldığında süreli atlayışı, kuyruğu ve bekleme sürelerini (cooldown) anında iptal edip sahneyi temizler.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">📊 İstatistik ve Geçmiş Merkezi</h3>
@@ -437,9 +437,9 @@
 
                 <h3 class="text-lg font-semibold text-white mt-4">👑 Broadcaster Commands (Broadcaster Only)</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                    <li><code>!droptogether</code> - Starts the "Queue Mode". Viewers who type <code>${cmd}</code> are queued up. When the streamer types <code>${cmd}</code>, they are added to the queue as well and the plane immediately takes off — everyone drops at once.</li>
-                    <li><code>!meteor</code> - Starts the "Meteor Shower" mode. Works just like Queue Mode, but everyone crashes straight into the ground like meteors without parachutes, leaving a red fire trail.</li>
-                    <li><code>!resetdrop</code> - Resets the cooldown for everyone and clears the drop queue if active. Everyone can jump again immediately.</li>
+                    <li><code>!droptogether</code> or <code>!droptogether [seconds]</code> - Starts Queue Mode. E.g. typing <code>!droptogether 100</code> drops everyone after 100 seconds automatically including the streamer. If no number is given, it waits until the broadcaster types <code>${cmd}</code>.</li>
+                    <li><code>!meteor</code> or <code>!meteor [seconds]</code> - Starts Meteor Shower mode with optional duration (e.g. <code>!meteor 60</code>). Everyone drops without parachutes like blazing fire meteors.</li>
+                    <li><code>!resetdrop</code> - Cancels any ongoing timed drop or queue immediately, clears cooldowns, and resets the scene.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">📊 Stats & History Center</h3>
@@ -749,7 +749,8 @@
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const channel = document.getElementById('channelInput').value.trim();
+            const rawChannel = document.getElementById('channelInput').value.trim();
+            const channel = rawChannel.replace(/^https?:\/\/(www\.)?kick\.com\//i, '').replace(/^@+/, '').trim();
             const cmd = document.getElementById('cmdInput').value.trim();
             const cooldown = document.getElementById('cooldownInput').value;
 
