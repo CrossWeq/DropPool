@@ -1,6 +1,6 @@
 # DropPool 🪂
 
-![DropPool](https://img.shields.io/badge/Version-2.0-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick-green)
+![DropPool](https://img.shields.io/badge/Version-5.0-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick-green)
 
 Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.html**
 
