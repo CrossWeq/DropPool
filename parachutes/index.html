@@ -1251,12 +1251,42 @@
         let currentKing = null; // Havuzdaki mevcut lider
         // Kral silinme zamanlayıcısı kaldırıldı (overlay açık olduğu sürece silinmeyecek)
 
+        // Her fizik adımından önce yatay hızı kaydet; duvar sekmesinde gelen hızı kullanılır
+        Events.on(engine, 'beforeUpdate', function () {
+            const all = Composite.allBodies(world);
+            for (let k = 0; k < all.length; k++) {
+                if (all[k].label === 'karakter' && all[k].plugin) all[k].plugin.preStepVx = all[k].velocity.x;
+            }
+        });
+        // Solver bittikten sonra duvar sekmesini kayıtsız uygula
+        Events.on(engine, 'afterUpdate', function () {
+            const all = Composite.allBodies(world);
+            for (let k = 0; k < all.length; k++) {
+                const b = all[k];
+                if (b.label === 'karakter' && b.plugin && b.plugin.wallBounceVx !== undefined) {
+                    if (!b.isStatic) Matter.Body.setVelocity(b, { x: b.plugin.wallBounceVx, y: b.velocity.y });
+                    b.plugin.wallBounceVx = undefined;
+                }
+            }
+        });
+
         Events.on(engine, 'collisionStart', function (event) {
             const pairs = event.pairs;
 
             for (let i = 0; i < pairs.length; i++) {
                 const bodyA = pairs[i].bodyA;
                 const bodyB = pairs[i].bodyB;
+
+                // Kenar duvarları: yatay hız birebir aynı büyüklükte ters çevrilir (afterUpdate'te uygulanır)
+                {
+                    let wallHit = null, wallChar = null;
+                    if ((bodyA === leftWall || bodyA === rightWall) && bodyB.label === 'karakter') { wallHit = bodyA; wallChar = bodyB; }
+                    else if ((bodyB === leftWall || bodyB === rightWall) && bodyA.label === 'karakter') { wallHit = bodyB; wallChar = bodyA; }
+                    if (wallHit && wallChar && !wallChar.isStatic && wallChar.plugin) {
+                        const speed = Math.abs(wallChar.plugin.preStepVx !== undefined ? wallChar.plugin.preStepVx : wallChar.velocity.x);
+                        if (speed > 0.01) wallChar.plugin.wallBounceVx = (wallHit === leftWall ? 1 : -1) * speed;
+                    }
+                }
 
                 let characterBody = null;
                 let groundBody = null;
