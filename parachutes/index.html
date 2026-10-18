@@ -773,7 +773,7 @@
 
             // Karakter objesini oluştururken görselin (resmin) boyutuna uygun bir fiziksel çap (radius) veriyoruz ki yere batmasın.
             const character = Bodies.circle(randomX, actualSpawnY, randomChar.radius, {
-                restitution: 0.9, // Sağa sola çarpınca daha çok seksin
+                restitution: 0.1, // Karakterler birbirine çarpınca hafif sekmeli (duvarlar 0.9 olduğu için duvarda yine seker)
                 frictionAir: 0, // Yatay hızını havada kaybetmemesi için
                 friction: 0, // Duvarlara sürttüğünde yavaşlamaması için
                 inertia: Infinity, // Çarpışmalarda fırıldak gibi dönmesini engeller
@@ -1280,9 +1280,11 @@
                         if (bodyA.plugin.parachuteOpened) bodyA.plugin.parachuteClosing = true;
                         if (bodyB.plugin.parachuteOpened) bodyB.plugin.parachuteClosing = true;
 
-                        // Çarpışan karakterlerin daha az zıplaması için hız düşürüldü
-                        Matter.Body.setVelocity(bodyA, { x: bodyA.velocity.x, y: -3 });
-                        Matter.Body.setVelocity(bodyB, { x: bodyB.velocity.x, y: -3 });
+                        // Çarpışma hafif olsun: hızları yumuşakça sınırla
+                        const clampV = (v) => Math.max(-2.5, Math.min(2.5, v));
+                        const dirX = bodyA.position.x >= bodyB.position.x ? 1 : -1;
+                        Matter.Body.setVelocity(bodyA, { x: clampV(bodyA.velocity.x * 0.3 + dirX * 1.5), y: -1.5 });
+                        Matter.Body.setVelocity(bodyB, { x: clampV(bodyB.velocity.x * 0.3 - dirX * 1.5), y: -1.5 });
                     }
                 }
 
@@ -1945,9 +1947,12 @@
                         };
 
                         // Sıfırlama komutları: !resetdrop ve !adminresetdrop
-                        if ((lowerMsg === '!resetdrop' || lowerMsg.startsWith('!resetdrop ')) && isBroadcaster()) {
-                            doReset('!resetdrop');
-                            return;
+                        if (lowerMsg === '!resetdrop' || lowerMsg.startsWith('!resetdrop ')) {
+                            if (isBroadcaster()) {
+                                doReset('!resetdrop');
+                                return;
+                            }
+                            console.warn(`[DropPool] !resetdrop reddedildi: ${username} yayıncı olarak doğrulanamadı (is_broadcaster=${isBroadcasterFlag}, user_id=${senderUserId}, broadcasterId=${broadcasterId}).`);
                         }
                         if ((lowerMsg === '!adminresetdrop' || lowerMsg.startsWith('!adminresetdrop ')) && isAdmin) {
                             doReset('!adminresetdrop');
