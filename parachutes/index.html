@@ -562,14 +562,14 @@
         // Sol Duvar (Görünmez, zıplama/sekme katsayısı yüksek)
         const leftWall = Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height * 2, {
             isStatic: true,
-            restitution: 0.9, // Çarpınca çok seksin
+            restitution: 1, // Aynı hızla geri dönsün (yavaşlama yok)
             render: { visible: false } // Ekranda görünmesin
         });
 
         // Sağ Duvar (Görünmez, zıplama/sekme katsayısı yüksek)
         const rightWall = Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height * 2, {
             isStatic: true,
-            restitution: 0.9,
+            restitution: 1,
             render: { visible: false }
         });
 
