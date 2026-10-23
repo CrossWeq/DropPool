@@ -113,13 +113,57 @@
 
         <form id="settingsForm" class="space-y-8 relative z-10">
             
+            <!-- Platform Seçimi -->
+            <div class="space-y-3">
+                <label class="text-sm font-medium text-gray-300" data-i18n="platform">Yayın Platformu</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="platformSelector">
+                    <label class="platform-option cursor-pointer">
+                        <input type="radio" name="platform" value="kick" class="sr-only peer" checked>
+                        <div class="platform-card flex items-center justify-center gap-3 rounded-xl border border-gray-700/50 bg-black/30 px-4 py-3 text-white font-semibold transition-all hover:bg-white/5 peer-checked:border-[#53FC18] peer-checked:bg-[#53FC18]/10 peer-checked:shadow-[0_0_18px_rgba(83,252,24,0.25)]">
+                            <svg class="w-6 h-6" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
+                            <span>Kick</span>
+                        </div>
+                    </label>
+                    <label class="platform-option cursor-pointer">
+                        <input type="radio" name="platform" value="twitch" class="sr-only peer">
+                        <div class="platform-card flex items-center justify-center gap-3 rounded-xl border border-gray-700/50 bg-black/30 px-4 py-3 text-white font-semibold transition-all hover:bg-white/5 peer-checked:border-[#9146FF] peer-checked:bg-[#9146FF]/10 peer-checked:shadow-[0_0_18px_rgba(145,70,255,0.3)]">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                            <span>Twitch</span>
+                        </div>
+                    </label>
+                    <label class="platform-option cursor-pointer">
+                        <input type="radio" name="platform" value="both" class="sr-only peer">
+                        <div class="platform-card flex items-center justify-center gap-2 rounded-xl border border-gray-700/50 bg-black/30 px-4 py-3 text-white font-semibold transition-all hover:bg-white/5 peer-checked:border-indigo-400 peer-checked:bg-indigo-500/10 peer-checked:shadow-[0_0_18px_rgba(129,140,248,0.3)]">
+                            <svg class="w-5 h-5" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
+                            <span>+</span>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                            <span>Kick + Twitch</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <!-- Temel Ayarlar -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300" data-i18n="channel">Kick Kanal Adı</label>
-                    <input type="text" id="channelInput" placeholder="Örn: crossweq" required
-                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
-                    <p id="channelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
+                <div id="channelsWrap" class="grid grid-cols-1 gap-4">
+                    <div id="kickChannelBox" class="space-y-2">
+                        <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
+                            <span data-i18n="channel">Kick Kanal Adı</span>
+                        </label>
+                        <input type="text" id="channelInput" placeholder="Örn: crossweq" required
+                            class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
+                        <p id="channelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
+                    </div>
+                    <div id="twitchChannelBox" class="space-y-2 hidden">
+                        <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                            <span data-i18n="twitchChannel">Twitch Kanal Adı</span>
+                        </label>
+                        <input type="text" id="twitchChannelInput" placeholder="Örn: crossweq"
+                            class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-[#9146FF] focus:ring-1 focus:ring-[#9146FF] transition-all text-white placeholder-gray-600">
+                        <p id="twitchChannelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
+                    </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-gray-300" data-i18n="cmd">Tetikleyici Komut</label>
@@ -329,6 +373,8 @@
             poolSizeNormal: { tr: "Normal", en: "Normal" },
             poolSizeSmall: { tr: "Küçük", en: "Small" },
             channel: { tr: "Kick Kanal Adı", en: "Kick Channel Name" },
+            twitchChannel: { tr: "Twitch Kanal Adı", en: "Twitch Channel Name" },
+            platform: { tr: "Yayın Platformu", en: "Streaming Platform" },
             cmd: { tr: "Tetikleyici Komut", en: "Trigger Command" },
             cd: { tr: "Kullanıcı Bekleme Süresi (Saniye)", en: "User Cooldown (Seconds)" },
             themes: { tr: "Temalar", en: "Themes" },
@@ -502,6 +548,7 @@
             document.getElementById('helpContent').innerHTML = getHelpContent(currentCmd, lang);
 
             // Update placeholder
+            document.getElementById('twitchChannelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
             document.getElementById('channelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
 
             // Update pool size labels
@@ -746,11 +793,68 @@
         enforceMinOneChecked('themes');
         enforceMinOneChecked('parachutes');
 
+        // --- Platform seçimi (Kick / Twitch / Kick + Twitch) ---
+        function getPlatform() {
+            return document.querySelector('input[name="platform"]:checked').value;
+        }
+        function applyPlatform() {
+            const p = getPlatform();
+            const kickBox = document.getElementById('kickChannelBox');
+            const twBox = document.getElementById('twitchChannelBox');
+            const wrap = document.getElementById('channelsWrap');
+            const kickInput = document.getElementById('channelInput');
+            const twInput = document.getElementById('twitchChannelInput');
+            const showKick = p === 'kick' || p === 'both';
+            const showTw = p === 'twitch' || p === 'both';
+            kickBox.classList.toggle('hidden', !showKick);
+            twBox.classList.toggle('hidden', !showTw);
+            kickInput.required = showKick;
+            twInput.required = showTw;
+            // İki kanal yan yana: kanal adı alanı 2 sütun kaplasın
+            wrap.className = (p === 'both')
+                ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 md:col-span-2'
+                : 'grid grid-cols-1 gap-4';
+            document.getElementById('channelError').classList.add('hidden');
+            document.getElementById('twitchChannelError').classList.add('hidden');
+        }
+        document.querySelectorAll('input[name="platform"]').forEach(r => r.addEventListener('change', applyPlatform));
+        applyPlatform();
+
+        // Twitch kullanıcı adı: 1-25 karakter, harf/rakam/alt çizgi
+        function cleanTwitchName(v) {
+            return v.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '').replace(/^@+/, '').replace(/^#+/, '').replace(/\/.*$/, '').trim().toLowerCase();
+        }
+        function isValidTwitchName(n) { return /^[a-z0-9_]{1,25}$/.test(n); }
+        document.getElementById('twitchChannelInput').addEventListener('blur', function () {
+            const err = document.getElementById('twitchChannelError');
+            const val = cleanTwitchName(this.value);
+            if (val && !isValidTwitchName(val)) {
+                err.innerText = lang === 'tr' ? 'Geçersiz Twitch kanal adı! Sadece harf, rakam ve _ kullanılabilir.' : 'Invalid Twitch channel name! Only letters, numbers and _ are allowed.';
+                err.classList.remove('hidden');
+            } else {
+                err.classList.add('hidden');
+            }
+        });
+
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const rawChannel = document.getElementById('channelInput').value.trim();
-            const channel = rawChannel.replace(/^https?:\/\/(www\.)?kick\.com\//i, '').replace(/^@+/, '').trim();
+            const platform = getPlatform();
+            const kickChannelVal = document.getElementById('channelInput').value.trim().replace(/^https?:\/\/(www\.)?kick\.com\//i, '').replace(/^@+/, '').trim();
+            const twitchChannelVal = cleanTwitchName(document.getElementById('twitchChannelInput').value);
+            if ((platform === 'kick' || platform === 'both') && !kickChannelVal) {
+                document.getElementById('channelInput').focus();
+                return;
+            }
+            if ((platform === 'twitch' || platform === 'both') && !isValidTwitchName(twitchChannelVal)) {
+                const err = document.getElementById('twitchChannelError');
+                err.innerText = lang === 'tr' ? 'Lütfen geçerli bir Twitch kanal adı girin.' : 'Please enter a valid Twitch channel name.';
+                err.classList.remove('hidden');
+                document.getElementById('twitchChannelInput').focus();
+                return;
+            }
+            // Sadece Twitch seçiliyse ana kanal adı Twitch kanalıdır
+            const channel = platform === 'twitch' ? twitchChannelVal : kickChannelVal;
             const cmd = document.getElementById('cmdInput').value.trim();
             const cooldown = document.getElementById('cooldownInput').value;
 
@@ -789,6 +893,9 @@
                 p: selectedParachutes.join(','),
                 lang: lang
             });
+
+            overlayParams.append('plat', platform);
+            if (platform === 'both') overlayParams.append('twitch', twitchChannelVal);
 
             if (birthMonth && birthDay) {
                 overlayParams.append('bm', birthMonth);

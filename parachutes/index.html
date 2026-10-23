@@ -90,6 +90,12 @@
     <script>
         // --- 1. AYARLAR VE DEĞİŞKENLER ---
         const urlParams = new URLSearchParams(window.location.search);
+        // Platform seçimi: plat=kick (varsayılan) | twitch | both. Twitch kanalı: ?twitch=kanaladi (twitch modunda kanal adı 'kanal' içinde de gelir)
+        const platParam = (urlParams.get('plat') || 'kick').toLowerCase();
+        const usePlatKick = platParam !== 'twitch';
+        const useTwitch = platParam === 'twitch' || platParam === 'both';
+        const twitchChannelName = (urlParams.get('twitch') || (platParam === 'twitch' ? urlParams.get('kanal') : '') || '')
+            .replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '').replace(/^@+/, '').replace(/^#+/, '').trim().toLowerCase();
         const rawChannelName = urlParams.get('kanal') || 'testkanal';
         const channelName = rawChannelName.replace(/^https?:\/\/(www\.)?kick\.com\//i, '').replace(/^@+/, '').trim();
         const commandStr = urlParams.get('cmd') || '!atla';
@@ -1787,8 +1793,8 @@
 
         // --- 8. KICK WEBSOCKET (GERÇEK ZAMANLI BAĞLANTI) ---
         async function setupKickChatListener() {
-            if (!channelName || channelName === 'testkanal') {
-                console.log("Test kanalı kullanılıyor.");
+            if (!usePlatKick || !channelName || channelName === 'testkanal') {
+                console.log("Kick dinleyicisi atlandı (test kanalı veya Kick seçili değil).");
                 return;
             }
 
@@ -1853,7 +1859,6 @@
                     console.log('[Kick Event]', eventName, rawData);
                 });
 
-
                 kickChannel.bind('chat.message.sent', (rawData) => {
                     try {
                         // Bazen data string olarak gelir, bazen obje — ikisini de handle ediyoruz
@@ -1875,11 +1880,27 @@
                         // is_admin bayrağını sadece imzalı webhook'u doğrulayan Worker üretir (ADMIN_KICK_USERS)
                         const isAdmin = senderObj.is_admin === true;
 
+
                         if (!message || !username) return;
-                        console.log(`[Chat] ${username}: ${message}`);
+                        processChat({ message, username, senderUserId, isBroadcasterFlag, isAdmin, broadcasterId, source: 'kick' });
+                    } catch (e) {
+                        console.error('Mesaj işlenirken hata:', e);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Kick bağlantısı sırasında hata:', error);
+            }
+        }
+
+        // --- ORTAK MESAJ İŞLEYİCİ (Kick ve Twitch aynı komut/atlayış mantığını kullanır) ---
+        function processChat(ctx) {
+                    try {
+                        const { message, username, senderUserId, isBroadcasterFlag, isAdmin, broadcasterId } = ctx;
+                        console.log(`[Chat${ctx.source ? ':' + ctx.source : ''}] ${username}: ${message}`);
 
                         // Yayıncı doğrulama (benzer isimli sahte hesaplara karşı sadece ID/bayrak güvenilir):
-                        // 1. Worker'dan gelen is_broadcaster bayrağı varsa sadece ona güvenilir
+                        // 1. Kaynaktan gelen is_broadcaster bayrağı varsa sadece ona güvenilir
                         // 2. Sayısal Broadcaster ID eşleşmesi (sender.user_id === broadcasterId)
                         // 3. Eski worker (bayrak yok) için: birebir aynı kullanıcı adı
                         const isBroadcaster = () => {
@@ -2072,9 +2093,9 @@
 
                         if (isDiveCommand || isDrunkCommand || isTarzanCommand || isFakeCommand || isNormalDropCommand) {
                             if (checkCooldown(username)) {
-                                let customEmoteUrl = null;
+                                let customEmoteUrl = ctx.emoteUrl || null;
                                 // Kick emote yapısını tespit et: [emote:12345:EmoteName]
-                                const emoteMatch = message.match(/\[emote:(\d+):.*?\]/i);
+                                const emoteMatch = customEmoteUrl ? null : message.match(/\[emote:(\d+):.*?\]/i);
                                 if (emoteMatch) {
                                     const emoteId = emoteMatch[1];
                                     customEmoteUrl = `https://files.kick.com/emotes/${emoteId}/fullsize`;
@@ -2132,11 +2153,94 @@
                     } catch (e) {
                         console.error('Mesaj işlenirken hata:', e);
                     }
-                });
+        }
 
-            } catch (error) {
-                console.error('Kick bağlantısı sırasında hata:', error);
-            }
+        // --- 8.1 TWITCH CHAT (Anonim IRC WebSocket — sunucu/worker gerektirmez, tarayıcıdan doğrudan bağlanır) ---
+        function setupTwitchChatListener() {
+            if (!useTwitch || !twitchChannelName) return;
+            console.log(`[Twitch] Chat bağlantısı kuruluyor... Kanal: ${twitchChannelName}`);
+            let ws = null;
+            let retry = 0;
+
+            const parseTags = (raw) => {
+                const tags = {};
+                raw.split(';').forEach(p => {
+                    const i = p.indexOf('=');
+                    if (i > 0) tags[p.slice(0, i)] = p.slice(i + 1);
+                });
+                return tags;
+            };
+
+            const handleLine = (line) => {
+                if (!line) return;
+                if (line.startsWith('PING')) { ws.send('PONG ' + line.slice(5)); return; }
+                let tags = {};
+                let rest = line;
+                if (rest.startsWith('@')) {
+                    const sp = rest.indexOf(' ');
+                    tags = parseTags(rest.slice(1, sp));
+                    rest = rest.slice(sp + 1);
+                }
+                // :nick!nick@nick.tmi.twitch.tv PRIVMSG #kanal :mesaj
+                const m = rest.match(/^:([^!]+)![^ ]+ PRIVMSG #[^ ]+ :([\s\S]*)$/);
+                if (!m) return;
+                let message = m[2].trim();
+                const actionMatch = message.match(/^\u0001ACTION ([\s\S]*?)\u0001?$/);
+                if (actionMatch) message = actionMatch[1].trim();
+                const login = m[1];
+                const username = (tags['display-name'] || login || '').replace(/\\s/g, ' ').trim();
+                if (!message || !username) return;
+
+                // Twitch emote: emotes=ID:0-4,6-10/ID2:12-15 → ilk emote'un görseli
+                let emoteUrl = null;
+                if (tags['emotes']) {
+                    const firstId = tags['emotes'].split('/')[0].split(':')[0];
+                    if (firstId) emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${firstId}/default/dark/3.0`;
+                }
+                const isBroadcasterFlag = (tags['badges'] || '').split(',').some(b => b.startsWith('broadcaster/'));
+
+                processChat({
+                    message,
+                    username,
+                    senderUserId: tags['user-id'] || null,
+                    isBroadcasterFlag,
+                    isAdmin: false, // Admin yetkisi sadece Kick Worker üzerinden doğrulanır
+                    broadcasterId: tags['room-id'] || null,
+                    emoteUrl,
+                    source: 'twitch'
+                });
+            };
+
+            const connect = () => {
+                try {
+                    ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+                } catch (e) {
+                    console.warn('[Twitch] WebSocket açılamadı:', e);
+                    setTimeout(connect, 5000);
+                    return;
+                }
+                ws.onopen = () => {
+                    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+                    ws.send('PASS SCHMOOPIIE');
+                    ws.send('NICK justinfan' + Math.floor(10000 + Math.random() * 89999));
+                    ws.send('JOIN #' + twitchChannelName);
+                    retry = 0;
+                    console.log('[Twitch] IRC BAĞLANDI! Sohbet canlı dinleniyor...');
+                };
+                ws.onmessage = (ev) => {
+                    String(ev.data).split('\r\n').forEach(l => {
+                        try { handleLine(l); } catch (e) { console.error('[Twitch] Mesaj işlenirken hata:', e); }
+                    });
+                };
+                ws.onclose = () => {
+                    retry++;
+                    const wait = Math.min(30000, 2000 * retry);
+                    console.warn(`[Twitch] Bağlantı koptu, ${wait / 1000}s sonra yeniden denenecek.`);
+                    setTimeout(connect, wait);
+                };
+                ws.onerror = () => { try { ws.close(); } catch (e) { } };
+            };
+            connect();
         }
 
         // --- HELİKOPTER (DIVE) ANİMASYONU ---
@@ -2273,6 +2377,7 @@
         }
 
         setupKickChatListener();
+        setupTwitchChatListener();
 
         // Sayfa yeniden boyutlandığında canvas ve fizik sınırlarını güncelle
         window.addEventListener('resize', () => {
