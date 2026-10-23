@@ -2158,6 +2158,7 @@
         // --- 8.1 TWITCH CHAT (Anonim IRC WebSocket — sunucu/worker gerektirmez, tarayıcıdan doğrudan bağlanır) ---
         function setupTwitchChatListener() {
             if (!useTwitch || !twitchChannelName) return;
+            if (!/^[a-z0-9_]{1,25}$/.test(twitchChannelName)) { console.error('[Twitch] Geçersiz kanal adı:', twitchChannelName); return; }
             console.log(`[Twitch] Chat bağlantısı kuruluyor... Kanal: ${twitchChannelName}`);
             let ws = null;
             let retry = 0;
@@ -2195,7 +2196,7 @@
                 let emoteUrl = null;
                 if (tags['emotes']) {
                     const firstId = tags['emotes'].split('/')[0].split(':')[0];
-                    if (firstId) emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${firstId}/default/dark/3.0`;
+                    if (firstId && /^[A-Za-z0-9_]{1,64}$/.test(firstId)) emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${firstId}/default/dark/3.0`;
                 }
                 const isBroadcasterFlag = (tags['badges'] || '').split(',').some(b => b.startsWith('broadcaster/'));
 
