@@ -416,11 +416,12 @@
             const tr = `
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 Nasıl Kurulur?</h3>
                 <ol class="list-decimal pl-5 space-y-1 text-gray-400">
-                    <li>Panelden <strong>Kick Kanal Adınızı</strong> ve diğer ayarları eksiksiz doldurun.</li>
+                    <li>Önce <strong>Yayın Platformu</strong>nu seçin: <strong>Kick</strong>, <strong>Twitch</strong> ya da <strong>Kick + Twitch</strong>. Seçime göre Kick ve/veya Twitch kanal adınızı ve diğer ayarları eksiksiz doldurun.</li>
                     <li>İstediğiniz zemin, tema ve paraşütleri seçin.</li>
                     <li>"Bağlantıları Oluştur" butonuna tıklayın.</li>
                     <li>Oluşan <strong>1. Ana Oyun Ekranı</strong> linkini kopyalayın ve OBS'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak URL kısmına yapıştırın. Genişlik: 1920, Yükseklik: 1080 yapmanız önerilir.</li>
                     <li>İsteğe bağlı olarak <strong>2. Sıralama Ekranı</strong> linkini de OBS'e tarayıcı kaynağı olarak ekleyebilirsiniz.</li>
+                    <li>İsteğe bağlı olarak <strong>3. İstatistik ve Geçmiş Merkezi</strong> linkini de ekleyebilirsiniz. Bu linki eklemek oyunu değiştirmez; sadece kim kaç kez atladı, rekor puanlar, canlı olay akışı ve Top 10 tablosunu OBS içinde görmenizi sağlar. Veriler ana oyun ekranı çalışırken zaten kaydedilir.</li>
                 </ol>
 
                 <h3 class="text-lg font-semibold text-white mt-4">✨ Özellikler ve İzleyici Komutları</h3>
@@ -434,6 +435,8 @@
                     <li><strong>Rastgele Atlayış (Random):</strong> <code>${cmd} random</code> yazıldığında, normal, dive, drunk, tarzan veya fake modlarından biri tamamen rastgele seçilerek uygulanır.</li>
                     <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
+                    <li><strong>Twitch Desteği:</strong> Platform olarak Twitch ya da Kick + Twitch seçildiğinde Twitch chat'i de dinlenir. Tüm komutlar ve Twitch emote'ları (ilk emote düşen karakter olur) aynı şekilde çalışır. Kick + Twitch modunda iki platformdaki izleyiciler aynı oyunda, aynı sıralama ve toplu atlayış kuyruğunda birleşir. Yayıncı komutlarını iki platformdaki yayıncı hesabı da kullanabilir (admin komutları sadece Kick'te çalışır).</li>
+                    <li><strong>İkili Atlayış (Duo):</strong> <code>${cmd} duo @kullanıcı</code> yazıldığında sen ve etiketlediğin kişi ince bir iple bağlı şekilde birlikte atlarsınız. İp gerildiğinde ikiniz birbirinizi çekersiniz. İkiniz de normal atlayış yapmış sayılır ve ayrı ayrı puan alırsınız. Etiketlenen kişi o oturumda chat'te daha önce yazmış olmalıdır (Kick'te bunun için en az bir komut yazmış olması gerekir); yoksa sadece sen atlarsın.</li>
                     <li><strong>Karakter Efekti:</strong> Düşen her karakterin arkasında onu takip eden ışıltılı ve renkli bir meteor izi efekti görünür.</li>
                 </ul>
 
@@ -450,6 +453,7 @@
                     <li>Bu linki OBS'te kaynaklar bölümünden 'Tarayıcı' (Browser) kaynağı olarak ekleyebilirsiniz.</li>
                     <li>YA DA OBS'te 'Paneller -> Özel Tarayıcı Yuvaları' kısmına ekleyip paneli OBS içine gömebilirsiniz.</li>
                     <li>Buradan kimin kaç kez atladığını, rekor puanlarını, Canlı Olay Akışını ve Tüm Zamanların Top 10'u tablosunu görebilirsiniz.</li>
+                    <li>Bu linki eklemek zorunlu değildir: atlayışlar ve puanlar ana oyun ekranı açıkken tarayıcının yerel depolamasına kaydedilir. 3. link sadece bu verileri gösterir; oyun ekranıyla aynı OBS/tarayıcı profilinde açılmalıdır.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">🎂 Doğum Günü Teması</h3>
@@ -460,11 +464,12 @@
             const en = `
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 How to Install?</h3>
                 <ol class="list-decimal pl-5 space-y-1 text-gray-400">
-                    <li>Fill in your <strong>Kick Channel Name</strong> and other settings completely from the panel.</li>
+                    <li>First choose your <strong>Streaming Platform</strong>: <strong>Kick</strong>, <strong>Twitch</strong> or <strong>Kick + Twitch</strong>. Then fill in your Kick and/or Twitch channel name and the other settings, depending on your choice.</li>
                     <li>Select the themes, backgrounds, and parachutes you want.</li>
                     <li>Click the "Generate Links" button.</li>
                     <li>Copy the generated <strong>1. Main Overlay</strong> link, add a new "Browser" source in OBS, and paste it into the URL field. Recommended Size: 1920x1080.</li>
                     <li>Optionally, you can add the <strong>2. Leaderboard Screen</strong> link to OBS as another browser source.</li>
+                    <li>Optionally, you can also add the <strong>3. Stats &amp; History Center</strong> link. Adding it does not change the game; it only lets you see who jumped how many times, record scores, the live event log and the Top 10 table inside OBS. The data is recorded anyway while the main overlay runs.</li>
                 </ol>
 
                 <h3 class="text-lg font-semibold text-white mt-4">✨ Features & Viewer Commands</h3>
@@ -478,6 +483,8 @@
                     <li><strong>Random Drop:</strong> Typing <code>${cmd} random</code> will randomly select and apply one of the normal, dive, drunk, tarzan, or fake modes.</li>
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
+                    <li><strong>Twitch Support:</strong> When you pick Twitch or Kick + Twitch as the platform, Twitch chat is listened to as well. All commands and Twitch emotes (the first emote becomes the falling character) work the same way. In Kick + Twitch mode viewers from both platforms share the same game, leaderboard and group drop queue. The streamer's account on either platform can use the streamer commands (admin commands only work on Kick).</li>
+                    <li><strong>Duo Drop:</strong> Typing <code>${cmd} duo @username</code> makes you and the tagged viewer jump together tied with a thin rope. When the rope goes taut you pull each other. Both count as having made a normal drop and score separately. The tagged viewer must have chatted earlier in the session (on Kick, they must have typed at least one command); otherwise only you will jump.</li>
                     <li><strong>Character Effect:</strong> Every falling character leaves a glowing, colorful meteor trail effect behind them.</li>
                 </ul>
 
@@ -494,6 +501,7 @@
                     <li>You can add this link as a 'Browser Source' from the sources section in OBS.</li>
                     <li>OR you can embed the panel into OBS by adding it via 'Docks -> Custom Browser Docks'.</li>
                     <li>Here you can see jump counts, record scores, Live Event Logs, and the All-Time Top 10 Leaderboard.</li>
+                    <li>Adding this link is optional: jumps and scores are saved to the browser's local storage while the main overlay is open. The 3rd link only displays that data; it should be opened in the same OBS/browser profile as the overlay.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">🎂 Birthday Theme</h3>
