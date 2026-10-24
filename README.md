@@ -1,12 +1,10 @@
 # DropPool 🪂
 
-![DropPool](https://img.shields.io/badge/Version-6.2-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick-green)
+![DropPool](https://img.shields.io/badge/Version-6.2-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick%20%7C%20Twitch-green)
 
-Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.html**
+🇹🇷 **DropPool**, Kick ve Twitch yayıncıları için geliştirilmiş açık kaynaklı ve interaktif bir OBS aracıdır. İzleyicilerinizin sohbete (chat) belirlediğiniz komutu yazarak ekrandaki havuza kendi isimleriyle paraşütle atlamasını sağlar.
 
-🇹🇷 **DropPool**, Kick yayıncıları için geliştirilmiş açık kaynaklı ve interaktif bir OBS aracıdır. İzleyicilerinizin sohbete (chat) belirlediğiniz komutu yazarak ekrandaki havuza kendi isimleriyle paraşütle atlamasını sağlar.
-
-🇬🇧 **DropPool** is an open-source, interactive OBS overlay designed for Kick streamers. It allows your viewers to drop into a pool with their custom parachutes and names by typing a command in the chat.
+🇬🇧 **DropPool** is an open-source, interactive OBS overlay designed for Kick and Twitch streamers. It allows your viewers to drop into a pool with their custom parachutes and names by typing a command in the chat.
 
 ---
 
@@ -14,7 +12,9 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 
 - 🎨 **Özelleştirilebilir Temalar (Custom Themes):** İlkbahar, Sonbahar, Kış ve Cehennem temaları. (Spring, Autumn, Winter, Hell)
 - 🪂 **Renk Seçenekleri (Parachute Colors):** İzleyiciler için 8 farklı havalı paraşüt rengi. (8 different parachute colors)
-- 😂 **Kick Emote Desteği:** İzleyiciler komutla birlikte bir Kick emoteu yazdığında o emote ekranda düşen karakter olur! GIF/WEBP dahil.
+- 😂 **Kick & Twitch Emote Desteği:** İzleyiciler komutla birlikte bir Kick ya da Twitch emoteu yazdığında o emote ekranda düşen karakter olur! GIF/WEBP dahil (Kick). (Kick & Twitch emotes become the falling character)
+- 🟣 **Twitch Desteği (Twitch Support):** Panelden **Kick**, **Twitch** ya da **Kick + Twitch** seçilebilir. Kick + Twitch modunda iki platformun izleyicileri aynı oyunda, aynı sıralamada ve aynı toplu atlayış kuyruğunda buluşur. Twitch chat'ine sunucu gerekmeden anonim olarak bağlanılır. (Choose Kick, Twitch or both; viewers of both platforms share the same game, leaderboard and group-drop queue. Twitch chat is read anonymously, no server needed.)
+- 🪢 **İkili Atlayış (Duo Drop):** `!atla duo @kullanıcı` ile iki izleyici ince bir iple bağlı şekilde birlikte atlar. (Two viewers jump together tied with a rope.)
 - ⏱️ **Spam Koruması (Cooldown):** Chat spamını önlemek için kullanıcı bazlı bekleme süresi ayarı. (Customizable viewer cooldowns)
 - 🏆 **Anlık Sıralama (Live Leaderboard):** O yayın oturumuna ait en yüksek puanları gösteren dinamik liderlik tablosu. (Session leaderboard)
 - 📊 **Kalıcı İstatistik Merkezi (Persistent Stats):** Tüm zamanların atlayış sayıları, isabet oranları, toplam ve rekor puanlar ile son atlayış tarihi/saati kalıcı olarak saklanır.
@@ -41,22 +41,22 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 
 **🇹🇷 Türkçe:**
 1. `panel.html` dosyasını tarayıcınızda açın.
-2. **Kick Kanal Adınızı**, tetikleyici komutu (Örn: `!atla`) ve bekleme süresini ayarlayın.
+2. Önce **Yayın Platformu**'nu seçin: **Kick** (varsayılan), **Twitch** ya da **Kick + Twitch**. Seçime göre **Kick** ve/veya **Twitch kanal adınızı** girin (Kick + Twitch seçilirse iki kanal adı yan yana istenir). Ardından tetikleyici komutu (Örn: `!atla`) ve bekleme süresini ayarlayın.
 3. İstediğiniz temaları ve aktif paraşüt renklerini seçin.
 4. **"Bağlantıları Oluştur"** butonuna tıklayın.
 5. Oluşan **"1. Ana Oyun Ekranı"** linkini kopyalayın ve OBS'te yeni bir **Tarayıcı (Browser)** kaynağı oluşturarak URL kısmına yapıştırın. (Genişlik: 1920, Yükseklik: 1080 olmalıdır).
 6. İsteğe bağlı: **"2. Sıralama Ekranı"** linkini de OBS'e ekleyip ekranın köşesine yerleştirin.
-7. İsteğe bağlı: **"3. İstatistik ve Geçmiş Merkezi"** (`log.html`) linkini OBS'te ya **Tarayıcı Kaynağı** olarak ya da **Paneller → Özel Tarayıcı Yuvaları** kısmına ekleyin.
+7. İsteğe bağlı: **"3. İstatistik ve Geçmiş Merkezi"** (`log.html`) linkini OBS'te ya **Tarayıcı Kaynağı** olarak ya da **Paneller → Özel Tarayıcı Yuvaları** kısmına ekleyin. Bu linki eklemek oyunu değiştirmez; sadece kim kaç kez atladı, rekor puanlar, canlı olay akışı ve Top 10 tablosunu görmenizi sağlar. Veriler ana oyun ekranı açıkken zaten tarayıcının yerel depolamasına kaydedilir; 3. link sadece bunları gösterir ve oyun ekranıyla aynı OBS/tarayıcı profilinde açılmalıdır.
 8. Chat'inize komutu yazın ve karakterlerin düşüşünü izleyin!
 
 **🇬🇧 English:**
 1. Open the `panel.html` file in your browser.
-2. Enter your **Kick Channel Name**, trigger command (e.g. `!drop`), and cooldown duration.
+2. Choose your **Streaming Platform**: **Kick** (default), **Twitch** or **Kick + Twitch**. Enter your **Kick** and/or **Twitch channel name** accordingly (with Kick + Twitch, two channel fields appear side by side). Then set the trigger command (e.g. `!drop`) and cooldown duration.
 3. Select the themes and active parachute colors you want.
 4. Click the **"Generate Links"** button.
 5. Copy the **"1. Main Overlay"** link and add a new **Browser Source** in **OBS Studio** (Width: 1920, Height: 1080).
 6. Optional: Add the **"2. Leaderboard Screen"** link to OBS and position it in a corner.
-7. Optional: Add the **"3. Stats & History Center"** (`log.html`) as a **Browser Source** or via **Docks → Custom Browser Docks**.
+7. Optional: Add the **"3. Stats & History Center"** (`log.html`) as a **Browser Source** or via **Docks → Custom Browser Docks**. Adding it does not change the game; it only lets you see who jumped how many times, record scores, the live event log and the Top 10 table. The data is saved to the browser's local storage while the main overlay is open anyway; the 3rd link only displays it and must be opened in the same OBS/browser profile as the overlay.
 8. Type your command in the chat and watch the characters fall!
 
 ---
@@ -68,7 +68,8 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 | Komut | Açıklama |
 |---|---|
 | `!atla` | Standart paraşütlü atlayış. |
-| `!atla [emote]` | Komutla birlikte bir Kick emote yazılırsa, o emote ekranda düşen karakter olur. |
+| `!atla [emote]` | Komutla birlikte bir Kick/Twitch emote yazılırsa, o emote ekranda düşen karakter olur. |
+| `!atla duo @kullanıcı` | **İkili atlayış:** Sen ve etiketlediğin kişi ince bir iple bağlı şekilde birlikte atlarsınız; ip gerilince birbirinizi çekersiniz. İkiniz de normal atlayış yapmış sayılır ve ayrı ayrı puan alırsınız. Etiketlenen kişi o oturumda chat'te yazmış olmalıdır (Kick'te en az bir komut yazmış olması yeterli); yoksa sadece komutu yazan atlar. |
 | `!atla dive` | Helikopterden paraşütsüz, havada fırıl fırıl dönerek çılgın bir dalış yapar. |
 | `!atla drunk` | Sarhoş gibi ne yapacağı belli olmayan, rastgele sağa sola savrularak aşağı düşer. |
 | `!atla tarzan` | Ekranın dışından uzun bir iple sarkaç hareketi yaparak uçar; ip kopar ve havuza düşer. |
@@ -90,7 +91,8 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 | Command | Description |
 |---|---|
 | `!drop` | Standard parachute drop. |
-| `!drop [emote]` | If a Kick emote is added to the command, that emote becomes the falling character on screen. |
+| `!drop [emote]` | If a Kick/Twitch emote is added to the command, that emote becomes the falling character on screen. |
+| `!drop duo @username` | **Duo drop:** You and the tagged viewer jump together tied with a thin rope; the rope pulls you both when it goes taut. Both count as a normal drop and score separately. The tagged viewer must have chatted in the session (on Kick, typing any command is enough); otherwise only the sender jumps. |
 | `!drop dive` | Drops from a helicopter without a parachute, spinning wildly in the air. |
 | `!drop drunk` | Falls down swaying left and right randomly, moving like a drunk jumper. |
 | `!drop tarzan` | Swings in from off-screen on a long rope like a pendulum; the rope snaps and they fall into the pool. |
@@ -145,3 +147,5 @@ Kurulum (Setup) Link → **https://crossweq.github.io/DropPool/parachutes/panel.
 Developed with ❤️ by **CrossWeq**
 
 İletişim / Contact: [crosweq204@gmail.com](mailto:crosweq204@gmail.com)
+
+
