@@ -851,7 +851,66 @@
                 const randomForceX = (Math.random() - 0.5) * 0.08 * character.mass;
                 Body.applyForce(character, { x: character.position.x, y: character.position.y }, { x: randomForceX, y: 0 });
             }
+            return character;
         }
+
+        // --- OTURUMDA CHAT'TE GÖRÜLEN KULLANICILAR (sadece tarayıcı belleğinde, sunucuya hiçbir şey gönderilmez) ---
+        // Anahtar: küçük harfli ad, değer: görünen ad. Tavan sınırı aşılınca en eski kayıt silinir (bellek şişmez).
+        const knownChatters = new Map();
+        const KNOWN_CHATTERS_MAX = 3000;
+        function rememberChatter(name) {
+            if (!name) return;
+            const key = String(name).toLowerCase();
+            knownChatters.delete(key); // yeniden ekleyerek 'en son görülen' sırasına al
+            knownChatters.set(key, String(name));
+            if (knownChatters.size > KNOWN_CHATTERS_MAX) {
+                knownChatters.delete(knownChatters.keys().next().value);
+            }
+        }
+
+        // --- TANDEM ATLAYIŞ: iki karakter ince bir iple bağlı iner (çarpışmazlar, birbirini çeker/sallar) ---
+        function spawnTandem(nameA, emoteA, nameB) {
+            const cx = Math.random() * (width - 320) + 160;
+            const a = spawnCharacter(nameA, emoteA, cx - 65, -50);
+            const b = spawnCharacter(nameB, null, cx + 65, -50);
+            if (!a || !b) return;
+
+            // Aynı negatif grup: birbirleriyle çarpışmazlar (ip fiziksel olarak çekecek)
+            const group = Body.nextGroup(true);
+            a.collisionFilter.group = group;
+            b.collisionFilter.group = group;
+
+            // İp: mesafe uzunluğun altındayken gevşek (kuvvet yok), aşınca sert gerilir.
+            // Gevşek/gergin geçişi aşağıdaki beforeUpdate olayında stiffness ile yapılır.
+            const rope = Constraint.create({
+                label: 'tandemRope',
+                bodyA: a,
+                bodyB: b,
+                length: 130,
+                stiffness: 0,
+                damping: 0,
+                render: { visible: true, lineWidth: 2, strokeStyle: '#d9b27c' }
+            });
+            Composite.add(world, rope);
+            a.plugin.tandemRope = rope;
+            b.plugin.tandemRope = rope;
+
+            // Zit yönlere hafif başlangıç hızı: ip gerilip sallansın
+            Matter.Body.setVelocity(a, { x: -1.2, y: 0 });
+            Matter.Body.setVelocity(b, { x: 1.2, y: 0 });
+        }
+
+        // İp mantığı: iki karakter arası mesafe ip boyunu aşarsa ip gerilir (sert), değilse serbest bırakılır
+        Events.on(engine, 'beforeUpdate', function () {
+            const cons = Composite.allConstraints(world);
+            for (let i = 0; i < cons.length; i++) {
+                const c = cons[i];
+                if (c.label !== 'tandemRope' || !c.bodyA || !c.bodyB) continue;
+                const dx = c.bodyB.position.x - c.bodyA.position.x;
+                const dy = c.bodyB.position.y - c.bodyA.position.y;
+                c.stiffness = (dx * dx + dy * dy > c.length * c.length) ? 1 : 0;
+            }
+        });
 
         // --- 5. FİZİK GÜNCELLEMESİ (PARAŞÜT MEKANİĞİ) ---
         Events.on(engine, 'beforeUpdate', function () {
@@ -1327,6 +1386,11 @@
                 // Havuz veya zemin ile bir karakter çarpıştıysa ve daha önce kilitlenmediyse:
                 if (characterBody && groundBody && !characterBody.plugin.landed) {
                     characterBody.plugin.landed = true;
+                    // Tandem ipi: biri indiyse ip kaldırılır (partneri statik gövdeye bağlı kalmasın)
+                    if (characterBody.plugin.tandemRope) {
+                        Composite.remove(world, characterBody.plugin.tandemRope);
+                        characterBody.plugin.tandemRope = null;
+                    }
                     // Paraşütü anında silmiyoruz; beforeUpdate içinde yavaşça aşağı kaydırılacak.
 
                     // Karakteri çarptığı yere anında kilitle (zıplama veya kayma olmasın)
@@ -1898,6 +1962,7 @@
                     try {
                         const { message, username, senderUserId, isBroadcasterFlag, isAdmin, broadcasterId } = ctx;
                         console.log(`[Chat${ctx.source ? ':' + ctx.source : ''}] ${username}: ${message}`);
+                        rememberChatter(username);
 
                         // Yayıncı doğrulama (benzer isimli sahte hesaplara karşı sadece ID/bayrak güvenilir):
                         // 1. Kaynaktan gelen is_broadcaster bayrağı varsa sadece ona güvenilir
@@ -2037,6 +2102,39 @@
                         const msgLower = message.toLowerCase();
                         const cmdLower = commandStr.toLowerCase();
                         const altCmd = '!drop';
+
+                        // --- TANDEM: '!atla duo @kullanici' (toplu atlayış/meteor modunda normal komut gibi işlenir) ---
+                        if (!isDropTogetherMode && !isMeteorMode) {
+                            const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const withRe = new RegExp('^(?:' + escRe(cmdLower) + '|' + escRe(altCmd) + ')\\s+duo\\s+@?([^\\s]+)');
+                            const withMatch = msgLower.match(withRe);
+                            if (withMatch) {
+                                if (checkCooldown(username)) {
+                                    let selfEmoteUrl = ctx.emoteUrl || null;
+                                    if (!selfEmoteUrl) {
+                                        const em = message.match(/\[emote:(\d+):.*?\]/i);
+                                        if (em) selfEmoteUrl = `https://files.kick.com/emotes/${em[1]}/fullsize`;
+                                    }
+                                    const targetKey = withMatch[1].toLowerCase();
+                                    const targetName = knownChatters.get(targetKey);
+                                    console.log(`[Tandem] ${username} -> @${targetKey} | listede: ${Boolean(targetName)} | liste boyutu: ${knownChatters.size}`);
+                                    if (targetName && targetKey !== username.toLowerCase()) {
+                                        // Her ikisi de normal '!atla' yazmış gibi sayılır (log + atlayış sayısı +1)
+                                        addDropPoolLog(username, 'ATLAYIŞ', 'Normal atlayış başlattı.');
+                                        updateDropPoolStats(username, 'JUMP');
+                                        addDropPoolLog(targetName, 'ATLAYIŞ', 'Normal atlayış başlattı.');
+                                        updateDropPoolStats(targetName, 'JUMP');
+                                        spawnTandem(username, selfEmoteUrl, targetName);
+                                    } else {
+                                        // Hedef chat'te görülmediyse (ya da kendisi) sadece komutu yazan normal atlar
+                                        addDropPoolLog(username, 'ATLAYIŞ', 'Normal atlayış başlattı.');
+                                        updateDropPoolStats(username, 'JUMP');
+                                        spawnCharacter(username, selfEmoteUrl, null, -50, false, false, false, false);
+                                    }
+                                }
+                                return;
+                            }
+                        }
 
                         // Dive komutu kontrolü
                         let isDiveCommand = false;
