@@ -379,7 +379,13 @@
                 </div>
             </div>
 
-            <div class="pt-8 border-t border-gray-800/50">
+            <div class="pt-8 border-t border-gray-800/50 space-y-3">
+                <button type="button" onclick="toggleHelpModal()" class="w-full bg-gray-800/70 hover:bg-gray-700/80 border border-gray-600/60 hover:border-cyan-500/50 text-gray-200 hover:text-white font-semibold py-3.5 px-6 rounded-xl shadow-md transition-all duration-200 text-sm sm:text-base flex items-center justify-center gap-2.5">
+                    <svg class="w-5 h-5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span data-i18n="btnHelpInfo">Kurulum ve özellikler hakkında bilgi almak için tıklayınız</span>
+                </button>
                 <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 text-lg flex items-center justify-center gap-2 group">
                 <span data-i18n="btnGen">Bağlantıları Oluştur</span>
                 <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -483,6 +489,7 @@
             themes: { tr: "Temalar", en: "Themes" },
             parachutes: { tr: "Aktif Paraşütler", en: "Active Parachutes" },
             min1: { tr: "En az 1 seçim zorunlu", en: "Min 1 selection required" },
+            btnHelpInfo: { tr: "Kurulum ve özellikler hakkında bilgi almak için tıklayınız", en: "Click here for installation and features information" },
             btnGen: { tr: "Bağlantıları Oluştur", en: "Generate Links" },
             res1Title: { tr: "1. Ana Oyun Ekranı", en: "1. Main Overlay" },
             res1Desc: { tr: 'Bu linki OBS\'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak ekleyin (Önerilen: 1920x1080).', en: 'Add this link to OBS as a new "Browser" source (Recommended: 1920x1080).' },
