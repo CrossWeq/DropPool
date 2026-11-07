@@ -87,15 +87,19 @@
                 // Seçenek 3: Tümü Beyaz
                 return '#FFFFFF';
             }
-            // Seçenek 1 (Varsayılan): Altın, Gümüş, Bronz, Beyaz, Beyaz
+            // Seçenek 1 (Klasik): Altın, Gümüş, Bronz, Beyaz, Beyaz
             if (index === 0) return '#FFD700'; // Altın (Gold)
-            if (index === 1) return '#A0AEC0'; // Gümüş (Silver - belirgin gümüşi gri)
+            if (index === 1) return '#CBD5E1'; // Gümüş (Silver - hafif parlatılmış gümüşi gri)
             if (index === 2) return '#b87333'; // Bronz (Bronze)
             return '#FFFFFF'; // 4. ve 5. için Beyaz
         }
 
         function getRankGlow(index) {
-            return ''; // Parlama efekti kapatıldı (temiz ve net görünüm)
+            // Klasik modda 2. sıra gümüş için çok hafif ve zarif bir parlama
+            if ((!rankColorMode || rankColorMode === '0') && index === 1) {
+                return 'text-shadow: 0 0 8px rgba(226, 232, 240, 0.4);';
+            }
+            return '';
         }
 
         function renderLeaderboard() {

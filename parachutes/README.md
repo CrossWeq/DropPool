@@ -14,7 +14,7 @@
 - 🎨 **Özelleştirilebilir Temalar (Custom Themes):** İlkbahar, Sonbahar, Kış ve Cehennem temaları. (Spring, Autumn, Winter, Hell)
 - 🪂 **Renk Seçenekleri (Parachute Colors):** İzleyiciler için 8 farklı havalı paraşüt rengi. (8 different parachute colors)
 - 😂 **Kick & Twitch Emote Desteği:** İzleyiciler komutla birlikte bir Kick ya da Twitch emote'u yazdığında o emote ekranda düşen karakter olur! GIF/WEBP dahil (Kick). (Kick & Twitch emotes become the falling character)
-- 📐 **Oyun Boyutu & Sıralama Renk Seçenekleri:** Normal veya Küçük oyun boyutu seçeneği ve Atla Sıralaması için 3 farklı renk teması (Klasik, Kademeli Renkli, Tümü Beyaz). (Normal/Small game size options and 3 leaderboard color themes.)
+- 📐 **Oyun Boyutu & Sıralama Renk Seçenekleri:** Normal veya Küçük oyun boyutu seçeneği ve Atla Sıralaması için 3 farklı renk teması (Klasik, Renkli, Tümü Beyaz). (Normal/Small game size options and 3 leaderboard color themes: Classic, Colorful, All White.)
 - ⏱️ **Spam Koruması (Cooldown):** Chat spamını önlemek için kullanıcı bazlı bekleme süresi ayarı. (Customizable viewer cooldowns)
 - 🏆 **Anlık Sıralama (Live Leaderboard):** O yayın oturumuna ait en yüksek puanları gösteren dinamik liderlik tablosu. (Session leaderboard)
 - 📊 **Kalıcı İstatistik Merkezi (Persistent Stats):** Tüm zamanların atlayış sayıları, isabet oranları, toplam ve rekor puanlar ile son atlayış tarihi/saati kalıcı olarak saklanır.
