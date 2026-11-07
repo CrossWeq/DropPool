@@ -27,7 +27,18 @@
             height: 100vh;
         }
 
-        /* Küçük mod zemin div'leri */
+        /* Normal ve küçük mod zemin div'leri (body içinde olduğu için havuzla birebir aynı anda fade olur) */
+        .bg-floor-full {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: repeat-x;
+            z-index: -1;
+            pointer-events: none;
+        }
+
         .bg-split-left,
         .bg-split-right {
             position: fixed;
@@ -201,10 +212,21 @@
         document.body.style.transition = 'none'; // İlk başta geçiş yok
 
         let overlayIdleTimerRef = null;
+        let overlayHideCleanupRef = null;
         let activeVehicles = 0; // Helikopter veya uçak havada mı?
         let overlayIdleTimer = null;
         // Idle timer'a artık gerek yok çünkü aktif karakter bittiğinde kapanıyor, ama fonksiyonu boş bırakıyoruz
         function resetIdleTimer() {
+        }
+
+        function clearFloorBackgrounds() {
+            document.body.style.backgroundImage = 'none';
+            const oldFloor = document.getElementById('bg-floor');
+            const oldLeft = document.getElementById('bg-left');
+            const oldRight = document.getElementById('bg-right');
+            if (oldFloor) oldFloor.remove();
+            if (oldLeft) oldLeft.remove();
+            if (oldRight) oldRight.remove();
         }
 
         function applyRandomTheme() {
@@ -223,19 +245,14 @@
 
             if (showBackground) {
                 if (isSmallPool) {
-                    // Küçük mod: body background'ı temizle, iki ayrı div ile zemin oluştur
-                    document.body.style.backgroundImage = 'none';
-
-                    // Eski div'leri temizle
-                    const oldLeft = document.getElementById('bg-left');
-                    const oldRight = document.getElementById('bg-right');
-                    if (oldLeft) oldLeft.remove();
-                    if (oldRight) oldRight.remove();
+                    // Küçük mod: eski zemin div'lerini temizle, iki ayrı div ile zemin oluştur
+                    clearFloorBackgrounds();
 
                     // Görselin gerçek boyutunu ölçmek için geçici Image kullan
                     const img = new Image();
                     img.src = randomTheme.bg;
                     img.onload = () => {
+                        if (!isOverlayVisible) return;
                         const naturalW = img.naturalWidth;
                         const naturalH = img.naturalHeight;
 
@@ -251,6 +268,11 @@
 
                         const bgSize = `${scaledW}px ${scaledH}px`;
                         const bgYPos = `calc(100% + ${Math.round(randomTheme.bgOffset * 0.60)}px)`;
+
+                        const prevLeft = document.getElementById('bg-left');
+                        const prevRight = document.getElementById('bg-right');
+                        if (prevLeft) prevLeft.remove();
+                        if (prevRight) prevRight.remove();
 
                         // Sol div
                         const leftDiv = document.createElement('div');
@@ -271,21 +293,19 @@
                         document.body.appendChild(rightDiv);
                     };
                 } else {
-                    // Normal mod: eski iki parçalı div varsa temizle, body'e tek background yap
-                    const oldLeft = document.getElementById('bg-left');
-                    const oldRight = document.getElementById('bg-right');
-                    if (oldLeft) oldLeft.remove();
-                    if (oldRight) oldRight.remove();
+                    // Normal mod: body.style.backgroundImage tarayıcıda root viewport'a taşındığı için body opacity ile fade olmaz.
+                    // Bu yüzden body içinde sabit #bg-floor div'i kullanıyoruz; böylece havuz (canvas) ve zemin aynı anda fade olur.
+                    clearFloorBackgrounds();
 
-                    document.body.style.backgroundImage = `url('${randomTheme.bg}')`;
-                    document.body.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
+                    const floorDiv = document.createElement('div');
+                    floorDiv.id = 'bg-floor';
+                    floorDiv.className = 'bg-floor-full';
+                    floorDiv.style.backgroundImage = `url('${randomTheme.bg}')`;
+                    floorDiv.style.backgroundPosition = `center calc(100% + ${randomTheme.bgOffset}px)`;
+                    document.body.appendChild(floorDiv);
                 }
             } else {
-                document.body.style.backgroundImage = 'none';
-                const oldLeft = document.getElementById('bg-left');
-                const oldRight = document.getElementById('bg-right');
-                if (oldLeft) oldLeft.remove();
-                if (oldRight) oldRight.remove();
+                clearFloorBackgrounds();
             }
 
             // Eğer pool objesi daha önceden oluşturulmuşsa görselini ve konumunu güncelle
@@ -327,6 +347,10 @@
         let countdownInitiator = null;
 
         function wakeOverlay() {
+            if (overlayHideCleanupRef) {
+                clearTimeout(overlayHideCleanupRef);
+                overlayHideCleanupRef = null;
+            }
             if (!isOverlayVisible) {
                 isOverlayVisible = true;
                 if (typeof pool !== 'undefined' && pool && pool.render) pool.render.visible = true;
@@ -743,7 +767,8 @@
 
             if (customEmoteUrl) {
                 // Emote boyutları 1.5x büyütüldü (radius: 24 -> 36, width/height: 48 -> 72)
-                randomChar = { file: customEmoteUrl, scale: 1, radius: 36, yOffset: 0, nameYOffset: 5, isCustom: true };
+                // Nick'in bi tık aşağıda (emote'a daha yakın) durması için nameYOffset -3 yapıldı
+                randomChar = { file: customEmoteUrl, scale: 1, radius: 36, yOffset: 0, nameYOffset: -3, isCustom: true };
 
                 // Animasyonlu emote (GIF/WEBP) desteği için DOM (img) elemanı oluşturuyoruz
                 customDomElement = document.createElement('img');
@@ -869,10 +894,10 @@
         }
 
         // --- TANDEM ATLAYIŞ: iki karakter ince bir iple bağlı iner (çarpışmazlar, birbirini çeker/sallar) ---
-        function spawnTandem(nameA, emoteA, nameB) {
+        function spawnTandem(nameA, emoteA, nameB, emoteB = null) {
             const cx = Math.random() * (width - 320) + 160;
             const a = spawnCharacter(nameA, emoteA, cx - 65, -50);
-            const b = spawnCharacter(nameB, null, cx + 65, -50);
+            const b = spawnCharacter(nameB, emoteB, cx + 65, -50);
             if (!a || !b) return;
 
             // Aynı negatif grup: birbirleriyle çarpışmazlar (ip fiziksel olarak çekecek)
@@ -1795,13 +1820,11 @@
                             }
 
                             // 1.5 saniye sonra arkaplanı ve havuzu tamamen yok et
-                            setTimeout(() => {
+                            if (overlayHideCleanupRef) clearTimeout(overlayHideCleanupRef);
+                            overlayHideCleanupRef = setTimeout(() => {
+                                overlayHideCleanupRef = null;
                                 if (!isOverlayVisible) {
-                                    document.body.style.backgroundImage = 'none';
-                                    const bgLeft = document.getElementById('bg-left');
-                                    const bgRight = document.getElementById('bg-right');
-                                    if (bgLeft) bgLeft.remove();
-                                    if (bgRight) bgRight.remove();
+                                    clearFloorBackgrounds();
                                     pool.render.visible = false;
                                 }
                             }, 1500);
@@ -1847,16 +1870,16 @@
                 clearTimeout(overlayIdleTimerRef);
                 overlayIdleTimerRef = null;
             }
+            if (overlayHideCleanupRef) {
+                clearTimeout(overlayHideCleanupRef);
+                overlayHideCleanupRef = null;
+            }
 
             // Overlay'i anında gizle (sayfa yenilenmiş gibi boş ekran)
             isOverlayVisible = false;
             document.body.style.transition = 'none';
             document.body.style.opacity = '0';
-            document.body.style.backgroundImage = 'none';
-            const bgLeft = document.getElementById('bg-left');
-            const bgRight = document.getElementById('bg-right');
-            if (bgLeft) bgLeft.remove();
-            if (bgRight) bgRight.remove();
+            clearFloorBackgrounds();
             pool.render.visible = false;
         }
 
@@ -2111,25 +2134,49 @@
                 // --- TANDEM: '!atla duo @kullanici' (toplu atlayış/meteor modunda normal komut gibi işlenir) ---
                 if (!isDropTogetherMode && !isMeteorMode) {
                     const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const withRe = new RegExp('^(?:' + escRe(cmdLower) + '|' + escRe(altCmd) + ')\\s+duo\\s+@?([^\\s]+)');
+                    const withRe = new RegExp('^(?:' + escRe(cmdLower) + '|' + escRe(altCmd) + ')\\s+duo\\s+@?([^\\s\\[]+)');
                     const withMatch = msgLower.match(withRe);
                     if (withMatch) {
                         if (checkCooldown(username)) {
-                            let selfEmoteUrl = ctx.emoteUrl || null;
-                            if (!selfEmoteUrl) {
-                                const em = message.match(/\[emote:(\d+):.*?\]/i);
-                                if (em) selfEmoteUrl = `https://files.kick.com/emotes/${em[1]}/fullsize`;
+                            const emoteList = [];
+                            if (Array.isArray(ctx.emoteUrls) && ctx.emoteUrls.length > 0) {
+                                emoteList.push(...ctx.emoteUrls);
+                            } else if (ctx.emoteUrl) {
+                                emoteList.push(ctx.emoteUrl);
                             }
-                            const targetKey = withMatch[1].toLowerCase();
-                            const targetName = knownChatters.get(targetKey);
-                            console.log(`[Tandem] ${username} -> @${targetKey} | listede: ${Boolean(targetName)} | liste boyutu: ${knownChatters.size}`);
+                            if (emoteList.length === 0) {
+                                const kickMatches = message.matchAll(/\[emote:(\d+):[^\]]*\]/gi);
+                                for (const m of kickMatches) {
+                                    emoteList.push(`https://files.kick.com/emotes/${m[1]}/fullsize`);
+                                }
+                            }
+                            const selfEmoteUrl = emoteList[0] || null;
+                            const partnerEmoteUrl = emoteList[1] || null;
+
+                            let targetKey = withMatch[1].toLowerCase();
+                            let targetName = knownChatters.get(targetKey);
+                            // Bitişik yazılmış metin/emote durumları için bilinen kullanıcı adlarıyla en uzun önek (prefix) eşleşmesi
+                            if (!targetName) {
+                                let bestKey = null;
+                                for (const k of knownChatters.keys()) {
+                                    if (targetKey.startsWith(k) && (!bestKey || k.length > bestKey.length)) {
+                                        bestKey = k;
+                                    }
+                                }
+                                if (bestKey) {
+                                    targetKey = bestKey;
+                                    targetName = knownChatters.get(bestKey);
+                                }
+                            }
+
+                            console.log(`[Tandem] ${username} -> @${targetKey} | listede: ${Boolean(targetName)} | emotes: ${emoteList.length} | liste boyutu: ${knownChatters.size}`);
                             if (targetName && targetKey !== username.toLowerCase()) {
                                 // Her ikisi de normal '!atla' yazmış gibi sayılır (log + atlayış sayısı +1)
                                 addDropPoolLog(username, 'ATLAYIŞ', 'Normal atlayış başlattı.');
                                 updateDropPoolStats(username, 'JUMP');
                                 addDropPoolLog(targetName, 'ATLAYIŞ', 'Normal atlayış başlattı.');
                                 updateDropPoolStats(targetName, 'JUMP');
-                                spawnTandem(username, selfEmoteUrl, targetName);
+                                spawnTandem(username, selfEmoteUrl, targetName, partnerEmoteUrl);
                             } else {
                                 // Hedef chat'te görülmediyse (ya da kendisi) sadece komutu yazan normal atlar
                                 addDropPoolLog(username, 'ATLAYIŞ', 'Normal atlayış başlattı.');
@@ -2295,11 +2342,27 @@
                 const username = (tags['display-name'] || login || '').replace(/\\s/g, ' ').trim();
                 if (!message || !username) return;
 
-                // Twitch emote: emotes=ID:0-4,6-10/ID2:12-15 → ilk emote'un görseli
+                // Twitch emote: emotes=ID:0-4,6-10/ID2:12-15 → mesaj içindeki sırasına göre tüm emote görselleri
                 let emoteUrl = null;
+                let emoteUrls = [];
                 if (tags['emotes']) {
-                    const firstId = tags['emotes'].split('/')[0].split(':')[0];
-                    if (firstId && /^[A-Za-z0-9_]{1,64}$/.test(firstId)) emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${firstId}/default/dark/3.0`;
+                    const parsedEmotes = [];
+                    tags['emotes'].split('/').forEach(group => {
+                        const [id, ranges] = group.split(':');
+                        if (!id || !ranges || !/^[A-Za-z0-9_]{1,64}$/.test(id)) return;
+                        ranges.split(',').forEach(r => {
+                            const start = parseInt(r.split('-')[0], 10);
+                            if (!isNaN(start)) {
+                                parsedEmotes.push({
+                                    start,
+                                    url: `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/3.0`
+                                });
+                            }
+                        });
+                    });
+                    parsedEmotes.sort((a, b) => a.start - b.start);
+                    emoteUrls = parsedEmotes.map(e => e.url);
+                    emoteUrl = emoteUrls[0] || null;
                 }
                 const isBroadcasterFlag = (tags['badges'] || '').split(',').some(b => b.startsWith('broadcaster/'));
 
@@ -2311,6 +2374,7 @@
                     isAdmin: false, // Admin yetkisi sadece Kick Worker üzerinden doğrulanır
                     broadcasterId: tags['room-id'] || null,
                     emoteUrl,
+                    emoteUrls,
                     source: 'twitch'
                 });
             };
