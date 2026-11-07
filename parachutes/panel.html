@@ -236,6 +236,105 @@
                     </div>
                 </div>
 
+                <!-- Sıralama Renk Seçenekleri -->
+                <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
+                    <div class="space-y-1 mb-3">
+                        <label class="text-sm font-medium text-gray-300" data-i18n="lbColorTitle">Sıralama Renkleri</label>
+                        <p class="text-xs text-gray-500" data-i18n="lbColorDesc">Atla Sıralaması listesindeki oyuncu isimlerinin renk stilini seçin (puan renkleri değişmez).</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Seçenek 1: Varsayılan (Altın, Gümüş, Bronz, Beyaz, Beyaz) -->
+                        <label class="cursor-pointer group">
+                            <input type="radio" name="lbColor" value="0" checked class="sr-only peer">
+                            <div class="border border-gray-700/50 rounded-xl p-3 bg-black/40 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 peer-checked:ring-1 peer-checked:ring-cyan-500/50 hover:border-gray-500">
+                                <div class="text-xs font-semibold text-center text-gray-300 pb-1.5 mb-2 border-b border-gray-700/60" data-i18n="lbColorOpt0">Varsayılan (Klasik)</div>
+                                <div class="space-y-1 text-xs font-bold leading-tight select-none">
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFD700; text-shadow:0 0 8px rgba(255,215,0,0.6);">1. CrossWeq</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#ef4444;">98.50 ⭐</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#D8D8D8; text-shadow:0 0 8px rgba(216,216,216,0.5);">2. <span data-i18n="lbSampleUser">Kullanıcı</span>2</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#facc15;">93.20</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#b87333;">3. <span data-i18n="lbSampleUser">Kullanıcı</span>3</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">86.40</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">4. <span data-i18n="lbSampleUser">Kullanıcı</span>4</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">74.10</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">5. <span data-i18n="lbSampleUser">Kullanıcı</span>5</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">62.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Seçenek 2: Altın, Mor, Mavi, Yeşil, Gri -->
+                        <label class="cursor-pointer group">
+                            <input type="radio" name="lbColor" value="1" class="sr-only peer">
+                            <div class="border border-gray-700/50 rounded-xl p-3 bg-black/40 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 peer-checked:ring-1 peer-checked:ring-cyan-500/50 hover:border-gray-500">
+                                <div class="text-xs font-semibold text-center text-gray-300 pb-1.5 mb-2 border-b border-gray-700/60" data-i18n="lbColorOpt1">Renkli (Kademeli)</div>
+                                <div class="space-y-1 text-xs font-bold leading-tight select-none">
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFD700; text-shadow:0 0 8px rgba(255,215,0,0.6);">1. CrossWeq</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#ef4444;">98.50 ⭐</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#c084fc; text-shadow:0 0 8px rgba(192,132,252,0.5);">2. <span data-i18n="lbSampleUser">Kullanıcı</span>2</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#facc15;">93.20</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#38bdf8;">3. <span data-i18n="lbSampleUser">Kullanıcı</span>3</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">86.40</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#4ade80;">4. <span data-i18n="lbSampleUser">Kullanıcı</span>4</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">74.10</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#9ca3af;">5. <span data-i18n="lbSampleUser">Kullanıcı</span>5</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">62.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Seçenek 3: Tümü Beyaz -->
+                        <label class="cursor-pointer group">
+                            <input type="radio" name="lbColor" value="2" class="sr-only peer">
+                            <div class="border border-gray-700/50 rounded-xl p-3 bg-black/40 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10 peer-checked:ring-1 peer-checked:ring-cyan-500/50 hover:border-gray-500">
+                                <div class="text-xs font-semibold text-center text-gray-300 pb-1.5 mb-2 border-b border-gray-700/60" data-i18n="lbColorOpt2">Tümü Beyaz</div>
+                                <div class="space-y-1 text-xs font-bold leading-tight select-none">
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">1. CrossWeq</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#ef4444;">98.50 ⭐</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">2. <span data-i18n="lbSampleUser">Kullanıcı</span>2</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#facc15;">93.20</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">3. <span data-i18n="lbSampleUser">Kullanıcı</span>3</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">86.40</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">4. <span data-i18n="lbSampleUser">Kullanıcı</span>4</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">74.10</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span style="color:#FFFFFF;">5. <span data-i18n="lbSampleUser">Kullanıcı</span>5</span>
+                                        <span class="font-extrabold tabular-nums" style="color:#22c55e;">62.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Doğum Günü Teması -->
                 <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
                     <div class="space-y-1 mb-3">
@@ -370,6 +469,12 @@
             poolSizeDesc: { tr: "Havuzun, karakterlerin ve tüm objelerin ekrandaki büyüklüğünü ayarlayın.", en: "Adjust the screen size of the pool, characters, and all objects." },
             poolSizeNormal: { tr: "Normal", en: "Normal" },
             poolSizeSmall: { tr: "Küçük", en: "Small" },
+            lbColorTitle: { tr: "Sıralama Renkleri", en: "Leaderboard Colors" },
+            lbColorDesc: { tr: "Atla Sıralaması listesindeki oyuncu isimlerinin renk stilini seçin (puan renkleri değişmez).", en: "Choose the color style for player names on the leaderboard (score colors remain unchanged)." },
+            lbColorOpt0: { tr: "Varsayılan (Klasik)", en: "Default (Classic)" },
+            lbColorOpt1: { tr: "Renkli (Kademeli)", en: "Colorful (Tiered)" },
+            lbColorOpt2: { tr: "Tümü Beyaz", en: "All White" },
+            lbSampleUser: { tr: "Kullanıcı", en: "Player" },
             channel: { tr: "Kick Kanal Adı", en: "Kick Channel Name" },
             twitchChannel: { tr: "Twitch Kanal Adı", en: "Twitch Channel Name" },
             platform: { tr: "Yayın Platformu", en: "Streaming Platform" },
@@ -415,9 +520,10 @@
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 Nasıl Kurulur?</h3>
                 <ol class="list-decimal pl-5 space-y-1 text-gray-400">
                     <li>Önce <strong>Yayın Platformu</strong>nu seçin: <strong>Kick</strong>, <strong>Twitch</strong> ya da <strong>Kick + Twitch</strong>. Seçime göre Kick ve/veya Twitch kanal adınızı ve diğer ayarları eksiksiz doldurun.</li>
-                    <li>İstediğiniz zemin, tema ve paraşütleri seçin.</li>
+                    <li>İstediğiniz zemin, tema, oyun boyutu, sıralama renkleri ve paraşütleri seçin.</li>
                     <li>"Bağlantıları Oluştur" butonuna tıklayın.</li>
                     <li>Oluşan <strong>1. Ana Oyun Ekranı</strong> linkini kopyalayın ve OBS'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak URL kısmına yapıştırın. Genişlik: 1920, Yükseklik: 1080 yapmanız önerilir.</li>
+                    <li><strong>Çoklu Sahne Kullanımı (Önemli):</strong> Oyunu OBS'te birden fazla sahnede kullanacaksanız, farklı sahnelere eklerken yeni kaynak açmak yerine <strong>"Var Olanı Ekle (Add Existing)"</strong> diyerek tek kaynağı kullanın <strong>ya da</strong> Tarayıcı (Browser) kaynağının özelliklerinden <strong>"Görünür olmadığında kaynağı kapat"</strong> seçeneğini mutlaka işaretleyin.</li>
                     <li>İsteğe bağlı olarak <strong>2. Sıralama Ekranı</strong> linkini de OBS'e tarayıcı kaynağı olarak ekleyebilirsiniz.</li>
                     <li>İsteğe bağlı olarak <strong>3. İstatistik ve Geçmiş Merkezi</strong> linkini de ekleyebilirsiniz. Bu linki eklemek oyunu değiştirmez; sadece kim kaç kez atladı, rekor puanlar, canlı olay akışı ve Top 10 tablosunu OBS içinde görmenizi sağlar. Veriler ana oyun ekranı çalışırken zaten kaydedilir.</li>
                 </ol>
@@ -463,9 +569,10 @@
                 <h3 class="text-lg font-semibold text-white mt-4">🚀 How to Install?</h3>
                 <ol class="list-decimal pl-5 space-y-1 text-gray-400">
                     <li>First choose your <strong>Streaming Platform</strong>: <strong>Kick</strong>, <strong>Twitch</strong> or <strong>Kick + Twitch</strong>. Then fill in your Kick and/or Twitch channel name and the other settings, depending on your choice.</li>
-                    <li>Select the themes, backgrounds, and parachutes you want.</li>
+                    <li>Select the themes, backgrounds, game size, leaderboard colors, and parachutes you want.</li>
                     <li>Click the "Generate Links" button.</li>
                     <li>Copy the generated <strong>1. Main Overlay</strong> link, add a new "Browser" source in OBS, and paste it into the URL field. Recommended Size: 1920x1080.</li>
+                    <li><strong>Multiple Scenes Usage (Important):</strong> If you use the overlay across multiple scenes in OBS, either add the same single source using <strong>"Add Existing"</strong> in other scenes <strong>or</strong> enable <strong>"Shutdown source when not visible"</strong> in the Browser Source properties.</li>
                     <li>Optionally, you can add the <strong>2. Leaderboard Screen</strong> link to OBS as another browser source.</li>
                     <li>Optionally, you can also add the <strong>3. Stats &amp; History Center</strong> link. Adding it does not change the game; it only lets you see who jumped how many times, record scores, the live event log and the Top 10 table inside OBS. The data is recorded anyway while the main overlay runs.</li>
                 </ol>
@@ -882,6 +989,7 @@
             const bgToggle = document.getElementById('bgToggle').checked ? 1 : 0;
             const trailToggle = document.getElementById('trailToggle').checked ? 1 : 0;
             const poolSizeVal = document.querySelector('input[name="poolSize"]:checked').value;
+            const lbColorVal = document.querySelector('input[name="lbColor"]:checked').value;
             
             const birthMonth = document.getElementById('birthMonth').value;
             const birthDay = document.getElementById('birthDay').value;
@@ -893,6 +1001,7 @@
                 bg: bgToggle,
                 tr: trailToggle,
                 ps: poolSizeVal,
+                rc: lbColorVal,
                 t: selectedThemes.join(','),
                 p: selectedParachutes.join(','),
                 lang: lang
@@ -907,7 +1016,8 @@
             }
 
             const lbParams = new URLSearchParams({
-                kanal: channel
+                kanal: channel,
+                rc: lbColorVal
             });
 
             // Lokal dosya sisteminde çalışması için .html uzantıları gereklidir

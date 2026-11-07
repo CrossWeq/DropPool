@@ -256,6 +256,7 @@
                 return;
             }
             emptyState.classList.add('hidden');
+            const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             let html = '';
             for (let i = logs.length - 1; i >= 0; i--) {
                 const log = logs[i];
@@ -271,15 +272,15 @@
                     actionBadge = `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-md text-xs font-bold">${i18n.badges.SYSTEM[lang]}</span>`;
                 }
                 else {
-                    actionBadge = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-md text-xs font-bold">${log.action}</span>`;
+                    actionBadge = `<span class="bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2.5 py-1 rounded-md text-xs font-bold">${escapeHtml(log.action)}</span>`;
                 }
 
-                let translatedDetail = translateLogDetail(log.detail, lang);
+                let translatedDetail = escapeHtml(translateLogDetail(log.detail, lang));
 
                 html += `
                     <tr class="hover:bg-white/5 transition-colors group">
                         <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">${log.time}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${log.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${escapeHtml(log.username)}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${actionBadge}</td>
                         <td class="px-6 py-4 text-gray-300 max-w-md truncate">${translatedDetail}</td>
                     </tr>
@@ -304,6 +305,7 @@
 
             // --- Top 10 ---
             const sortedByScore = [...users].sort((a,b) => b.maxScore - a.maxScore).slice(0, 10);
+            const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             let top10Html = '';
             sortedByScore.forEach((u, index) => {
                 let medal = `${index+1}.`;
@@ -316,7 +318,7 @@
                     <li class="flex justify-between items-center px-4 py-3 rounded-xl transition-colors ${bgClass}">
                         <div class="flex items-center gap-3">
                             <span class="font-bold text-lg w-7 text-center ${index<3?'text-white':'text-gray-500'}">${medal}</span>
-                            <span class="font-medium text-white">${u.username}</span>
+                            <span class="font-medium text-white">${escapeHtml(u.username)}</span>
                         </div>
                         <span class="font-bold text-green-400">${u.maxScore.toFixed(2)}</span>
                     </li>
@@ -337,7 +339,7 @@
                 let lastJumpTime = u.lastJumpTime || '-';
                 statsHtml += `
                     <tr class="hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${u.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${escapeHtml(u.username)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-blue-400 font-bold">${u.jumps}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-purple-400 font-bold">%${hitRate.toFixed(1)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-yellow-400 font-bold">${totalScore.toFixed(2)}</td>

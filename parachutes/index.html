@@ -230,6 +230,7 @@
         }
 
         function applyRandomTheme() {
+            if (typeof updateSceneDimensions === 'function') updateSceneDimensions();
             let randomTheme;
             if (isBirthdayMode) {
                 // Doğum günü temasında zemin pixelgrass, havuz ise rastgele bir pasta (cake1 - cake5) olur
@@ -448,6 +449,12 @@
         syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
         // Başlık bilgisini siralama.html'e gönder (sayfa yenilenince de güncellenir)
         syncChannel.postMessage({ type: 'TITLE_UPDATE', title: leaderboardTitle });
+        // Sıralama renk modunu (rc) siralama.html'e bildir ve kaydet
+        const rankColorParam = urlParams.get('rc');
+        if (rankColorParam !== null) {
+            try { localStorage.setItem('droppool_leaderboard_color', rankColorParam); } catch (e) { }
+            syncChannel.postMessage({ type: 'COLOR_UPDATE', colorMode: rankColorParam });
+        }
 
         function updateLeaderboard(username, score) {
             score = parseFloat(score);
@@ -585,26 +592,26 @@
         Runner.run(runner, engine);
 
         // --- 3. DUVARLAR VE ZEMİN (ÇEVRE) ---
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        let width = window.innerWidth;
+        let height = window.innerHeight;
         const wallThickness = 60;
 
-        // Sol Duvar (Görünmez, zıplama/sekme katsayısı yüksek)
-        const leftWall = Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height * 2, {
+        // Sol Duvar (Görünmez, zıplama/sekme katsayısı yüksek — OBS boyut değişimlerinde de tam boyutu kapsaması için yüksekliği geniş tutuldu)
+        const leftWall = Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, Math.max(height * 3, 6000), {
             isStatic: true,
             restitution: 1, // Aynı hızla geri dönsün (yavaşlama yok)
             render: { visible: false } // Ekranda görünmesin
         });
 
         // Sağ Duvar (Görünmez, zıplama/sekme katsayısı yüksek)
-        const rightWall = Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height * 2, {
+        const rightWall = Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, Math.max(height * 3, 6000), {
             isStatic: true,
             restitution: 1,
             render: { visible: false }
         });
 
-        // Genel Zemin (Havuzu tutturamayanların düşeceği görünmez düz zemin)
-        const ground = Bodies.rectangle(width / 2, height + wallThickness / 2, width, wallThickness, {
+        // Genel Zemin (Havuzu tutturamayanların düşeceği görünmez düz zemin — OBS boyut değişimlerinde tam genişliği kapsaması için geniş tutuldu)
+        const ground = Bodies.rectangle(width / 2, height + wallThickness / 2, Math.max(width * 3, 8000), wallThickness, {
             isStatic: true,
             isSensor: false,
             label: 'zemin',
@@ -618,8 +625,8 @@
 
         // Havuzun sağa sola rastgele (random) doğması için güvenli X ekseni aralığı
         const poolMargin = poolHitboxRadiusX + 60;
-        const randomPoolX = Math.random() * (width - poolMargin * 2) + poolMargin;
-        const poolY = height - (isSmallPool ? 21 : 35); // %60 oranına göre zemin hizalaması
+        const randomPoolX = Math.random() * Math.max(10, width - poolMargin * 2) + poolMargin;
+        let poolY = height - (isSmallPool ? 21 : 35); // %60 oranına göre zemin hizalaması
 
         const pool = Bodies.circle(randomPoolX, poolY, poolHitboxRadiusX, {
             isStatic: true,
@@ -642,9 +649,43 @@
         pool.render.sprite.xScale = poolSpriteScale;
         pool.render.sprite.yScale = poolSpriteScale;
 
+        // OBS'te kaynak ilk eklendiğinde (800x600 -> 1920x1080 geçişinde) sayfa yenilenmeden havuz, zemin ve duvarların yeni ekran boyutuna oturmasını sağlar
+        function updateSceneDimensions() {
+            const newW = window.innerWidth;
+            const newH = window.innerHeight;
+            if (!newW || !newH) return;
+
+            width = newW;
+            height = newH;
+            poolY = height - (isSmallPool ? 21 : 35);
+
+            if (typeof render !== 'undefined' && render && render.canvas) {
+                if (render.canvas.width !== width) render.canvas.width = width;
+                if (render.canvas.height !== height) render.canvas.height = height;
+                render.options.width = width;
+                render.options.height = height;
+            }
+
+            if (typeof leftWall !== 'undefined' && leftWall) {
+                Matter.Body.setPosition(leftWall, { x: -wallThickness / 2, y: height / 2 });
+            }
+            if (typeof rightWall !== 'undefined' && rightWall) {
+                Matter.Body.setPosition(rightWall, { x: width + wallThickness / 2, y: height / 2 });
+            }
+            if (typeof ground !== 'undefined' && ground) {
+                Matter.Body.setPosition(ground, { x: width / 2, y: height + wallThickness / 2 });
+            }
+            if (typeof pool !== 'undefined' && pool) {
+                const maxPoolX = Math.max(poolMargin, width - poolMargin);
+                const clampedX = Math.max(poolMargin, Math.min(maxPoolX, pool.position.x));
+                Matter.Body.setPosition(pool, { x: clampedX, y: poolY });
+            }
+        }
+
         // İstendiğinde havuzun yerini tekrar rastgele değiştirmek için global fonksiyon
         window.randomizePoolPosition = function () {
-            const newX = Math.random() * (width - poolMargin * 2) + poolMargin;
+            updateSceneDimensions();
+            const newX = Math.random() * Math.max(10, width - poolMargin * 2) + poolMargin;
             Matter.Body.setPosition(pool, { x: newX, y: poolY });
             console.log("Havuz yeni rastgele konuma taşındı: X =", newX);
         };
@@ -2547,14 +2588,9 @@
         setupKickChatListener();
         setupTwitchChatListener();
 
-        // Sayfa yeniden boyutlandığında canvas ve fizik sınırlarını güncelle
+        // Sayfa yeniden boyutlandığında canvas, havuz, zemin ve duvar sınırlarını anında güncelle
         window.addEventListener('resize', () => {
-            render.canvas.width = window.innerWidth;
-            render.canvas.height = window.innerHeight;
-            render.options.width = window.innerWidth;
-            render.options.height = window.innerHeight;
-
-            // Zemin ve duvarları yeni boyutlara göre konumlandırmak gerekirse ekstra kod buraya yazılabilir.
+            updateSceneDimensions();
         });
 
         // Konsoldan test edebilmeniz için global'e açıyoruz
