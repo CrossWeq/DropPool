@@ -70,6 +70,7 @@
 | Komut | Açıklama |
 |---|---|
 | `!atla` | Standart paraşütlü atlayış. |
+| `!atla duo @kullanıcı` | **İkili atlayış:** Sen ve etiketlediğin kişi ince bir iple bağlı şekilde birlikte atlarsınız; ip gerilince birbirinizi çekersiniz. İkiniz de normal atlayış yapmış sayılır ve ayrı ayrı puan alırsınız. Etiketlenen kişi o oturumda chat'te yazmış olmalıdır (Kick'te en az bir komut yazmış olması yeterli); yoksa sadece komutu yazan atlar. |
 | `!atla [emote]` | Komutla birlikte bir Kick/Twitch emote yazılırsa, o emote ekranda düşen karakter olur. |
 | `!atla dive` | Helikopterden paraşütsüz, havada fırıl fırıl dönerek çılgın bir dalış yapar. |
 | `!atla drunk` | Sarhoş gibi ne yapacağı belli olmayan, rastgele sağa sola savrularak aşağı düşer. |
@@ -92,6 +93,7 @@
 | Command | Description |
 |---|---|
 | `!drop` | Standard parachute drop. |
+| `!drop duo @username` | **Duo drop:** You and the tagged viewer jump together tied with a thin rope; the rope pulls you both when it goes taut. Both count as a normal drop and score separately. The tagged viewer must have chatted in the session (on Kick, typing any command is enough); otherwise only the sender jumps. |
 | `!drop [emote]` | If a Kick/Twitch emote is added to the command, that emote becomes the falling character on screen. |
 | `!drop dive` | Drops from a helicopter without a parachute, spinning wildly in the air. |
 | `!drop drunk` | Falls down swaying left and right randomly, moving like a drunk jumper. |
