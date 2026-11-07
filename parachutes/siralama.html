@@ -38,7 +38,7 @@
         .lb-list {
             margin-top: 24px;
             display: grid;
-            grid-template-columns: minmax(16ch, max-content) max-content auto;
+            grid-template-columns: max-content max-content auto;
             row-gap: 24px;
             column-gap: 0px;
             align-items: center;
@@ -89,21 +89,13 @@
             }
             // Seçenek 1 (Varsayılan): Altın, Gümüş, Bronz, Beyaz, Beyaz
             if (index === 0) return '#FFD700'; // Altın (Gold)
-            if (index === 1) return '#D8D8D8'; // Gümüş (Silver)
+            if (index === 1) return '#A0AEC0'; // Gümüş (Silver - belirgin gümüşi gri)
             if (index === 2) return '#b87333'; // Bronz (Bronze)
             return '#FFFFFF'; // 4. ve 5. için Beyaz
         }
 
         function getRankGlow(index) {
-            if (rankColorMode === '2') return '';
-            if (rankColorMode === '1') {
-                if (index === 0) return 'text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.5);';
-                if (index === 1) return 'text-shadow: 0 0 15px rgba(192, 132, 252, 0.75), 0 0 25px rgba(168, 85, 247, 0.45);';
-                return '';
-            }
-            if (index === 0) return 'text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.5);';
-            if (index === 1) return 'text-shadow: 0 0 15px rgba(216, 216, 216, 0.8), 0 0 25px rgba(216, 216, 216, 0.5);';
-            return '';
+            return ''; // Parlama efekti kapatıldı (temiz ve net görünüm)
         }
 
         function renderLeaderboard() {
