@@ -145,32 +145,30 @@
 
             <!-- Temel Ayarlar -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div id="channelsWrap" class="grid grid-cols-1 gap-4">
-                    <div id="kickChannelBox" class="space-y-2">
-                        <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
-                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
-                            <span data-i18n="channel">Kick Kanal Adı</span>
-                        </label>
-                        <input type="text" id="channelInput" placeholder="Örn: crossweq" required
-                            class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
-                        <p id="channelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
-                    </div>
-                    <div id="twitchChannelBox" class="space-y-2 hidden">
-                        <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
-                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
-                            <span data-i18n="twitchChannel">Twitch Kanal Adı</span>
-                        </label>
-                        <input type="text" id="twitchChannelInput" placeholder="Örn: crossweq"
-                            class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-[#9146FF] focus:ring-1 focus:ring-[#9146FF] transition-all text-white placeholder-gray-600">
-                        <p id="twitchChannelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
-                    </div>
+                <div id="kickChannelBox" class="space-y-2 order-1">
+                    <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
+                        <span data-i18n="channel">Kick Kanal Adı</span>
+                    </label>
+                    <input type="text" id="channelInput" placeholder="Örn: crossweq" required
+                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white placeholder-gray-600">
+                    <p id="channelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
                 </div>
-                <div class="space-y-2">
+                <div id="twitchChannelBox" class="space-y-2 order-2 md:order-4 hidden">
+                    <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                        <span data-i18n="twitchChannel">Twitch Kanal Adı</span>
+                    </label>
+                    <input type="text" id="twitchChannelInput" placeholder="Örn: crossweq"
+                        class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-[#9146FF] focus:ring-1 focus:ring-[#9146FF] transition-all text-white placeholder-gray-600">
+                    <p id="twitchChannelError" class="text-red-400 text-xs hidden font-medium mt-1"></p>
+                </div>
+                <div class="space-y-2 order-3 md:order-2">
                     <label class="text-sm font-medium text-gray-300" data-i18n="cmd">Tetikleyici Komut</label>
                     <input type="text" id="cmdInput" value="!atla" required
                         class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white">
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-2 order-4 md:order-3">
                     <label class="text-sm font-medium text-gray-300" data-i18n="cd">Kullanıcı Bekleme Süresi (Saniye)</label>
                     <input type="number" id="cooldownInput" value="30" min="0" required
                         class="w-full bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all text-white">
@@ -349,7 +347,7 @@
     </div>
 
     <!-- Help Modal -->
-    <div id="helpModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div id="helpModal" onclick="if(event.target === this) toggleHelpModal()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative">
             <button type="button" onclick="toggleHelpModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -427,6 +425,7 @@
                 <h3 class="text-lg font-semibold text-white mt-4">✨ Özellikler ve İzleyici Komutları</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
                     <li><strong>Paraşütlü Atlayış:</strong> <code>${cmd}</code> yazıldığında standart bir paraşüt atlayışı gerçekleşir.</li>
+                    <li><strong>İkili Atlayış (Duo):</strong> <code>${cmd} duo @kullanıcı</code> yazıldığında sen ve etiketlediğin kişi ince bir iple bağlı şekilde birlikte atlarsınız. İp gerildiğinde ikiniz birbirinizi çekersiniz. İkiniz de normal atlayış yapmış sayılır ve ayrı ayrı puan alırsınız. Etiketlenen kişi o oturumda chat'te daha önce yazmış olmalıdır (Kick'te bunun için en az bir komut yazmış olması gerekir); yoksa sadece sen atlarsın.</li>
                     <li><strong>Animasyonlu Kick Emotları:</strong> Sohbette <code>${cmd} [emote]</code> yazıldığında, izleyicinin attığı Kick emote'u (GIF/WEBP dahil) ekranda düşen bir karakter olur!</li>
                     <li><strong>Helikopter Dalışı (Dive):</strong> <code>${cmd} dive</code> yazıldığında, izleyici paraşütsüz şekilde havada dönerek helikopterden atlar.</li>
                     <li><strong>Sarhoş Atlayış (Drunk):</strong> <code>${cmd} drunk</code> yazıldığında, izleyici ne yapacağı belli olmayan rastgele hareketlerle sarhoş gibi aşağı düşer.</li>
@@ -436,7 +435,6 @@
                     <li><strong>Puanlama Sistemi:</strong> Havuzun tam merkezine düşenler 100 puan alır, merkezden kenarlara doğru uzaklaştıkça puan 0'a kadar düşer. En iyi puanları toplayanlar lider tablosunda yerini alır!</li>
                     <li><strong>Rastgele Temalar:</strong> Seçtiğiniz temalar arasından her yeni atlayışta farklı bir arkaplan ve havuz gelir.</li>
                     <li><strong>Twitch Desteği:</strong> Platform olarak Twitch ya da Kick + Twitch seçildiğinde Twitch chat'i de dinlenir. Tüm komutlar ve Twitch emote'ları (ilk emote düşen karakter olur) aynı şekilde çalışır. Kick + Twitch modunda iki platformdaki izleyiciler aynı oyunda, aynı sıralama ve toplu atlayış kuyruğunda birleşir. Yayıncı komutlarını iki platformdaki yayıncı hesabı da kullanabilir (admin komutları sadece Kick'te çalışır).</li>
-                    <li><strong>İkili Atlayış (Duo):</strong> <code>${cmd} duo @kullanıcı</code> yazıldığında sen ve etiketlediğin kişi ince bir iple bağlı şekilde birlikte atlarsınız. İp gerildiğinde ikiniz birbirinizi çekersiniz. İkiniz de normal atlayış yapmış sayılır ve ayrı ayrı puan alırsınız. Etiketlenen kişi o oturumda chat'te daha önce yazmış olmalıdır (Kick'te bunun için en az bir komut yazmış olması gerekir); yoksa sadece sen atlarsın.</li>
                     <li><strong>Karakter Efekti:</strong> Düşen her karakterin arkasında onu takip eden ışıltılı ve renkli bir meteor izi efekti görünür.</li>
                 </ul>
 
@@ -475,6 +473,7 @@
                 <h3 class="text-lg font-semibold text-white mt-4">✨ Features & Viewer Commands</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
                     <li><strong>Parachute Drop:</strong> Typing <code>${cmd}</code> triggers a standard parachute drop.</li>
+                    <li><strong>Duo Drop:</strong> Typing <code>${cmd} duo @username</code> makes you and the tagged viewer jump together tied with a thin rope. When the rope goes taut you pull each other. Both count as having made a normal drop and score separately. The tagged viewer must have chatted earlier in the session (on Kick, they must have typed at least one command); otherwise only you will jump.</li>
                     <li><strong>Animated Kick Emotes:</strong> When <code>${cmd} [emote]</code> is typed in chat, the emote sent by the viewer (including GIF/WEBP) becomes the falling character!</li>
                     <li><strong>Helicopter Dive:</strong> Typing <code>${cmd} dive</code> causes the viewer to drop from a helicopter without a parachute, spinning.</li>
                     <li><strong>Drunk Drop:</strong> Typing <code>${cmd} drunk</code> causes the viewer to fall swaying left and right randomly, moving like a drunk jumper.</li>
@@ -484,7 +483,6 @@
                     <li><strong>Scoring System:</strong> Viewers who land in the dead center of the pool get 100 points, and the score decreases down to 0 the further away they land from the center. The highest scorers secure a spot on the leaderboard!</li>
                     <li><strong>Random Themes:</strong> A random background and pool from your selected themes appears with every new drop session.</li>
                     <li><strong>Twitch Support:</strong> When you pick Twitch or Kick + Twitch as the platform, Twitch chat is listened to as well. All commands and Twitch emotes (the first emote becomes the falling character) work the same way. In Kick + Twitch mode viewers from both platforms share the same game, leaderboard and group drop queue. The streamer's account on either platform can use the streamer commands (admin commands only work on Kick).</li>
-                    <li><strong>Duo Drop:</strong> Typing <code>${cmd} duo @username</code> makes you and the tagged viewer jump together tied with a thin rope. When the rope goes taut you pull each other. Both count as having made a normal drop and score separately. The tagged viewer must have chatted earlier in the session (on Kick, they must have typed at least one command); otherwise only you will jump.</li>
                     <li><strong>Character Effect:</strong> Every falling character leaves a glowing, colorful meteor trail effect behind them.</li>
                 </ul>
 
@@ -809,19 +807,17 @@
             const p = getPlatform();
             const kickBox = document.getElementById('kickChannelBox');
             const twBox = document.getElementById('twitchChannelBox');
-            const wrap = document.getElementById('channelsWrap');
             const kickInput = document.getElementById('channelInput');
             const twInput = document.getElementById('twitchChannelInput');
             const showKick = p === 'kick' || p === 'both';
             const showTw = p === 'twitch' || p === 'both';
             kickBox.classList.toggle('hidden', !showKick);
             twBox.classList.toggle('hidden', !showTw);
+            // Kick + Twitch modunda Twitch 4. sıraya (Kick'in tam altına) yerleşir; sadece Twitch modunda 1. sırada durur
+            twBox.classList.toggle('md:order-4', p === 'both');
+            twBox.classList.toggle('md:order-1', p === 'twitch');
             kickInput.required = showKick;
             twInput.required = showTw;
-            // İki kanal yan yana: kanal adı alanı 2 sütun kaplasın
-            wrap.className = (p === 'both')
-                ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 md:col-span-2'
-                : 'grid grid-cols-1 gap-4';
             document.getElementById('channelError').classList.add('hidden');
             document.getElementById('twitchChannelError').classList.add('hidden');
         }
