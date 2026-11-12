@@ -527,9 +527,13 @@
                         }));
 
                     let leaderboard = [];
+                    let hasLbInStorage = false;
                     try {
                         const lb = localStorage.getItem('droppool_leaderboard');
-                        if (lb) leaderboard = JSON.parse(lb);
+                        if (lb) {
+                            leaderboard = JSON.parse(lb);
+                            hasLbInStorage = true;
+                        }
                     } catch (e) { }
 
                     const currentLb = Array.isArray(leaderboard) ? leaderboard.slice(0, 5).map(item => ({
@@ -552,16 +556,21 @@
 
                     if (!broadcasterId && !channelName && top10.length === 0) return false;
 
+                    const payload = {
+                        id: broadcasterId || undefined,
+                        channel: channelName || undefined,
+                        top10: top10,
+                        users: usersStats,
+                        force: !!force
+                    };
+                    if (hasLbInStorage) {
+                        payload.leaderboard = currentLb;
+                    }
+
                     const res = await fetch(`${KICK_API_WORKER}/scores/sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            id: broadcasterId || undefined,
-                            channel: channelName || undefined,
-                            leaderboard: currentLb,
-                            top10: top10,
-                            users: usersStats
-                        })
+                        body: JSON.stringify(payload)
                     });
                     const resData = await res.json();
                     if (resData && resData.ok) {
@@ -629,9 +638,12 @@
             statsData = {};
             localStorage.removeItem('droppool_logs');
             localStorage.removeItem('droppool_stats');
+            localStorage.removeItem('droppool_leaderboard');
             syncChannel.postMessage({ type: 'CLEAR_LOGS' });
+            syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
             renderLogs();
             renderStats();
+            syncScoresToWorker(true);
         }
 
         loadData();

@@ -292,6 +292,7 @@
                                             <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droppoolbot enable / disable</code>
                                             <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droptogether [sn]</code>
                                             <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!meteor [sn]</code>
+                                            <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!resetdroplist</code>
                                             <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droptogetherhelp</code>
                                             <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!meteorhelp</code>
                                             <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!resetdrophelp</code>
@@ -666,6 +667,7 @@
                     <li><code>!droptogether</code> veya <code>!droptogether [saniye]</code> - Toplu atlayış kuyruğunu başlatır. Örneğin <code>!droptogether 100</code> yazılırsa 100 saniye sonra devasa uçak otomatik kalkar ve yayıncı da dahil sıradaki herkes aynı anda atlar. Sayı yazılmazsa yayıncı atlama komutunu (<code>${cmd}</code>) yazana kadar sırayı toplar ve o an kaldırır.</li>
                     <li><code>!meteor</code> veya <code>!meteor [saniye]</code> - Meteor Yağmuru modunu başlatır (örn: <code>!meteor 60</code>). Herkes paraşütsüz, alevler içinde göktaşı gibi hızla düşer.</li>
                     <li><code>!resetdrop</code> - Chat'ten yazıldığında süreli atlayışı, kuyruğu ve bekleme sürelerini (cooldown) anında iptal edip sahneyi temizler.</li>
+                    <li><code>!resetdroplist</code> (veya <code>!resetlist</code>) - Canlı yayın ilk 5 sıralamasını (ekran ve bot) anında sıfırlar.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">🤖 Chatbot ve Sohbet Komutları</h3>
@@ -727,6 +729,7 @@
                     <li><code>!droptogether</code> or <code>!droptogether [seconds]</code> - Starts Queue Mode. E.g. typing <code>!droptogether 100</code> drops everyone after 100 seconds automatically including the streamer. If no number is given, it waits until the broadcaster types <code>${cmd}</code>.</li>
                     <li><code>!meteor</code> or <code>!meteor [seconds]</code> - Starts Meteor Shower mode with optional duration (e.g. <code>!meteor 60</code>). Everyone drops without parachutes like blazing fire meteors.</li>
                     <li><code>!resetdrop</code> - Cancels any ongoing timed drop or queue immediately, clears cooldowns, and resets the scene.</li>
+                    <li><code>!resetdroplist</code> (or <code>!resetlist</code>) - Instantly resets the live stream top 5 leaderboard (screen & bot).</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">🤖 Chatbot &amp; Chat Commands</h3>

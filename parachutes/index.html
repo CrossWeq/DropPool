@@ -490,7 +490,7 @@
                 localStorage.removeItem('droppool_leaderboard');
             } catch (e) { }
             syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
-            syncScoresToWorker();
+            syncScoresToWorker(true);
             console.log("Atla Sıralaması sıfırlandı!");
         };
 
@@ -566,10 +566,10 @@
         }
 
         let syncScoresTimer = null;
-        function syncScoresToWorker() {
+        function syncScoresToWorker(force = false) {
             if (!broadcasterId) return;
             if (syncScoresTimer) clearTimeout(syncScoresTimer);
-            syncScoresTimer = setTimeout(async () => {
+            const doSync = async () => {
                 try {
                     const currentLb = Array.isArray(leaderboard) ? leaderboard.slice(0, 5).map(item => ({
                         username: item.username,
@@ -612,13 +612,20 @@
                             channel: String(channelName || ''),
                             leaderboard: currentLb,
                             top10: top10,
-                            users: usersStats
+                            users: usersStats,
+                            force: !!force
                         })
                     });
                 } catch (e) {
                     console.warn('[DropPool] Skor senkronizasyon uyarısı:', e);
                 }
-            }, 3000);
+            };
+
+            if (force) {
+                doSync();
+            } else {
+                syncScoresTimer = setTimeout(doSync, 3000);
+            }
         }
 
         // --- 2. MATTER.JS KURULUMU ---
@@ -2011,7 +2018,7 @@
                             localStorage.setItem('droppool_channel_name', String(channelName));
                             syncChannel.postMessage({ type: 'BROADCASTER_INFO', broadcasterId: data.id, channelName: channelName });
                         } catch (e) { }
-                        syncScoresToWorker();
+                        syncScoresToWorker(true);
                     } else {
                         console.error('[Kick] Abonelik hatası:', data);
                     }
@@ -2202,6 +2209,17 @@
                     addDropPoolLog(username, 'SİSTEM', logMsg);
                     console.log(`[DropPool] ${kind === 'meteor' ? 'Meteor Yağmuru' : 'Toplu atlayış (Drop Together)'} modu AKTİF (${owner})${durationSec > 0 ? ` [${durationSec}s sayaç]` : ''}${takeover ? ' — devralındı, sıra korundu' : ''}. İzleyiciler sıraya alınıyor.`);
                 };
+
+                // Sıralama sıfırlama komutları: !resetdroplist, !resetlist, !resetdrop list
+                const isResetList = lowerMsg === '!resetdroplist' || lowerMsg === '!resetlist' || lowerMsg === '!atlaresetlist' ||
+                                    lowerMsg === '!droplistreset' || lowerMsg === '!resetdrop list' || lowerMsg === '!resetdrop liste';
+                if (isResetList) {
+                    if (isBroadcaster() || isAdmin) {
+                        window.resetLeaderboard();
+                        addDropPoolLog(username, 'SİSTEM', 'Yayıncı canlı sıralama listesini sıfırladı.');
+                        return;
+                    }
+                }
 
                 // Sıfırlama komutları: !resetdrop ve !adminresetdrop
                 if (lowerMsg === '!resetdrop' || lowerMsg.startsWith('!resetdrop ')) {
