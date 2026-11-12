@@ -1124,7 +1124,7 @@
             // Lokal dosya sisteminde çalışması için .html uzantıları gereklidir
             document.getElementById('overlayUrl').value = `${baseUrl}/index.html?${overlayParams.toString()}`;
             document.getElementById('leaderboardUrl').value = `${baseUrl}/siralama.html?${lbParams.toString()}`;
-            document.getElementById('logsUrl').value = `${baseUrl}/log.html`;
+            document.getElementById('logsUrl').value = `${baseUrl}/log.html?c=${encodeURIComponent(channel)}`;
 
             // Show results (otomatik scroll yok, kullanıcı isterse aşağı kayar)
             document.getElementById('resultSection').classList.remove('hidden');

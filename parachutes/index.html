@@ -596,6 +596,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             id: String(broadcasterId),
+                            channel: String(channelName || ''),
                             leaderboard: currentLb,
                             top10: top10
                         })
@@ -603,7 +604,7 @@
                 } catch (e) {
                     console.warn('[DropPool] Skor senkronizasyon uyarısı:', e);
                 }
-            }, 1000);
+            }, 3000);
         }
 
         // --- 2. MATTER.JS KURULUMU ---
@@ -1991,6 +1992,11 @@
                         broadcasterId = data.id;
                         subscribeData = data;
                         console.log('[Kick] Kanal abone edildi, broadcaster ID:', broadcasterId);
+                        try {
+                            localStorage.setItem('droppool_broadcaster_id', String(broadcasterId));
+                            localStorage.setItem('droppool_channel_name', String(channelName));
+                            syncChannel.postMessage({ type: 'BROADCASTER_INFO', broadcasterId: data.id, channelName: channelName });
+                        } catch (e) { }
                         syncScoresToWorker();
                     } else {
                         console.error('[Kick] Abonelik hatası:', data);
@@ -2074,6 +2080,15 @@
             try {
                 const { message, username, senderUserId, isBroadcasterFlag, isAdmin, broadcasterId } = ctx;
                 console.log(`[Chat${ctx.source ? ':' + ctx.source : ''}] ${username}: ${message}`);
+
+                // Bot hesapları asla oyuna veya toplu atlama sırasına giremez
+                const isBotAccount = Boolean(
+                    (username && username.toLowerCase() === 'droppoolbot') ||
+                    (username && username.toLowerCase().endsWith('bot') && (username.toLowerCase().includes('droppool') || username.toLowerCase().includes('kick'))) ||
+                    ctx.is_bot === true
+                );
+                if (isBotAccount) return;
+
                 rememberChatter(username);
 
                 // Yayıncı doğrulama (benzer isimli sahte hesaplara karşı sadece ID/bayrak güvenilir):
@@ -2187,8 +2202,8 @@
                     return;
                 }
 
-                // Toplu atlayış ve meteor komutları (isteğe bağlı saniye parametreli: !droptogether 100, !admindroptogether 20 vb.)
-                const modeCmdMatch = lowerMsg.match(/^!(droptogether|admindroptogether|meteor|adminmeteor)(?:\s+(\d+)(?:s|sn|sec)?)?$/);
+                // Toplu atlayış ve meteor komutları (isteğe bağlı saniye parametreli: !droptogether 100, !admindroptogether 20, !droptogether 20 saniye vb.)
+                const modeCmdMatch = lowerMsg.match(/^!(droptogether|admindroptogether|meteor|adminmeteor)(?:\s+(\d+)(?:\s*(?:s|sn|sec|saniye))?)?$/);
                 if (modeCmdMatch) {
                     const cName = modeCmdMatch[1];
                     const dur = modeCmdMatch[2] ? parseInt(modeCmdMatch[2], 10) : 0;
@@ -2295,7 +2310,18 @@
                         for (let j = 0; j < s.length; j++) {
                             const pat = s[j];
                             // Boşluk, '[' veya ' [' ile biten kalıplar → startsWith ile kontrol et
-                            if (pat.endsWith('[') || pat.endsWith(' ') || pat.endsWith(' [') ? msgLower.startsWith(pat) : msgLower === pat) {
+                            const matched = (pat.endsWith('[') || pat.endsWith(' ') || pat.endsWith(' ['))
+                                ? msgLower.startsWith(pat)
+                                : msgLower === pat;
+                            if (matched) {
+                                // Normal atlayışta (si === 5) komuttan sonra sadece emote/emoji/boşluk olmalı; cümle veya kelimeler (örn: "!atla yazarak...") atlayış sayılmaz!
+                                if (si === 5) {
+                                    const remainder = msgLower.slice(base.length).trim();
+                                    const cleanRemainder = remainder.replace(/\[emote:\d+:[^\]]*\]/gi, '').trim();
+                                    if (/[a-zA-ZçğıöşüÇĞİÖŞÜ]/.test(cleanRemainder)) {
+                                        continue;
+                                    }
+                                }
                                 return si;
                             }
                         }

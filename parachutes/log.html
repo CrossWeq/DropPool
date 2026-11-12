@@ -106,6 +106,11 @@
             <div class="flex gap-3 items-center">
                 <button type="button" id="langBtn" onclick="toggleLang()"
                     class="bg-black/40 border border-gray-700/50 text-white font-bold py-2.5 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg">ENG</button>
+                <button type="button" id="syncBotBtn" onclick="manualSyncBot()"
+                    class="bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 border border-cyan-500/30 px-4 py-2.5 rounded-xl font-medium transition-colors text-sm flex items-center gap-1.5 shadow-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span id="syncBotText" data-i18n="syncBotBtn">Bota Eşitle</span>
+                </button>
                 <button onclick="clearAllData()"
                     class="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 px-5 py-2.5 rounded-xl font-medium transition-colors text-sm">
                     <span data-i18n="clearBtn">Tüm Verileri Sıfırla</span>
@@ -239,6 +244,7 @@
             cancelBtn: { tr: "İptal", en: "Cancel" },
             confirmBtn: { tr: "Sil", en: "Delete" },
             noStats: { tr: "Henüz istatistik bulunmuyor.", en: "No statistics available yet." },
+            syncBotBtn: { tr: "Bota Eşitle", en: "Sync to Bot" },
             top10: { tr: "Tüm Zamanların Top 10'u", en: "All-Time Top 10" },
             logLimit: { tr: "Sadece son 500 olay (Zaman Tüneli)", en: "Only last 500 events (Timeline)" },
             thDate: { tr: "Tarih / Saat", en: "Date / Time" },
@@ -301,6 +307,7 @@
 
             renderLogs();
             renderStats();
+            syncScoresToWorker();
         }
 
         function translateLogDetail(detail, l) {
@@ -431,6 +438,95 @@
             renderStats();
         }
 
+        const urlParams = new URLSearchParams(window.location.search);
+        let channelName = urlParams.get('c') || '';
+        let broadcasterId = urlParams.get('id') || '';
+        try {
+            if (!broadcasterId) broadcasterId = localStorage.getItem('droppool_broadcaster_id') || '';
+            if (!channelName) channelName = localStorage.getItem('droppool_channel_name') || '';
+        } catch (e) { }
+
+        const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/+$/, '');
+
+        let syncScoresTimer = null;
+        async function syncScoresToWorker(force = false) {
+            if (syncScoresTimer && !force) clearTimeout(syncScoresTimer);
+            const run = async () => {
+                try {
+                    if (!broadcasterId && channelName) {
+                        try {
+                            const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}`);
+                            const data = await res.json();
+                            if (data && data.id) {
+                                broadcasterId = String(data.id);
+                                try { localStorage.setItem('droppool_broadcaster_id', broadcasterId); } catch(e){}
+                            }
+                        } catch (e) { }
+                    }
+
+                    let statsObj = {};
+                    try {
+                        const s = localStorage.getItem('droppool_stats');
+                        if (s) statsObj = JSON.parse(s);
+                    } catch (e) { statsObj = statsData || {}; }
+
+                    const top10 = Object.values(statsObj)
+                        .filter(u => u && u.username && (u.maxScore !== undefined && u.maxScore !== null))
+                        .sort((a, b) => (b.maxScore || 0) - (a.maxScore || 0))
+                        .slice(0, 10)
+                        .map(u => ({
+                            username: u.username,
+                            score: typeof u.maxScore === 'number' ? u.maxScore : parseFloat(u.maxScore)
+                        }));
+
+                    let leaderboard = [];
+                    try {
+                        const lb = localStorage.getItem('droppool_leaderboard');
+                        if (lb) leaderboard = JSON.parse(lb);
+                    } catch (e) { }
+
+                    const currentLb = Array.isArray(leaderboard) ? leaderboard.slice(0, 5).map(item => ({
+                        username: item.username,
+                        score: typeof item.score === 'number' ? item.score : parseFloat(item.score)
+                    })) : [];
+
+                    if (!broadcasterId && !channelName && top10.length === 0) return false;
+
+                    const res = await fetch(`${KICK_API_WORKER}/scores/sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: broadcasterId || undefined,
+                            channel: channelName || undefined,
+                            leaderboard: currentLb,
+                            top10: top10
+                        })
+                    });
+                    const resData = await res.json();
+                    if (resData && resData.ok) {
+                        console.log('[DropPool Data] Skorlar bota eşitlendi:', resData);
+                        return true;
+                    }
+                } catch (e) {
+                    console.warn('[DropPool Data] Senkronizasyon hatası:', e);
+                }
+                return false;
+            };
+
+            if (force) return await run();
+            syncScoresTimer = setTimeout(run, 1500);
+        }
+
+        async function manualSyncBot() {
+            const btn = document.getElementById('syncBotText');
+            if (btn) btn.innerText = 'Eşitleniyor...';
+            const ok = await syncScoresToWorker(true);
+            if (btn) {
+                btn.innerText = ok ? 'Eşitlendi!' : 'Başarısız!';
+                setTimeout(() => { btn.innerText = i18n.syncBotBtn[lang] || 'Bota Eşitle'; }, 3000);
+            }
+        }
+
         syncChannel.onmessage = (event) => {
             if (event.data && event.data.type === 'NEW_LOG') {
                 logs.push(event.data.log);
@@ -439,6 +535,11 @@
             } else if (event.data && event.data.type === 'STATS_UPDATE') {
                 statsData = event.data.stats;
                 if (document.getElementById('statsTab').classList.contains('active')) renderStats();
+                syncScoresToWorker();
+            } else if (event.data && event.data.type === 'BROADCASTER_INFO') {
+                if (event.data.broadcasterId) broadcasterId = String(event.data.broadcasterId);
+                if (event.data.channelName) channelName = String(event.data.channelName);
+                syncScoresToWorker(true);
             } else if (event.data && event.data.type === 'CLEAR_LOGS') {
                 logs = [];
                 statsData = {};
