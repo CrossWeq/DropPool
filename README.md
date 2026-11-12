@@ -1,6 +1,6 @@
 # DropPool 🪂
 
-![DropPool](https://img.shields.io/badge/Version-7.2-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick%20%7C%20Twitch-green)
+![DropPool](https://img.shields.io/badge/Version-8.3-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick%20%7C%20Twitch-green)
 
 🇹🇷 **DropPool**, hem **Kick** hem de **Twitch** ile tam uyumlu çalışan (ister tek platformda, ister iki platform aynı anda ortak olarak kullanılabilen) açık kaynaklı ve interaktif bir OBS aracıdır. İzleyicilerinizin sohbete (chat) belirlediğiniz komutu yazarak ekrandaki havuza kendi isimleriyle paraşütle atlamasını sağlar.
 
@@ -11,6 +11,7 @@
 ## 🚀 Özellikler / Features
 
 - 🟢🟣 **Kick & Twitch Tam Uyumluluk (Kick & Twitch Compatibility):** Kurulum ekranından **Kick**, **Twitch** ya da **Kick + Twitch** seçilebilir. Kick + Twitch modunda her iki platformun izleyicileri aynı oyunda, aynı sıralamada ve aynı toplu atlayış kuyruğunda buluşur. (Works seamlessly with Kick, Twitch, or both platforms combined in the same game, leaderboard, and group-drop queue.)
+- 🤖 **Resmi Kick Chatbot Entegrasyonu (Kick Chatbot v8.3):** DropPoolBot ile sohbette canlı liderlik sıralaması (`!atlalist`), tüm zamanlar rekorları (`!atlatop`), kullanıcıya özel genel sıralama ve atlayış karnesi (`!atlacount`), yardım rehberleri (`!atlahelp`) ve otomatik toplu atlayış anonsları.
 - 🎨 **Özelleştirilebilir Temalar (Custom Themes):** İlkbahar, Sonbahar, Kış ve Cehennem temaları. (Spring, Autumn, Winter, Hell)
 - 🪂 **Renk Seçenekleri (Parachute Colors):** İzleyiciler için 8 farklı havalı paraşüt rengi. (8 different parachute colors)
 - 😂 **Kick & Twitch Emote Desteği:** İzleyiciler komutla birlikte bir Kick ya da Twitch emote'u yazdığında o emote ekranda düşen karakter olur! GIF/WEBP dahil (Kick). (Kick & Twitch emotes become the falling character)
@@ -65,49 +66,85 @@
 
 ## 🎮 Komutlar / Chat Commands
 
-**🇹🇷 İzleyici Komutları:**
+**🇹🇷 İzleyici ve Bot Komutları:**
 
-| Komut | Açıklama |
-|---|---|
-| `!atla` | Standart paraşütlü atlayış. |
-| `!atla duo @kullanıcı` | **İkili atlayış:** Sen ve etiketlediğin kişi ince bir iple bağlı şekilde birlikte atlarsınız; ip gerilince birbirinizi çekersiniz. İkiniz de normal atlayış yapmış sayılır ve ayrı ayrı puan alırsınız. Etiketlenen kişi o oturumda chat'te yazmış olmalıdır (Kick'te en az bir komut yazmış olması yeterli); yoksa sadece komutu yazan atlar. |
-| `!atla [emote]` | Komutla birlikte bir Kick/Twitch emote yazılırsa, o emote ekranda düşen karakter olur. |
-| `!atla dive` | Helikopterden paraşütsüz, havada fırıl fırıl dönerek çılgın bir dalış yapar. |
-| `!atla drunk` | Sarhoş gibi ne yapacağı belli olmayan, rastgele sağa sola savrularak aşağı düşer. |
-| `!atla tarzan` | Ekranın dışından uzun bir iple sarkaç hareketi yaparak uçar; ip kopar ve havuza düşer. |
-| `!atla fake` | Kusursuz bir iniş yapacakmış gibi süzülürken son anda paraşütünü bırakıp jetpackle havaya uçar ve kaybolur. |
-| `!atla random` | Yukarıdaki modlardan birini (dive, drunk, tarzan, fake dahil) tamamen rastgele seçer ve uygular. |
+| Komut | Tür | Açıklama |
+|---|---|---|
+| `!atla` | Oyun | Standart paraşütlü atlayış. |
+| `!atla duo @kullanıcı` | Oyun | **İkili atlayış:** Sen ve etiketlediğin kişi iple bağlı olarak birlikte atlarsınız. |
+| `!atla [emote]` | Oyun | Komutla birlikte atılan Kick/Twitch emote'u ekranda düşen karakter olur. |
+| `!atla dive` | Oyun | Helikopterden paraşütsüz, havada dönerek çılgın bir dalış yapar. |
+| `!atla drunk` | Oyun | Sarhoş gibi rastgele sağa sola savrularak aşağı düşer. |
+| `!atla tarzan` | Oyun | Uzun bir iple sarkaç hareketi yaparak uçar ve havuza dalar. |
+| `!atla fake` | Oyun | Tam inecekken paraşütü bırakıp jetpack ile havaya uçar ve kaybolur. |
+| `!atla random` | Oyun | Yukarıdaki modlardan birini rastgele seçer ve uygular. |
+| `!atlacount` veya `!atlacount @kullanıcı` | Bot | Kullanıcının genel sıralamadaki sırasını, toplam atlayış sayısını, isabet oranını (%) ve rekor puanını yazar (Takma ad: `!atlarank`). |
+| `!atlalist` | Bot | O anki canlı yayının ilk 5 sıralamasını sohbete listeler. |
+| `!atlatop` | Bot | Tüm zamanların en yüksek rekoruna sahip ilk 10 oyuncusunu listeler. |
+| `!atlakomutlar` / `!atlakomutları` | Bot | Botu ve oyunu tetikleyen tüm interaktif komutları sohbete döker. |
+| `!atlahelp` (veya `!help`) | Bot | Yayıncı yardım komutlarını listeler (Herkes yazabilir). |
+| `!crossweq` | Bot | DropPool Kurulum Paneli bağlantısını sohbete gönderir. |
 
 **🇹🇷 Yayıncı Komutları *(Sadece Yayıncı)*:**
 
 | Komut | Açıklama |
 |---|---|
-| `!droptogether [saniye]` | **Toplu Atlayış (Kuyruk) Modunu** başlatır. Sayı girilirse (örn: `!droptogether 100`) belirtilen süre sonra yayıncı otomatik dahil edilir ve devasa uçak herkesi aynı anda atar. Sayı yazılmazsa manuel modda çalışır (yayıncı `!atla` yazana kadar bekler). |
-| `!meteor [saniye]` | **Meteor Yağmuru Modunu** başlatır (örn: `!meteor 60`). Belirtilen süre bitince veya yayıncı `!atla` yazınca herkes paraşütsüz, göktaşı aleviyle aynı anda yere çakılır. |
-| `!resetdrop` | Bekleme sürelerini sıfırlar, varsa aktif toplu atlayışı ve kuyruğu iptal eder, ekrandaki araçları ve karakterleri anında temizler. |
+| `!droppoolbot enable` / `disable` | DropPoolBot'u yayında açar veya kapatır. |
+| `!droptogether [saniye]` | **Toplu Atlayış (Uçak) Modunu** başlatır. Süre verilirse süre bitince, verilmezse yayıncı `!atla` yazdığında uçak havalanır. Bot sohbete otomatik sıra anonsu geçer. |
+| `!meteor [saniye]` | **Meteor Yağmuru Modunu** başlatır. Herkes paraşütsüz alevler içinde göktaşı gibi düşer. Bot sohbete otomatik anons geçer. |
+| `!resetdrop` | Bekleme sürelerini sıfırlar, varsa aktif toplu atlayışı iptal eder ve sahneyi temizler. |
+| `!droptogetherhelp` | Toplu atlayış modunun nasıl kullanıldığını açıklar. |
+| `!meteorhelp` | Meteor modunun nasıl kullanıldığını açıklar. |
+| `!resetdrophelp` | Sıfırlama komutunu ve OBS kaynak yenileme ipucunu açıklar. |
 
 ---
 
-**🇬🇧 Viewer Commands:**
+**🇬🇧 Viewer & Bot Commands:**
 
-| Command | Description |
-|---|---|
-| `!drop` | Standard parachute drop. |
-| `!drop duo @username` | **Duo drop:** You and the tagged viewer jump together tied with a thin rope; the rope pulls you both when it goes taut. Both count as a normal drop and score separately. The tagged viewer must have chatted in the session (on Kick, typing any command is enough); otherwise only the sender jumps. |
-| `!drop [emote]` | If a Kick/Twitch emote is added to the command, that emote becomes the falling character on screen. |
-| `!drop dive` | Drops from a helicopter without a parachute, spinning wildly in the air. |
-| `!drop drunk` | Falls down swaying left and right randomly, moving like a drunk jumper. |
-| `!drop tarzan` | Swings in from off-screen on a long rope like a pendulum; the rope snaps and they fall into the pool. |
-| `!drop fake` | Glides down as if making a perfect landing, then at the last second ditches the parachute and blasts off with a jetpack. |
-| `!drop random` | Randomly selects and applies one of the modes above (including dive, drunk, tarzan, and fake). |
+| Command | Type | Description |
+|---|---|---|
+| `!drop` | Game | Standard parachute drop. |
+| `!drop duo @username` | Game | **Duo drop:** Jump together tied with a rope; both score separately. |
+| `!drop [emote]` | Game | Kick/Twitch emote becomes the falling character on screen. |
+| `!drop dive` | Game | Drops from a helicopter without a parachute, spinning wildly. |
+| `!drop drunk` | Game | Falls down swaying left and right randomly like a drunk jumper. |
+| `!drop tarzan` | Game | Swings in on a long rope like a pendulum before dropping. |
+| `!drop fake` | Game | Ditches parachute at the last second and blasts off with a jetpack. |
+| `!drop random` | Game | Randomly selects and applies one of the modes above. |
+| `!dropcount` or `!dropcount @user` | Bot | Displays overall rank, total drops, hit rate %, and record score (Alias: `!droprank`). |
+| `!droplist` | Bot | Lists the top 5 players for the current live stream session. |
+| `!droptop` | Bot | Lists the all-time top 10 best scores. |
+| `!dropcommands` | Bot | Posts all game and bot commands into chat. |
+| `!drophelp` (or `!help`) | Bot | Displays broadcaster help menu (can be used by anyone). |
+| `!crossweq` | Bot | Posts the setup panel URL into chat. |
 
 **🇬🇧 Streamer Commands *(Streamer Only)*:**
 
 | Command | Description |
 |---|---|
-| `!droptogether [seconds]` | Starts **Queue Mode**. When a duration is specified (e.g. `!droptogether 100`), the drop triggers automatically after that time, including the broadcaster. Without a number, it waits until the broadcaster types `!drop`. |
-| `!meteor [seconds]` | Starts **Meteor Shower Mode** (e.g. `!meteor 60`). When time expires or streamer drops, everyone crashes down at high speeds without parachutes like fiery meteors. |
-| `!resetdrop` | Resets all viewer cooldowns, cancels ongoing group drops and queues, and clears characters and vehicles from the screen. |
+| `!droppoolbot enable` / `disable` | Turns DropPoolBot on or off in chat. |
+| `!droptogether [seconds]` | Starts **Plane Queue Mode**. When timer expires (or streamer drops), everyone drops simultaneously from a giant plane. Bot announces queue in chat. |
+| `!meteor [seconds]` | Starts **Meteor Shower Mode**. Everyone crashes down like fiery meteors. Bot announces queue in chat. |
+| `!resetdrop` | Resets all viewer cooldowns, cancels ongoing group drops, and clears the screen. |
+| `!droptogetherhelp` | Explains how to use the plane drop mode. |
+| `!meteorhelp` | Explains how to use the meteor shower mode. |
+| `!resetdrophelp` | Explains resetdrop and OBS browser source refresh tips. |
+
+---
+
+## 🤖 Resmi Kick Chatbotu (v8.3) / Official Kick Chatbot
+
+🇹🇷 **DropPoolBot Nasıl Kullanılır?**
+1. Kick sohbetinizde bota moderatör yetkisi verin: `/mod DropPoolBot`
+2. Botu açmak için sohbete yazın: `!droppoolbot enable`
+3. Kapatmak istediğinizde yazın: `!droppoolbot disable`
+4. Bot tamamen resmi Kick Webhook API'si ve Cloudflare Edge altyapısı üzerinde çalışır; sıfır kota tüketir ve sıfır gecikmeyle yanıt verir.
+
+🇬🇧 **How to Use DropPoolBot?**
+1. Give moderator privileges to the bot in your Kick chat: `/mod DropPoolBot`
+2. Turn on the bot by typing: `!droppoolbot enable`
+3. Turn off whenever you want by typing: `!droppoolbot disable`
+4. Powered by the official Kick Webhook API and Cloudflare Edge; uses zero database quota and responds instantly.
 
 ---
 
