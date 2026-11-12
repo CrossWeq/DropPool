@@ -97,6 +97,7 @@
 | `!droptogetherhelp` | Toplu atlayış modunun nasıl kullanıldığını açıklar. |
 | `!meteorhelp` | Meteor modunun nasıl kullanıldığını açıklar. |
 | `!resetdrophelp` | Sıfırlama komutunu ve OBS kaynak yenileme ipucunu açıklar. |
+| `!resetdroplisthelp` | Canlı sıralama sıfırlama komutunu açıklar. |
 
 ---
 
@@ -131,6 +132,7 @@
 | `!droptogetherhelp` | Explains how to use the plane drop mode. |
 | `!meteorhelp` | Explains how to use the meteor shower mode. |
 | `!resetdrophelp` | Explains resetdrop and OBS browser source refresh tips. |
+| `!resetdroplisthelp` | Explains how to reset the live top 5 leaderboard. |
 
 ---
 
