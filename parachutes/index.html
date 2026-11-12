@@ -591,6 +591,19 @@
                             score: typeof u.maxScore === 'number' ? u.maxScore : parseFloat(u.maxScore)
                         }));
 
+                    const usersStats = {};
+                    for (const [key, val] of Object.entries(statsObj)) {
+                        if (val && val.username) {
+                            usersStats[key.toLowerCase()] = {
+                                username: val.username,
+                                jumps: val.jumps || 0,
+                                hits: val.hits || 0,
+                                maxScore: typeof val.maxScore === 'number' ? val.maxScore : parseFloat(val.maxScore || 0),
+                                totalScore: typeof val.totalScore === 'number' ? val.totalScore : parseFloat(val.totalScore || 0)
+                            };
+                        }
+                    }
+
                     await fetch(`${KICK_API_WORKER}/scores/sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -598,7 +611,8 @@
                             id: String(broadcasterId),
                             channel: String(channelName || ''),
                             leaderboard: currentLb,
-                            top10: top10
+                            top10: top10,
+                            users: usersStats
                         })
                     });
                 } catch (e) {

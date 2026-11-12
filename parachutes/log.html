@@ -537,6 +537,19 @@
                         score: typeof item.score === 'number' ? item.score : parseFloat(item.score)
                     })) : [];
 
+                    const usersStats = {};
+                    for (const [key, val] of Object.entries(statsObj)) {
+                        if (val && val.username) {
+                            usersStats[key.toLowerCase()] = {
+                                username: val.username,
+                                jumps: val.jumps || 0,
+                                hits: val.hits || 0,
+                                maxScore: typeof val.maxScore === 'number' ? val.maxScore : parseFloat(val.maxScore || 0),
+                                totalScore: typeof val.totalScore === 'number' ? val.totalScore : parseFloat(val.totalScore || 0)
+                            };
+                        }
+                    }
+
                     if (!broadcasterId && !channelName && top10.length === 0) return false;
 
                     const res = await fetch(`${KICK_API_WORKER}/scores/sync`, {
@@ -546,7 +559,8 @@
                             id: broadcasterId || undefined,
                             channel: channelName || undefined,
                             leaderboard: currentLb,
-                            top10: top10
+                            top10: top10,
+                            users: usersStats
                         })
                     });
                     const resData = await res.json();

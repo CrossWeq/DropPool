@@ -273,16 +273,32 @@
 
                             <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
                                 <span class="bg-cyan-500/20 text-cyan-400 font-bold px-1.5 py-0.5 rounded text-[10px]">4</span>
-                                <div class="space-y-0.5">
-                                    <div class="font-medium text-white flex items-center gap-1.5 flex-wrap">
-                                        <span data-i18n="botStep4Label">Faydalı Chatbot Komutları:</span>
-                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlakomutları</code>
-                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlalist</code>
-                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlatop</code>
-                                        <code class="text-amber-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlahelp</code>
+                                <div class="space-y-1.5 w-full">
+                                    <div class="font-medium text-white flex items-center gap-1.5">
+                                        <span data-i18n="botStep4Label">Botu Tetikleyen Tüm Komutlar:</span>
                                     </div>
-                                    <p class="text-gray-400 text-[10.5px]" data-i18n="botStep4Desc">
-                                        İzleyiciler komut listesini (!atlakomutları), canlı yayın ilk 5'ini (!atlalist) veya Tüm Zamanlar Top 10'unu (!atlatop) görebilir. Yayıncı ise !atlahelp ile yayıncı komutlarını alabilir.
+                                    <div class="space-y-1.5 text-[10.5px]">
+                                        <div class="text-gray-300 flex flex-wrap items-center gap-1">
+                                            <span class="text-cyan-400 font-bold mr-1">İzleyici & Genel:</span>
+                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlakomutları</code>
+                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlacount</code>
+                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlalist</code>
+                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlatop</code>
+                                            <code class="text-amber-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlahelp</code>
+                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!crossweq</code>
+                                        </div>
+                                        <div class="text-gray-300 flex flex-wrap items-center gap-1">
+                                            <span class="text-emerald-400 font-bold mr-1">Yayıncıya Özel:</span>
+                                            <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droppoolbot enable / disable</code>
+                                            <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droptogether [sn]</code>
+                                            <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!meteor [sn]</code>
+                                            <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droptogetherhelp</code>
+                                            <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!meteorhelp</code>
+                                            <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!resetdrophelp</code>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-400 text-[10px]" data-i18n="botStep4Desc">
+                                        !atlahelp komutunu chate yazan herkese bot yayıncı yardım menüsünü sunar. İzleyiciler kendi veya başkasının istatistiklerini (!atlacount @kullanıcı) ve sıralama listelerini sorgulayabilir.
                                     </p>
                                 </div>
                             </div>
@@ -652,6 +668,18 @@
                     <li><code>!resetdrop</code> - Chat'ten yazıldığında süreli atlayışı, kuyruğu ve bekleme sürelerini (cooldown) anında iptal edip sahneyi temizler.</li>
                 </ul>
 
+                <h3 class="text-lg font-semibold text-white mt-4">🤖 Chatbot ve Sohbet Komutları</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><code>${cmd}count</code> veya <code>${cmd}count @kullanıcı</code> (veya <code>${cmd}rank</code>) - Kullanıcının genel sıralamadaki yerini, toplam atlayış sayısını, isabet yüzdesini ve rekor puanını yazar.</li>
+                    <li><code>${cmd}list</code> - O anki canlı yayının ilk 5 sıralamasını listeler.</li>
+                    <li><code>${cmd}top</code> - Tüm zamanların en yüksek rekoruna sahip ilk 10 oyuncusunu listeler.</li>
+                    <li><code>${cmd}komutlar</code> veya <code>!dropcommands</code> - DropPool oyun ve bot komutlarının tümünü sohbete döker.</li>
+                    <li><code>${cmd}help</code> (veya <code>!help</code>) - Yayıncı yardım rehberini sohbete yazar (herkes yazabilir).</li>
+                    <li><code>!crossweq</code> - DropPool Kurulum Paneli web sitesi linkini sohbete gönderir.</li>
+                    <li><strong>Yayıncı Bot Kontrolü:</strong> <code>!droppoolbot enable</code> ve <code>!droppoolbot disable</code> ile bot chate bağlanır/kapatılır.</li>
+                    <li><strong>Yayıncı Yardım Rehberleri:</strong> <code>!droptogetherhelp</code>, <code>!meteorhelp</code> ve <code>!resetdrophelp</code> komutları ilgili modun nasıl çalıştığını ayrıntılı açıklar.</li>
+                </ul>
+
                 <h3 class="text-lg font-semibold text-white mt-4">📊 İstatistik ve Geçmiş Merkezi</h3>
                 <ul class="list-disc pl-5 space-y-1 text-gray-400">
                     <li>"Bağlantıları Oluştur" diyerek 3. linki (İstatistik Merkezi) elde edebilirsiniz.</li>
@@ -699,6 +727,18 @@
                     <li><code>!droptogether</code> or <code>!droptogether [seconds]</code> - Starts Queue Mode. E.g. typing <code>!droptogether 100</code> drops everyone after 100 seconds automatically including the streamer. If no number is given, it waits until the broadcaster types <code>${cmd}</code>.</li>
                     <li><code>!meteor</code> or <code>!meteor [seconds]</code> - Starts Meteor Shower mode with optional duration (e.g. <code>!meteor 60</code>). Everyone drops without parachutes like blazing fire meteors.</li>
                     <li><code>!resetdrop</code> - Cancels any ongoing timed drop or queue immediately, clears cooldowns, and resets the scene.</li>
+                </ul>
+
+                <h3 class="text-lg font-semibold text-white mt-4">🤖 Chatbot &amp; Chat Commands</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                    <li><code>${cmd}count</code> or <code>${cmd}count @user</code> (or <code>${cmd}rank</code>) - Displays the user's overall rank, total drops, hit rate percentage, and record score.</li>
+                    <li><code>${cmd}list</code> - Lists the top 5 players for the current live stream.</li>
+                    <li><code>${cmd}top</code> - Lists the all-time top 10 players and their best scores.</li>
+                    <li><code>${cmd}commands</code> or <code>!dropcommands</code> - Lists all interactive game and bot commands.</li>
+                    <li><code>${cmd}help</code> (or <code>!help</code>) - Displays the broadcaster help guide (can be typed by anyone).</li>
+                    <li><code>!crossweq</code> - Posts the DropPool setup panel link into chat.</li>
+                    <li><strong>Broadcaster Bot Toggle:</strong> <code>!droppoolbot enable</code> and <code>!droppoolbot disable</code> turn the chatbot on or off.</li>
+                    <li><strong>Broadcaster Help Guides:</strong> <code>!droptogetherhelp</code>, <code>!meteorhelp</code>, and <code>!resetdrophelp</code> explain how each mode works in detail.</li>
                 </ul>
 
                 <h3 class="text-lg font-semibold text-white mt-4">📊 Stats & History Center</h3>
