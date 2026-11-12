@@ -114,6 +114,8 @@
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
         const showTrail = urlParams.get('tr') !== '0'; // Varsayılan olarak true (1)
         const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
+        const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
+        let broadcasterId = null;
 
         // --- DOĞUM GÜNÜ TEMASI KONTROLÜ ---
         const birthMonth = parseInt(urlParams.get('bm'));
@@ -478,6 +480,7 @@
                 localStorage.setItem('droppool_leaderboard', JSON.stringify(leaderboard));
             } catch (e) { }
             syncChannel.postMessage({ type: 'LEADERBOARD_UPDATE', leaderboard });
+            syncScoresToWorker();
         }
 
         // Sıralamayı manuel sıfırlamak için global fonksiyon
@@ -487,6 +490,7 @@
                 localStorage.removeItem('droppool_leaderboard');
             } catch (e) { }
             syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
+            syncScoresToWorker();
             console.log("Atla Sıralaması sıfırlandı!");
         };
 
@@ -553,9 +557,53 @@
 
                 localStorage.setItem('droppool_stats', JSON.stringify(stats));
                 syncChannel.postMessage({ type: 'STATS_UPDATE', stats: stats });
+                if (type === 'SCORE') {
+                    syncScoresToWorker();
+                }
             } catch (e) {
                 console.error("Stats kaydetme hatası:", e);
             }
+        }
+
+        let syncScoresTimer = null;
+        function syncScoresToWorker() {
+            if (!broadcasterId) return;
+            if (syncScoresTimer) clearTimeout(syncScoresTimer);
+            syncScoresTimer = setTimeout(async () => {
+                try {
+                    const currentLb = Array.isArray(leaderboard) ? leaderboard.slice(0, 5).map(item => ({
+                        username: item.username,
+                        score: typeof item.score === 'number' ? item.score : parseFloat(item.score)
+                    })) : [];
+
+                    let statsObj = {};
+                    try {
+                        const s = localStorage.getItem('droppool_stats');
+                        if (s) statsObj = JSON.parse(s);
+                    } catch (e) { }
+
+                    const top10 = Object.values(statsObj)
+                        .filter(u => u && u.username && (u.maxScore !== undefined && u.maxScore !== null))
+                        .sort((a, b) => (b.maxScore || 0) - (a.maxScore || 0))
+                        .slice(0, 10)
+                        .map(u => ({
+                            username: u.username,
+                            score: typeof u.maxScore === 'number' ? u.maxScore : parseFloat(u.maxScore)
+                        }));
+
+                    await fetch(`${KICK_API_WORKER}/scores/sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: String(broadcasterId),
+                            leaderboard: currentLb,
+                            top10: top10
+                        })
+                    });
+                } catch (e) {
+                    console.warn('[DropPool] Skor senkronizasyon uyarısı:', e);
+                }
+            }, 1000);
         }
 
         // --- 2. MATTER.JS KURULUMU ---
@@ -1933,22 +1981,17 @@
 
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
-            // --- Kick resmi API (webhook) ---
-            // Worker (kick-api-worker/worker.js) deploy edildikten sonra adresini buraya yazın
-            // ya da overlay linkine ?api=https://... ekleyin.
-            const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
-
             // Worker'ı kanal için abone ettir ve broadcaster_user_id'yi al
-            let broadcasterId = null;
             let subscribeData = null;
             for (let attempt = 1; attempt <= 3 && !broadcasterId; attempt++) {
                 try {
-                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}`);
+                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}`);
                     const data = await res.json();
                     if (data && data.id) {
                         broadcasterId = data.id;
                         subscribeData = data;
                         console.log('[Kick] Kanal abone edildi, broadcaster ID:', broadcasterId);
+                        syncScoresToWorker();
                     } else {
                         console.error('[Kick] Abonelik hatası:', data);
                     }

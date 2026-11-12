@@ -212,6 +212,88 @@
                     </label>
                 </div>
 
+                <!-- DropPool Bot Bilgilendirme (Sadece Kick) -->
+                <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3.5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <span>🤖</span><span data-i18n="botInfoTitle">DropPool Bot (Kick)</span>
+                        </label>
+                        <span class="text-xs text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded font-mono font-medium">@DropPoolBot</span>
+                    </div>
+
+                    <p class="text-xs text-gray-400 leading-relaxed" data-i18n="botInfoDesc">
+                        Kick sohbetinde izleyicilerinize komutlara otomatik cevap veren yardımcı bottur. Varsayılan olarak kapalıdır.
+                    </p>
+
+                    <div class="text-xs bg-gray-900/80 border border-gray-800 rounded-xl p-3.5 space-y-2.5">
+                        <div class="text-gray-200 font-semibold text-xs flex items-center gap-1.5">
+                            <span>🚀</span>
+                            <span data-i18n="botInfoHowToTitle">Chatbot Nasıl Kullanılır?</span>
+                        </div>
+
+                        <div class="space-y-2 text-[11px] text-gray-300">
+                            <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                                <span class="bg-cyan-500/20 text-cyan-400 font-bold px-1.5 py-0.5 rounded text-[10px]">1</span>
+                                <div class="space-y-0.5">
+                                    <div class="font-medium text-white flex items-center gap-1.5 flex-wrap">
+                                        <span data-i18n="botStep1Label">Sohbette bota mod verin:</span>
+                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">/mod DropPoolBot</code>
+                                    </div>
+                                    <p class="text-gray-400 text-[10.5px]" data-i18n="botStep1Desc">
+                                        Botun yavaş mod veya sadece takipçilere özel sohbet kısıtlamalarına takılmadan anında cevap verebilmesi için gereklidir.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                                <span class="bg-cyan-500/20 text-cyan-400 font-bold px-1.5 py-0.5 rounded text-[10px]">2</span>
+                                <div class="space-y-0.5">
+                                    <div class="font-medium text-white flex items-center gap-1.5 flex-wrap">
+                                        <span data-i18n="botStep2Label">Botu açmak için sohbete yazın:</span>
+                                        <code class="text-emerald-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!droppoolbot enable</code>
+                                    </div>
+                                    <p class="text-gray-400 text-[10.5px]" data-i18n="botStep2Desc">
+                                        Bot aktifleşir ve sohbete "DropPoolBot enabled" yazar. (Büyük/küçük harf duyarsızdır: DropPoolBot Enable da yazabilirsiniz).
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                                <span class="bg-cyan-500/20 text-cyan-400 font-bold px-1.5 py-0.5 rounded text-[10px]">3</span>
+                                <div class="space-y-0.5">
+                                    <div class="font-medium text-white flex items-center gap-1.5 flex-wrap">
+                                        <span data-i18n="botStep3Label">Kapatmak istediğinizde sohbete yazın:</span>
+                                        <code class="text-red-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!droppoolbot disable</code>
+                                    </div>
+                                    <p class="text-gray-400 text-[10.5px]" data-i18n="botStep3Desc">
+                                        Bot kapanır ve sohbete "DropPoolBot disabled" yazarak susar.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                                <span class="bg-cyan-500/20 text-cyan-400 font-bold px-1.5 py-0.5 rounded text-[10px]">4</span>
+                                <div class="space-y-0.5">
+                                    <div class="font-medium text-white flex items-center gap-1.5 flex-wrap">
+                                        <span data-i18n="botStep4Label">Faydalı Chatbot Komutları:</span>
+                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlakomutları</code>
+                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlalist</code>
+                                        <code class="text-cyan-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlatop</code>
+                                        <code class="text-amber-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!atlahelp</code>
+                                    </div>
+                                    <p class="text-gray-400 text-[10.5px]" data-i18n="botStep4Desc">
+                                        İzleyiciler komut listesini (!atlakomutları), canlı yayın ilk 5'ini (!atlalist) veya Tüm Zamanlar Top 10'unu (!atlatop) görebilir. Yayıncı ise !atlahelp ile yayıncı komutlarını alabilir.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-[10.5px] text-gray-500 pt-1" data-i18n="botInfoNote">
+                            ⚠️ Açma/kapatma komutlarını sadece yayıncının kendisi kullanabilir. Bot istemiyorsanız hiçbir işlem yapmanıza gerek yoktur, oyun botsuz da %100 çalışır.
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Havuz Boyutu -->
                 <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3">
                     <div class="space-y-1 mb-3">
@@ -471,6 +553,18 @@
             bgToggleDesc: { tr: "Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.", en: "If disabled, only the pool is visible and the floor becomes transparent." },
             trailToggleTitle: { tr: "Karakter Efekti", en: "Character Effect" },
             trailToggleDesc: { tr: "Kapatırsanız düşen karakterlerin arkasındaki renkli ışıltı efekti görünmez.", en: "If disabled, the colorful glow effect behind falling characters is hidden." },
+            botInfoTitle: { tr: "DropPool Bot (Kick)", en: "DropPool Bot (Kick)" },
+            botInfoDesc: { tr: "Kick sohbetinde izleyicilerinize komutlara otomatik cevap veren yardımcı bottur. Varsayılan olarak kapalıdır.", en: "A helper bot that automatically replies to commands in Kick chat. Disabled by default." },
+            botInfoHowToTitle: { tr: "Chatbot Nasıl Kullanılır?", en: "How to Use Chatbot?" },
+            botStep1Label: { tr: "Sohbette bota mod verin:", en: "Give mod role in chat:" },
+            botStep1Desc: { tr: "Botun yavaş mod veya sadece takipçilere özel sohbet kısıtlamalarına takılmadan anında cevap verebilmesi için gereklidir.", en: "Required so the bot can reply instantly without slow-mode or follower-only restrictions." },
+            botStep2Label: { tr: "Botu açmak için sohbete yazın:", en: "Type in chat to enable:" },
+            botStep2Desc: { tr: 'Bot aktifleşir ve sohbete "DropPoolBot enabled" yazar. (Büyük/küçük harf duyarsızdır: DropPoolBot Enable da yazabilirsiniz).', en: 'The bot activates and confirms with "DropPoolBot enabled" in chat. (Case-insensitive: you can also type DropPoolBot Enable).' },
+            botStep3Label: { tr: "Kapatmak istediğinizde sohbete yazın:", en: "Type in chat to disable:" },
+            botStep3Desc: { tr: 'Bot kapanır ve sohbete "DropPoolBot disabled" yazarak susar.', en: 'The bot shuts down and confirms with "DropPoolBot disabled" in chat.' },
+            botStep4Label: { tr: "Faydalı Chatbot Komutları:", en: "Useful Chatbot Commands:" },
+            botStep4Desc: { tr: 'İzleyiciler komut listesini (!atlakomutları), canlı yayın ilk 5\'ini (!atlalist) veya Tüm Zamanlar Top 10\'unu (!atlatop) görebilir. Yayıncı ise !atlahelp ile yayıncı komutlarını alabilir.', en: 'Viewers can see commands (!atlakomutları), live stream top 5 (!atlalist) or All-Time Top 10 (!atlatop). Streamers can type !atlahelp for broadcaster commands.' },
+            botInfoNote: { tr: "⚠️ Açma/kapatma komutlarını sadece yayıncının kendisi kullanabilir. Bot istemiyorsanız hiçbir işlem yapmanıza gerek yoktur, oyun botsuz da %100 çalışır.", en: "⚠️ Only the broadcaster can use enable/disable commands. If you don't want the bot, no action is needed; the game runs 100% without it." },
             poolSizeTitle: { tr: "Oyun Boyutu", en: "Game Size" },
             poolSizeDesc: { tr: "Havuzun, karakterlerin ve tüm objelerin ekrandaki büyüklüğünü ayarlayın.", en: "Adjust the screen size of the pool, characters, and all objects." },
             poolSizeNormal: { tr: "Normal", en: "Normal" },
