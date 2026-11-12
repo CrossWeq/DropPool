@@ -152,6 +152,7 @@
                             <table class="w-full text-left border-collapse">
                                 <thead class="sticky top-0 bg-gray-900 border-b border-gray-800 z-10">
                                     <tr class="text-xs uppercase tracking-wider text-gray-400">
+                                        <th class="px-4 py-4 font-semibold text-center w-16" data-i18n="thRank">Sıra</th>
                                         <th class="px-6 py-4 font-semibold" data-i18n="thUser">Kullanıcı Adı</th>
                                         <th class="px-6 py-4 font-semibold text-center" data-i18n="thJumps">Toplam
                                             Atlayış</th>
@@ -233,6 +234,7 @@
             tabStats: { tr: "Oyuncu İstatistikleri", en: "Player Stats" },
             tabLogs: { tr: "Canlı Olay Akışı (Log)", en: "Live Event Log" },
             allPlayers: { tr: "Tüm Oyuncular", en: "All Players" },
+            thRank: { tr: "Sıra", en: "Rank" },
             thUser: { tr: "Kullanıcı Adı", en: "Username" },
             thJumps: { tr: "Toplam Atlayış", en: "Total Drops" },
             thHitRate: { tr: "İsabet Oranı", en: "HIT SCORE" },
@@ -386,42 +388,87 @@
             }
             empty.classList.add('hidden');
 
-            // --- Top 10 ---
-            const sortedByScore = [...users].sort((a, b) => b.maxScore - a.maxScore).slice(0, 10);
+            // --- Top 10 (Sadece 0'dan büyük puanı olanlar listelenir; 0.00 puan olanlar listelenmez) ---
+            const scoredUsers = users.filter(u => u && (parseFloat(u.maxScore) || 0) > 0);
+            const sortedByScore = [...scoredUsers].sort((a, b) => (b.maxScore || 0) - (a.maxScore || 0)).slice(0, 10);
             const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-            let top10Html = '';
-            sortedByScore.forEach((u, index) => {
-                let medal = `${index + 1}.`;
-                let bgClass = 'bg-white/5 hover:bg-white/10';
-                if (index === 0) { medal = '🥇'; bgClass = 'bg-yellow-500/20 border-yellow-500/30 border hover:bg-yellow-500/30'; }
-                if (index === 1) { medal = '🥈'; bgClass = 'bg-gray-300/20 border-gray-300/30 border hover:bg-gray-300/30'; }
-                if (index === 2) { medal = '🥉'; bgClass = 'bg-orange-600/20 border-orange-600/30 border hover:bg-orange-600/30'; }
+            
+            if (sortedByScore.length === 0) {
+                top10.innerHTML = `<li class="text-gray-500 text-center py-4 text-sm">${i18n.noLogs[lang]}</li>`;
+            } else {
+                let top10Html = '';
+                sortedByScore.forEach((u, index) => {
+                    let medal = `${index + 1}.`;
+                    let bgClass = 'bg-white/5 hover:bg-white/10';
+                    if (index === 0) { medal = '🥇'; bgClass = 'bg-yellow-500/20 border-yellow-500/30 border hover:bg-yellow-500/30'; }
+                    if (index === 1) { medal = '🥈'; bgClass = 'bg-gray-300/20 border-gray-300/30 border hover:bg-gray-300/30'; }
+                    if (index === 2) { medal = '🥉'; bgClass = 'bg-orange-600/20 border-orange-600/30 border hover:bg-orange-600/30'; }
 
-                top10Html += `
-                    <li class="flex justify-between items-center px-4 py-3 rounded-xl transition-colors ${bgClass}">
-                        <div class="flex items-center gap-3">
-                            <span class="font-bold text-lg w-7 text-center ${index < 3 ? 'text-white' : 'text-gray-500'}">${medal}</span>
-                            <span class="font-medium text-white">${escapeHtml(u.username)}</span>
-                        </div>
-                        <span class="font-bold text-green-400">${u.maxScore.toFixed(2)}</span>
-                    </li>
-                `;
+                    top10Html += `
+                        <li class="flex justify-between items-center px-4 py-3 rounded-xl transition-colors ${bgClass}">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold text-lg w-7 text-center ${index < 3 ? 'text-white' : 'text-gray-500'}">${medal}</span>
+                                <span class="font-medium text-white">${escapeHtml(u.username)}</span>
+                            </div>
+                            <span class="font-bold text-green-400">${u.maxScore.toFixed(2)}</span>
+                        </li>
+                    `;
+                });
+                top10.innerHTML = top10Html;
+            }
+
+            // --- Genel Liste Sıralaması Hesaplama ---
+            // Tüm oyuncuları rekor puana göre (eşitlikte toplam puan ve atlayışa göre) sırala
+            const allSorted = [...users].sort((a, b) => {
+                const sDiff = (b.maxScore || 0) - (a.maxScore || 0);
+                if (sDiff !== 0) return sDiff;
+                const tDiff = (b.totalScore || 0) - (a.totalScore || 0);
+                if (tDiff !== 0) return tDiff;
+                return (b.jumps || 0) - (a.jumps || 0);
             });
-            top10.innerHTML = top10Html;
 
-            // --- All Users Table ---
+            // Her kullanıcının genel sıralamadaki yerini eşle (Harita)
+            // Sadece puanı > 0 olanlara resmi sıra verilir; 0.00 puanlılar '-' olarak gösterilir
+            const rankMap = new Map();
+            let currentRank = 1;
+            allSorted.forEach(u => {
+                const key = String(u.username || '').toLowerCase();
+                if ((parseFloat(u.maxScore) || 0) > 0) {
+                    rankMap.set(key, currentRank++);
+                } else {
+                    rankMap.set(key, null);
+                }
+            });
+
+            // --- Tüm Oyuncular Tablosu (Arama ve Filtreleme) ---
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filteredUsers = users.filter(u => u.username.toLowerCase().includes(query));
-
-            filteredUsers.sort((a, b) => b.maxScore - a.maxScore);
+            const filteredUsers = allSorted.filter(u => u.username.toLowerCase().includes(query));
 
             let statsHtml = '';
             filteredUsers.forEach(u => {
                 let hitRate = u.jumps > 0 ? ((u.hits || 0) / u.jumps) * 100 : 0;
                 let totalScore = u.totalScore || 0;
                 let lastJumpTime = u.lastJumpTime || '-';
+                
+                const userKey = String(u.username || '').toLowerCase();
+                const rank = rankMap.get(userKey);
+                
+                let rankBadge = '<span class="text-gray-600 font-mono text-xs font-semibold">-</span>';
+                if (rank === 1) {
+                    rankBadge = '<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-black shadow-sm" title="1. Sıra">🥇</span>';
+                } else if (rank === 2) {
+                    rankBadge = '<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-300/20 text-gray-300 border border-gray-300/30 text-xs font-black shadow-sm" title="2. Sıra">🥈</span>';
+                } else if (rank === 3) {
+                    rankBadge = '<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-orange-600/20 text-orange-400 border border-orange-600/30 text-xs font-black shadow-sm" title="3. Sıra">🥉</span>';
+                } else if (rank && rank <= 10) {
+                    rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold font-mono">#${rank}</span>`;
+                } else if (rank) {
+                    rankBadge = `<span class="text-gray-400 font-mono text-xs font-semibold">#${rank}</span>`;
+                }
+
                 statsHtml += `
                     <tr class="hover:bg-white/5 transition-colors">
+                        <td class="px-4 py-4 whitespace-nowrap text-center">${rankBadge}</td>
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${escapeHtml(u.username)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-blue-400 font-bold">${u.jumps}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-purple-400 font-bold">%${hitRate.toFixed(1)}</td>
@@ -471,7 +518,7 @@
                     } catch (e) { statsObj = statsData || {}; }
 
                     const top10 = Object.values(statsObj)
-                        .filter(u => u && u.username && (u.maxScore !== undefined && u.maxScore !== null))
+                        .filter(u => u && u.username && (parseFloat(u.maxScore) || 0) > 0)
                         .sort((a, b) => (b.maxScore || 0) - (a.maxScore || 0))
                         .slice(0, 10)
                         .map(u => ({

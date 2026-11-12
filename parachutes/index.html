@@ -583,7 +583,7 @@
                     } catch (e) { }
 
                     const top10 = Object.values(statsObj)
-                        .filter(u => u && u.username && (u.maxScore !== undefined && u.maxScore !== null))
+                        .filter(u => u && u.username && (parseFloat(u.maxScore) || 0) > 0)
                         .sort((a, b) => (b.maxScore || 0) - (a.maxScore || 0))
                         .slice(0, 10)
                         .map(u => ({
