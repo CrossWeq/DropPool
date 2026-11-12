@@ -93,6 +93,7 @@
 | `!droptogether [saniye]` | **Toplu Atlayış (Uçak) Modunu** başlatır. Süre verilirse süre bitince, verilmezse yayıncı `!atla` yazdığında uçak havalanır. Bot sohbete otomatik sıra anonsu geçer. |
 | `!meteor [saniye]` | **Meteor Yağmuru Modunu** başlatır. Herkes paraşütsüz alevler içinde göktaşı gibi düşer. Bot sohbete otomatik anons geçer. |
 | `!resetdrop` | Bekleme sürelerini sıfırlar, varsa aktif toplu atlayışı iptal eder ve sahneyi temizler. |
+| `!resetdroplist` / `!resetlist` | Canlı yayın ilk 5 sıralamasını (overlay ve bot) anında sıfırlar. |
 | `!droptogetherhelp` | Toplu atlayış modunun nasıl kullanıldığını açıklar. |
 | `!meteorhelp` | Meteor modunun nasıl kullanıldığını açıklar. |
 | `!resetdrophelp` | Sıfırlama komutunu ve OBS kaynak yenileme ipucunu açıklar. |
@@ -126,6 +127,7 @@
 | `!droptogether [seconds]` | Starts **Plane Queue Mode**. When timer expires (or streamer drops), everyone drops simultaneously from a giant plane. Bot announces queue in chat. |
 | `!meteor [seconds]` | Starts **Meteor Shower Mode**. Everyone crashes down like fiery meteors. Bot announces queue in chat. |
 | `!resetdrop` | Resets all viewer cooldowns, cancels ongoing group drops, and clears the screen. |
+| `!resetdroplist` / `!resetlist` | Instantly resets the live top 5 leaderboard (overlay and bot). |
 | `!droptogetherhelp` | Explains how to use the plane drop mode. |
 | `!meteorhelp` | Explains how to use the meteor shower mode. |
 | `!resetdrophelp` | Explains resetdrop and OBS browser source refresh tips. |
