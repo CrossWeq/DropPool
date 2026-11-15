@@ -139,16 +139,26 @@
 ## 🤖 Resmi Kick Chatbotu (v8.3) / Official Kick Chatbot
 
 🇹🇷 **DropPoolBot Nasıl Kullanılır?**
-1. Kick sohbetinizde bota moderatör yetkisi verin: `/mod DropPoolBot`
-2. Botu açmak için sohbete yazın: `!droppoolbot enable`
-3. Kapatmak istediğinizde yazın: `!droppoolbot disable`
-4. Bot tamamen resmi Kick Webhook API'si ve Cloudflare Edge altyapısı üzerinde çalışır; sıfır kota tüketir ve sıfır gecikmeyle yanıt verir.
+- **Seçenek 1 (Önerilen — Modluksuz & Resmi Bot Rozetli):**
+  1. [Kick ile Botu Bağla](https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect) bağlantısından yalnızca `user:read` ve `chat:write` izniyle giriş yapın.
+  2. `/mod` vermenize gerek kalmadan bot anında aktifleşir ve sohbete resmi **Bot** rozetiyle yazar.
+  3. Tokenlarınız ayrı bir D1 tablosunda **AES-256-GCM** ile şifreli tutulur, hiçbir arayüzden görüntülenemez. İstediğiniz zaman sohbete `!droppoolbot disconnect` yazarak tokenı kalıcı olarak silebilirsiniz.
+- **Seçenek 2 (Klasik Yöntem):**
+  1. Kick sohbetinizde bota moderatör yetkisi verin: `/mod DropPoolBot`
+  2. Botu açmak için sohbete yazın: `!droppoolbot enable`
+  3. Kapatmak istediğinizde yazın: `!droppoolbot disable`
+- Bot tamamen resmi Kick Webhook API'si ve Cloudflare Edge altyapısı üzerinde çalışır; sıfır kota tüketir ve sıfır gecikmeyle yanıt verir.
 
 🇬🇧 **How to Use DropPoolBot?**
-1. Give moderator privileges to the bot in your Kick chat: `/mod DropPoolBot`
-2. Turn on the bot by typing: `!droppoolbot enable`
-3. Turn off whenever you want by typing: `!droppoolbot disable`
-4. Powered by the official Kick Webhook API and Cloudflare Edge; uses zero database quota and responds instantly.
+- **Option 1 (Recommended — No Mod Required & Official Bot Badge):**
+  1. Sign in via [Connect Bot with Kick](https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect) granting only `user:read` and `chat:write`.
+  2. The bot activates immediately without `/mod` and posts with the official **Bot** badge.
+  3. Your tokens are stored AES-256-GCM encrypted in an isolated D1 table and never exposed anywhere. Type `!droppoolbot disconnect` in chat anytime to revoke and delete your token.
+- **Option 2 (Classic Method):**
+  1. Give moderator privileges to the bot in your Kick chat: `/mod DropPoolBot`
+  2. Turn on the bot by typing: `!droppoolbot enable`
+  3. Turn off whenever you want by typing: `!droppoolbot disable`
+- Powered by the official Kick Webhook API and Cloudflare Edge; uses zero database quota and responds instantly.
 
 ---
 
