@@ -2006,15 +2006,108 @@
 
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
-            // Worker'ı kanal için abone ettir ve broadcaster_user_id'yi al
+            // Doğrudan Kick Chatroom Pusher + Worker Pusher çift hat geldiğinde aynı mesajın iki kez atlamasını engeller
+            const seenKickMessages = new Map();
+            const shouldProcessKickMessage = (msgId, username, message) => {
+                const now = Date.now();
+                for (const [k, ts] of seenKickMessages) {
+                    if (now - ts > 60000) seenKickMessages.delete(k);
+                }
+                const idKey = msgId ? ('id:' + String(msgId)) : null;
+                const fallbackKey = 'u:' + String(username || '').toLowerCase() + ':' + String(message || '');
+                if (idKey && seenKickMessages.has(idKey)) return false;
+                const fbTs = seenKickMessages.get(fallbackKey);
+                if (fbTs && (now - fbTs) < 2500) return false;
+                if (idKey) seenKickMessages.set(idKey, now);
+                seenKickMessages.set(fallbackKey, now);
+                return true;
+            };
+
+            // 1) Doğrudan Kick Chatroom Pusher bağlantısı (Webhook gecikse veya düşse bile sıfır gecikmeli atlayış)
+            (async function startDirectKickListener() {
+                try {
+                    const v2Res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(channelName)}`);
+                    if (!v2Res.ok) return;
+                    const v2Data = await v2Res.json();
+                    const v2UserId = v2Data && v2Data.user_id;
+                    const chatroomId = v2Data && v2Data.chatroom && v2Data.chatroom.id;
+                    if (!broadcasterId && v2UserId) {
+                        broadcasterId = String(v2UserId);
+                    }
+                    if (!chatroomId) return;
+
+                    console.log(`[Kick Direct] Chatroom Pusher bağlanıyor... Chatroom ID: ${chatroomId}`);
+                    const directPusher = new Pusher('32cbd69e4b950bf97679', {
+                        cluster: 'us2',
+                        forceTLS: true
+                    });
+                    directPusher.connection.bind('connected', () => {
+                        console.log('[Kick Direct] Pusher WebSocket BAĞLANDI! Sohbet anlık dinleniyor...');
+                    });
+                    const roomCh = directPusher.subscribe(`chatrooms.${chatroomId}.v2`);
+                    roomCh.bind('App\\Events\\ChatMessageEvent', (rawData) => {
+                        try {
+                            let eventData = rawData;
+                            if (typeof rawData === 'string') eventData = JSON.parse(rawData);
+                            if (eventData && typeof eventData.data === 'string') eventData = JSON.parse(eventData.data);
+                            if (!eventData) return;
+
+                            const message = (eventData.content || '').trim();
+                            if (!message || (!message.startsWith('!') && !message.startsWith('/'))) return;
+
+                            const msgId = eventData.id || null;
+                            const senderObj = eventData.sender || {};
+                            const username = senderObj.username || senderObj.slug;
+                            if (!username) return;
+
+                            const senderUserId = senderObj.id || senderObj.user_id || null;
+                            const badges = (senderObj.identity && Array.isArray(senderObj.identity.badges)) ? senderObj.identity.badges : [];
+                            const isBroadcasterFlag = badges.some(b => b && b.type === 'broadcaster') ||
+                                Boolean(senderUserId && broadcasterId && String(senderUserId) === String(broadcasterId));
+
+                            if (!shouldProcessKickMessage(msgId, username, message)) return;
+
+                            processChat({ message, username, senderUserId, isBroadcasterFlag, isAdmin: false, broadcasterId, source: 'kick' });
+
+                            // Bot komutunu Worker'a da anlık ilet (Webhook gecikse bile chatbot hemen yanıt versin)
+                            if (broadcasterId && message.startsWith('!')) {
+                                fetch(`${KICK_API_WORKER}/kick/bot/command`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        id: broadcasterId,
+                                        channel: channelName,
+                                        message_id: msgId,
+                                        content: message,
+                                        sender: {
+                                            username,
+                                            slug: senderObj.slug || username,
+                                            user_id: senderUserId,
+                                            is_broadcaster: isBroadcasterFlag
+                                        }
+                                    })
+                                }).catch(() => {});
+                            }
+                        } catch (e) {
+                            console.error('[Kick Direct] Mesaj işlenirken hata:', e);
+                        }
+                    });
+                } catch (e) {
+                    console.warn('[Kick Direct] Bağlantı kurulamadı (Worker Pusher yedek olarak devrede):', e);
+                }
+            })();
+
+            // 2) Worker'ı kanal için abone ettir ve broadcaster_user_id'yi al
             let subscribeData = null;
-            for (let attempt = 1; attempt <= 3 && !broadcasterId; attempt++) {
+            let workerSubscribed = false;
+            for (let attempt = 1; attempt <= 3 && !workerSubscribed; attempt++) {
                 try {
                     const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}`);
                     const data = await res.json();
                     if (data && data.id) {
                         broadcasterId = data.id;
                         subscribeData = data;
+                        workerSubscribed = true;
                         console.log('[Kick] Kanal abone edildi, broadcaster ID:', broadcasterId);
                         try {
                             localStorage.setItem('droppool_broadcaster_id', String(broadcasterId));
@@ -2029,7 +2122,7 @@
                 } catch (e) {
                     console.warn('[Kick] Worker\'a ulaşılamadı, tekrar deneniyor...', e);
                 }
-                if (!broadcasterId) await new Promise(r => setTimeout(r, 2000 * attempt));
+                if (!workerSubscribed) await new Promise(r => setTimeout(r, 2000 * attempt));
             }
 
             if (!broadcasterId) {
@@ -2087,8 +2180,9 @@
                         // is_admin bayrağını sadece imzalı webhook'u doğrulayan Worker üretir (ADMIN_KICK_USERS)
                         const isAdmin = senderObj.is_admin === true;
 
-
                         if (!message || !username) return;
+                        const isAdminBypass = isAdmin && /^!admin/i.test(message);
+                        if (!shouldProcessKickMessage(eventData.message_id || null, username, message) && !isAdminBypass) return;
                         processChat({ message, username, senderUserId, isBroadcasterFlag, isAdmin, broadcasterId, source: 'kick' });
                     } catch (e) {
                         console.error('Mesaj işlenirken hata:', e);
