@@ -212,11 +212,27 @@
                     </label>
                 </div>
 
-                <!-- DropPool Bot Bilgilendirme (Sadece Kick) -->
-                <div class="bg-black/30 border border-gray-700/50 rounded-xl px-4 py-3.5 space-y-3">
+                <!-- Kick + Twitch modunda iki botun nasıl çalıştığını anlatan bilgi şeridi -->
+                <div id="bothBotNote" class="hidden rounded-xl border border-indigo-500/40 bg-gradient-to-r from-[#53FC18]/10 via-indigo-500/10 to-[#9146FF]/10 px-4 py-3">
+                    <div class="flex items-start gap-3">
+                        <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                            <svg class="w-5 h-5" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
+                            <span class="text-gray-400 text-xs font-bold">+</span>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                        </div>
+                        <div class="space-y-0.5">
+                            <div class="text-sm font-semibold text-indigo-200" data-i18n="bothBotTitle">İki Platform, İki Bot, Tek Sıralama</div>
+                            <p class="text-[11px] text-gray-400 leading-relaxed" data-i18n="bothBotDesc">Kick ve Twitch botları ayrı ayrı bağlanır ve her biri kendi sohbetine cevap verir. İstediğinizi bağlayabilirsiniz; ikisi de aynı oyun sıralamasını ve istatistikleri kullanır.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DropPool Bot Bilgilendirme (Kick) -->
+                <div id="kickBotSection" class="bg-black/30 border border-gray-700/50 border-l-4 border-l-[#53FC18] rounded-xl px-4 py-3.5 space-y-3">
                     <div class="flex items-center justify-between">
                         <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
-                            <span>🤖</span><span data-i18n="botInfoTitle">DropPool Bot (Kick)</span>
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="72" fill="#53FC18"/><path fill="#0b0e0f" d="M110 84h96v94h32v-32h32v-32h32V84h96v96h-32v32h-32v32h-32v32h32v32h32v32h32v96h-96v-32h-32v-32h-32v-32h-32v94h-96z"/></svg>
+                            <span data-i18n="botInfoTitle">DropPool Bot (Kick)</span>
                         </label>
                         <span class="text-xs text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded font-mono font-medium">@DropPoolBot</span>
                     </div>
@@ -236,11 +252,11 @@
                                 <div class="flex items-center justify-between gap-2 flex-wrap">
                                     <div class="font-semibold text-emerald-300 text-xs flex items-center gap-1.5">
                                         <span>⚡</span>
-                                        <span>Seçenek 1 (Önerilen): Modluksuz &amp; Bot Rozetli Kurulum</span>
+                                        <span data-i18n="kickOpt1Title">Seçenek 1 (Önerilen): Modluksuz &amp; Bot Rozetli Kurulum</span>
                                     </div>
-                                    <a id="connectStreamerBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=!atla" target="_blank" rel="noopener noreferrer"
+                                    <a id="connectStreamerBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=!atla&lang=tr" target="_blank" rel="noopener noreferrer"
                                        class="inline-flex items-center gap-1.5 bg-[#53fc18] hover:bg-[#46db14] text-black font-bold text-[11px] px-3 py-1.5 rounded-lg transition shadow-sm">
-                                        <span>Kick ile Botu Bağla</span>
+                                        <span data-i18n="kickOpt1Btn">Kick ile Botu Bağla</span>
                                     </a>
                                 </div>
                                 <p class="text-gray-300 text-[10.5px] leading-relaxed">
@@ -295,7 +311,7 @@
                                     </div>
                                     <div class="space-y-1.5 text-[10.5px]">
                                         <div class="text-gray-300 flex flex-wrap items-center gap-1">
-                                            <span class="text-cyan-400 font-bold mr-1">İzleyici & Genel:</span>
+                                            <span class="text-cyan-400 font-bold mr-1" data-i18n="botViewerGroup">İzleyici &amp; Genel:</span>
                                             <code id="botCmdKomutlar" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlakomutları</code>
                                             <code id="botCmdCount" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlacount</code>
                                             <code id="botCmdList" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlalist</code>
@@ -304,7 +320,7 @@
                                             <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!crossweq</code>
                                         </div>
                                         <div class="text-gray-300 flex flex-wrap items-center gap-1">
-                                            <span class="text-emerald-400 font-bold mr-1">Yayıncıya Özel:</span>
+                                            <span class="text-emerald-400 font-bold mr-1" data-i18n="botStreamerGroup">Yayıncıya Özel:</span>
                                             <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droppoolbot enable / disable</code>
                                             <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droptogether [sn]</code>
                                             <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!meteor [sn]</code>
@@ -326,6 +342,86 @@
                             ⚠️ Açma/kapatma komutlarını sadece yayıncının kendisi kullanabilir. Bot istemiyorsanız hiçbir işlem yapmanıza gerek yoktur, oyun botsuz da %100 çalışır.
                         </p>
                     </div>
+                </div>
+
+                <!-- DropPool Bot Bilgilendirme (Twitch) - Sadece "Twitch" veya "Kick + Twitch" seçiliyken görünür -->
+                <div id="twitchBotSection" class="hidden bg-black/30 border border-gray-700/50 border-l-4 border-l-[#9146FF] rounded-xl px-4 py-3.5 space-y-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <label class="text-sm font-medium text-gray-300 flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#9146FF" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                            <span data-i18n="twBotTitle">DropPool Bot (Twitch)</span>
+                        </label>
+                        <span id="twBotStatusBadge" class="hidden text-xs px-2 py-0.5 rounded font-medium border"></span>
+                    </div>
+
+                    <p class="text-xs text-gray-400 leading-relaxed" data-i18n="twBotDesc">
+                        Twitch sohbetinde izleyicilerinize komutlara otomatik cevap veren yardımcı bottur. Twitch ile tek tıkla bağlanır; mod vermenize gerek yoktur.
+                    </p>
+
+                    <div class="text-xs bg-gray-900/80 border border-gray-800 rounded-xl p-3.5 space-y-2.5">
+                        <div class="bg-[#9146FF]/10 border border-[#9146FF]/40 rounded-lg p-3 space-y-2">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <div class="font-semibold text-[#bf94ff] text-xs flex items-center gap-1.5">
+                                    <span>⚡</span>
+                                    <span data-i18n="twBotConnectTitle">Twitch ile Tek Tıkla Kurulum</span>
+                                </div>
+                                <a id="connectTwitchBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/twitch/bot/connect?cmd=!atla&lang=tr" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-1.5 bg-[#9146FF] hover:bg-[#772ce8] text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition shadow-sm">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
+                                    <span data-i18n="twBotConnectBtn">Twitch ile Botu Bağla</span>
+                                </a>
+                            </div>
+                            <p class="text-gray-300 text-[10.5px] leading-relaxed" data-i18n="twBotConnectDesc">
+                                Sadece sohbet okuma/yazma ve "Chat Bot" izinleri istenir. Giriş tokenınız sunucuda saklanmaz; bağlantı Twitch'in resmi bot altyapısı (EventSub) üzerinden çalışır. Seçtiğiniz komut ve dil (TR/EN) bota otomatik aktarılır.
+                            </p>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                            <span class="bg-[#9146FF]/20 text-[#bf94ff] font-bold px-1.5 py-0.5 rounded text-[10px]">1</span>
+                            <div class="font-medium text-white flex items-center gap-1.5 flex-wrap text-[11px]">
+                                <span data-i18n="twBotStep1">Susturmak / tekrar açmak için Twitch sohbetine yazın:</span>
+                                <code class="text-red-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!droppoolbot disable</code>
+                                <code class="text-emerald-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!droppoolbot enable</code>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                            <span class="bg-[#9146FF]/20 text-[#bf94ff] font-bold px-1.5 py-0.5 rounded text-[10px]">2</span>
+                            <div class="font-medium text-white flex items-center gap-1.5 flex-wrap text-[11px]">
+                                <span data-i18n="twBotStep2">Tamamen kaldırmak için:</span>
+                                <code class="text-red-400 bg-gray-800 px-1.5 py-0.5 rounded font-mono font-bold">!droppoolbot disconnect</code>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-black/40 border border-gray-800 rounded-lg p-2.5">
+                            <span class="bg-[#9146FF]/20 text-[#bf94ff] font-bold px-1.5 py-0.5 rounded text-[10px]">3</span>
+                            <div class="space-y-1.5 w-full">
+                                <div class="font-medium text-white text-[11px]" data-i18n="twBotStep3">Botu Tetikleyen Komutlar (Kick ile aynı):</div>
+                                <div class="text-gray-300 flex flex-wrap items-center gap-1 text-[10.5px]">
+                                    <code id="twBotCmdKomutlar" class="text-[#bf94ff] bg-gray-800 px-1 py-0.5 rounded font-mono">!atlakomutları</code>
+                                    <code id="twBotCmdCount" class="text-[#bf94ff] bg-gray-800 px-1 py-0.5 rounded font-mono">!atlacount</code>
+                                    <code id="twBotCmdList" class="text-[#bf94ff] bg-gray-800 px-1 py-0.5 rounded font-mono">!atlalist</code>
+                                    <code id="twBotCmdTop" class="text-[#bf94ff] bg-gray-800 px-1 py-0.5 rounded font-mono">!atlatop</code>
+                                    <code id="twBotCmdHelp" class="text-amber-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlahelp</code>
+                                    <code class="text-[#bf94ff] bg-gray-800 px-1 py-0.5 rounded font-mono">!crossweq</code>
+                                    <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!droptogether [sn]</code>
+                                    <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!meteor [sn]</code>
+                                    <code class="text-emerald-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!resetdroplist</code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-[#9146FF]/5 border border-[#9146FF]/20 rounded-lg p-2.5">
+                            <span class="text-[11px]">💡</span>
+                            <p class="text-gray-400 text-[10.5px] leading-relaxed" data-i18n="twBotDuoNote">
+                                Twitch'te Duo atlayış için etiketlenen kişinin o yayında herhangi bir mesaj yazmış olması yeterlidir (Kick'te ! ile başlayan bir mesaj gerekir).
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-[10.5px] text-gray-500 pt-1" data-i18n="twBotNote">
+                        ⚠️ Açma/kapatma komutlarını sadece yayıncı kullanabilir. Bot istemiyorsanız bağlamanız gerekmez; oyun Twitch'te botsuz da %100 çalışır.
+                    </p>
                 </div>
 
                 <!-- Havuz Boyutu -->
@@ -599,6 +695,22 @@
             botStep4Label: { tr: "Faydalı Chatbot Komutları:", en: "Useful Chatbot Commands:" },
             botStep4Desc: { tr: 'İzleyiciler komut listesini (!atlakomutları), canlı yayın ilk 5\'ini (!atlalist) veya Tüm Zamanlar Top 10\'unu (!atlatop) görebilir. Yayıncı ise !atlahelp ile yayıncı komutlarını alabilir.', en: 'Viewers can see commands (!atlakomutları), live stream top 5 (!atlalist) or All-Time Top 10 (!atlatop). Streamers can type !atlahelp for broadcaster commands.' },
             botInfoNote: { tr: "⚠️ Açma/kapatma komutlarını sadece yayıncının kendisi kullanabilir. Bot istemiyorsanız hiçbir işlem yapmanıza gerek yoktur, oyun botsuz da %100 çalışır.", en: "⚠️ Only the broadcaster can use enable/disable commands. If you don't want the bot, no action is needed; the game runs 100% without it." },
+            kickOpt1Title: { tr: "Seçenek 1 (Önerilen): Modluksuz & Bot Rozetli Kurulum", en: "Option 1 (Recommended): No-Mod & Bot Badge Setup" },
+            kickOpt1Btn: { tr: "Kick ile Botu Bağla", en: "Connect Bot with Kick" },
+            botViewerGroup: { tr: "İzleyici & Genel:", en: "Viewer & General:" },
+            botStreamerGroup: { tr: "Yayıncıya Özel:", en: "Broadcaster Only:" },
+            bothBotTitle: { tr: "İki Platform, İki Bot, Tek Sıralama", en: "Two Platforms, Two Bots, One Leaderboard" },
+            bothBotDesc: { tr: "Kick ve Twitch botları ayrı ayrı bağlanır ve her biri kendi sohbetine cevap verir. İstediğinizi bağlayabilirsiniz; ikisi de aynı oyun sıralamasını ve istatistikleri kullanır.", en: "The Kick and Twitch bots are connected separately and each replies in its own chat. Connect whichever you like; both share the same game leaderboard and stats." },
+            twBotTitle: { tr: "DropPool Bot (Twitch)", en: "DropPool Bot (Twitch)" },
+            twBotDesc: { tr: "Twitch sohbetinde izleyicilerinize komutlara otomatik cevap veren yardımcı bottur. Twitch ile tek tıkla bağlanır; mod vermenize gerek yoktur.", en: "A helper bot that automatically replies to commands in Twitch chat. Connect with one click via Twitch; no mod role needed." },
+            twBotConnectTitle: { tr: "Twitch ile Tek Tıkla Kurulum", en: "One-Click Setup with Twitch" },
+            twBotConnectBtn: { tr: "Twitch ile Botu Bağla", en: "Connect Bot with Twitch" },
+            twBotConnectDesc: { tr: "Sadece sohbet okuma/yazma ve \"Chat Bot\" izinleri istenir. Giriş tokenınız sunucuda saklanmaz; bağlantı Twitch'in resmi bot altyapısı (EventSub) üzerinden çalışır. Seçtiğiniz komut ve dil (TR/EN) bota otomatik aktarılır.", en: "Only chat read/write and \"Chat Bot\" permissions are requested. Your login token is not stored on the server; it runs on Twitch's official bot infrastructure (EventSub). Your selected command and language (TR/EN) are passed to the bot automatically." },
+            twBotStep1: { tr: "Susturmak / tekrar açmak için Twitch sohbetine yazın:", en: "To mute / re-enable, type in Twitch chat:" },
+            twBotStep2: { tr: "Tamamen kaldırmak için:", en: "To remove completely:" },
+            twBotStep3: { tr: "Botu Tetikleyen Komutlar (Kick ile aynı):", en: "Commands That Trigger the Bot (same as Kick):" },
+            twBotDuoNote: { tr: "Twitch'te Duo atlayış için etiketlenen kişinin o yayında herhangi bir mesaj yazmış olması yeterlidir (Kick'te ! ile başlayan bir mesaj gerekir).", en: "On Twitch, the tagged person only needs to have sent any message in the stream for a Duo drop (on Kick, a message starting with ! is required)." },
+            twBotNote: { tr: "⚠️ Açma/kapatma komutlarını sadece yayıncı kullanabilir. Bot istemiyorsanız bağlamanız gerekmez; oyun Twitch'te botsuz da %100 çalışır.", en: "⚠️ Only the broadcaster can use enable/disable commands. If you don't want the bot, you don't need to connect it; the game runs 100% on Twitch without it." },
             poolSizeTitle: { tr: "Oyun Boyutu", en: "Game Size" },
             poolSizeDesc: { tr: "Havuzun, karakterlerin ve tüm objelerin ekrandaki büyüklüğünü ayarlayın.", en: "Adjust the screen size of the pool, characters, and all objects." },
             poolSizeNormal: { tr: "Normal", en: "Normal" },
@@ -821,6 +933,7 @@
             const currentCmd = document.getElementById('cmdInput').value.trim() || (lang === 'tr' ? '!atla' : '!drop');
             document.getElementById('helpContent').innerHTML = getHelpContent(currentCmd, lang);
             updateBotCommandsUI();
+            renderTwitchBotStatusBadge();
 
             // Update placeholder
             document.getElementById('twitchChannelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
@@ -900,14 +1013,19 @@
         function updateBotCommandsUI() {
             const rawCmd = (document.getElementById('cmdInput').value || '').trim() || (lang === 'tr' ? '!atla' : '!drop');
             const cmd = rawCmd.startsWith('!') ? rawCmd : ('!' + rawCmd);
-            const komutCmd = (lang === 'en' && cmd.toLowerCase() === '!drop') ? `${cmd}commands` : `${cmd}komutları`;
+            const komutCmd = (lang === 'en') ? `${cmd}commands` : `${cmd}komutları`;
 
             const map = {
                 botCmdKomutlar: komutCmd,
                 botCmdCount: `${cmd}count`,
                 botCmdList: `${cmd}list`,
                 botCmdTop: `${cmd}top`,
-                botCmdHelp: `${cmd}help`
+                botCmdHelp: `${cmd}help`,
+                twBotCmdKomutlar: komutCmd,
+                twBotCmdCount: `${cmd}count`,
+                twBotCmdList: `${cmd}list`,
+                twBotCmdTop: `${cmd}top`,
+                twBotCmdHelp: `${cmd}help`
             };
             Object.entries(map).forEach(([id, text]) => {
                 const el = document.getElementById(id);
@@ -921,9 +1039,14 @@
                     : `Viewers can see commands (${komutCmd}), live stream top 5 (${cmd}list) or All-Time Top 10 (${cmd}top). Streamers can type ${cmd}help for broadcaster commands.`;
             }
 
+            const query = `cmd=${encodeURIComponent(cmd)}&lang=${encodeURIComponent(lang)}`;
             const connectBtn = document.getElementById('connectStreamerBotBtn');
             if (connectBtn) {
-                connectBtn.href = `https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=${encodeURIComponent(cmd)}&lang=${encodeURIComponent(lang)}`;
+                connectBtn.href = `https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?${query}`;
+            }
+            const twConnectBtn = document.getElementById('connectTwitchBotBtn');
+            if (twConnectBtn) {
+                twConnectBtn.href = `https://droppool-kick-api.crosweq204.workers.dev/twitch/bot/connect?${query}`;
             }
         }
 
@@ -1100,6 +1223,58 @@
         enforceMinOneChecked('themes');
         enforceMinOneChecked('parachutes');
 
+        // Twitch kullanıcı adı: 1-25 karakter, harf/rakam/alt çizgi
+        function cleanTwitchName(v) {
+            return v.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '').replace(/^@+/, '').replace(/^#+/, '').replace(/\/.*$/, '').trim().toLowerCase();
+        }
+        function isValidTwitchName(n) { return /^[a-z0-9_]{1,25}$/.test(n); }
+
+        let lastTwitchBotStatus = null;
+        function renderTwitchBotStatusBadge() {
+            const badge = document.getElementById('twBotStatusBadge');
+            if (!badge) return;
+            const p = getPlatform();
+            const val = cleanTwitchName(document.getElementById('twitchChannelInput').value);
+            if ((p !== 'twitch' && p !== 'both') || !isValidTwitchName(val) || !lastTwitchBotStatus) {
+                badge.classList.add('hidden');
+                return;
+            }
+            badge.classList.remove('hidden', 'text-emerald-300', 'bg-emerald-950/60', 'border-emerald-700/60', 'text-amber-300', 'bg-amber-950/60', 'border-amber-700/60', 'text-gray-400', 'bg-gray-800/80', 'border-gray-700');
+            if (lastTwitchBotStatus.botEnabled) {
+                badge.textContent = lang === 'tr' ? '● Aktif' : '● Active';
+                badge.classList.add('text-emerald-300', 'bg-emerald-950/60', 'border-emerald-700/60');
+            } else if (lastTwitchBotStatus.connected) {
+                badge.textContent = lang === 'tr' ? '● Susturulmuş' : '● Muted';
+                badge.classList.add('text-amber-300', 'bg-amber-950/60', 'border-amber-700/60');
+            } else if (lastTwitchBotStatus.configured === false) {
+                badge.textContent = lang === 'tr' ? 'Sunucu Kurulumu Bekleniyor' : 'Server Setup Pending';
+                badge.classList.add('text-amber-300', 'bg-amber-950/60', 'border-amber-700/60');
+            } else {
+                badge.textContent = lang === 'tr' ? 'Bağlı değil' : 'Not connected';
+                badge.classList.add('text-gray-400', 'bg-gray-800/80', 'border-gray-700');
+            }
+        }
+
+        let twStatusReqSeq = 0;
+        async function refreshTwitchBotStatus() {
+            const p = getPlatform();
+            const val = cleanTwitchName(document.getElementById('twitchChannelInput').value);
+            if ((p !== 'twitch' && p !== 'both') || !isValidTwitchName(val)) {
+                lastTwitchBotStatus = null;
+                renderTwitchBotStatusBadge();
+                return;
+            }
+            const seq = ++twStatusReqSeq;
+            try {
+                const res = await fetch(`https://droppool-kick-api.crosweq204.workers.dev/twitch/bot/status?channel=${encodeURIComponent(val)}`);
+                if (!res.ok || seq !== twStatusReqSeq) return;
+                const data = await res.json();
+                if (seq !== twStatusReqSeq || !data || !data.ok) return;
+                lastTwitchBotStatus = data;
+                renderTwitchBotStatusBadge();
+            } catch (e) { }
+        }
+
         // --- Platform seçimi (Kick / Twitch / Kick + Twitch) ---
         function getPlatform() {
             return document.querySelector('input[name="platform"]:checked').value;
@@ -1121,15 +1296,21 @@
             twInput.required = showTw;
             document.getElementById('channelError').classList.add('hidden');
             document.getElementById('twitchChannelError').classList.add('hidden');
+
+            // Bot bilgilendirme ve yetkilendirme kutularını seçilen platforma göre göster/gizle
+            const kickBotSec = document.getElementById('kickBotSection');
+            const twBotSec = document.getElementById('twitchBotSection');
+            const bothNote = document.getElementById('bothBotNote');
+            if (kickBotSec) kickBotSec.classList.toggle('hidden', !showKick);
+            if (twBotSec) twBotSec.classList.toggle('hidden', !showTw);
+            if (bothNote) bothNote.classList.toggle('hidden', p !== 'both');
+
+            if (showTw) refreshTwitchBotStatus();
+            else renderTwitchBotStatusBadge();
         }
         document.querySelectorAll('input[name="platform"]').forEach(r => r.addEventListener('change', applyPlatform));
         applyPlatform();
 
-        // Twitch kullanıcı adı: 1-25 karakter, harf/rakam/alt çizgi
-        function cleanTwitchName(v) {
-            return v.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '').replace(/^@+/, '').replace(/^#+/, '').replace(/\/.*$/, '').trim().toLowerCase();
-        }
-        function isValidTwitchName(n) { return /^[a-z0-9_]{1,25}$/.test(n); }
         document.getElementById('twitchChannelInput').addEventListener('blur', function () {
             const err = document.getElementById('twitchChannelError');
             const val = cleanTwitchName(this.value);
@@ -1139,6 +1320,7 @@
             } else {
                 err.classList.add('hidden');
             }
+            refreshTwitchBotStatus();
         });
 
         document.getElementById('settingsForm').addEventListener('submit', function(e) {

@@ -116,6 +116,7 @@
         const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
         const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
         let broadcasterId = null;
+        let twitchRoomId = null; // Twitch kanalının sayısal ID'si (IRC ROOMSTATE'ten alınır)
 
         // --- DOĞUM GÜNÜ TEMASI KONTROLÜ ---
         const birthMonth = parseInt(urlParams.get('bm'));
@@ -567,7 +568,9 @@
 
         let syncScoresTimer = null;
         function syncScoresToWorker(force = false) {
-            if (!broadcasterId) return;
+            // Kick varsa skorlar Kick ID'sinde, sadece Twitch modunda 'tw_<twitchId>' anahtarında tutulur
+            const scoreSyncId = broadcasterId || ((!usePlatKick && twitchRoomId) ? ('tw_' + twitchRoomId) : null);
+            if (!scoreSyncId) return;
             if (syncScoresTimer) clearTimeout(syncScoresTimer);
             const doSync = async () => {
                 try {
@@ -608,7 +611,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            id: String(broadcasterId),
+                            id: String(scoreSyncId),
                             channel: String(channelName || ''),
                             leaderboard: currentLb,
                             top10: top10,
@@ -2019,6 +2022,7 @@
                             syncChannel.postMessage({ type: 'BROADCASTER_INFO', broadcasterId: data.id, channelName: channelName });
                         } catch (e) { }
                         syncScoresToWorker(true);
+                        registerTwitchWithWorker();
                     } else {
                         console.error('[Kick] Abonelik hatası:', data);
                     }
@@ -2109,6 +2113,9 @@
                     ctx.is_bot === true
                 );
                 if (isBotAccount) return;
+
+                // Botun kendi yardım/bilgi yanıtlarını (özellikle yayıncı hesabından gönderilen Twitch mesajlarını) komut olarak işleme
+                if (/^!(droptogether|meteor|resetdrop|resetdroplist)\s*\((Yayıncıya özel|Broadcaster only)\):/i.test(message)) return;
 
                 rememberChatter(username);
 
@@ -2326,6 +2333,17 @@
                                             lang: overlayLang
                                         })
                                     }).catch(() => {});
+                                } else if (targetKey !== username.toLowerCase() && ctx.source === 'twitch' && twitchChannelName) {
+                                    fetch(`${KICK_API_WORKER}/twitch/bot/duo-warn`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            login: twitchChannelName,
+                                            sender: username,
+                                            target: withMatch[1],
+                                            lang: overlayLang
+                                        })
+                                    }).catch(() => {});
                                 }
                             }
                         }
@@ -2461,6 +2479,26 @@
             }
         }
 
+        // --- 8.0 TWITCH BOT KAYDI: Bağlı Twitch botuna komut/dil/skor anahtarını bildirir (bot bağlı değilse worker yoksayar) ---
+        let twitchRegisterTimer = null;
+        function registerTwitchWithWorker() {
+            if (!useTwitch || !twitchChannelName || !twitchRoomId) return;
+            if (twitchRegisterTimer) clearTimeout(twitchRegisterTimer);
+            twitchRegisterTimer = setTimeout(() => {
+                fetch(`${KICK_API_WORKER}/twitch/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        login: twitchChannelName,
+                        room: String(twitchRoomId),
+                        cmd: commandStr,
+                        lang: overlayLang,
+                        kick: (usePlatKick && broadcasterId) ? String(broadcasterId) : ''
+                    })
+                }).catch(() => {});
+            }, 1500);
+        }
+
         // --- 8.1 TWITCH CHAT (Anonim IRC WebSocket — sunucu/worker gerektirmez, tarayıcıdan doğrudan bağlanır) ---
         function setupTwitchChatListener() {
             if (!useTwitch || !twitchChannelName) return;
@@ -2487,6 +2525,13 @@
                     const sp = rest.indexOf(' ');
                     tags = parseTags(rest.slice(1, sp));
                     rest = rest.slice(sp + 1);
+                }
+                // Kanal ID'si (room-id): skor senkronu ve Twitch bot kaydı için bir kez alınır
+                if (!twitchRoomId && tags['room-id'] && /^\d+$/.test(tags['room-id']) && / (ROOMSTATE|PRIVMSG) #/.test(rest)) {
+                    twitchRoomId = tags['room-id'];
+                    console.log('[Twitch] Kanal ID:', twitchRoomId);
+                    registerTwitchWithWorker();
+                    if (!usePlatKick) syncScoresToWorker(true);
                 }
                 // :nick!nick@nick.tmi.twitch.tv PRIVMSG #kanal :mesaj
                 const m = rest.match(/^:([^!]+)![^ ]+ PRIVMSG #[^ ]+ :([\s\S]*)$/);
