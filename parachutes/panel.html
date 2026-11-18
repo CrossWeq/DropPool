@@ -238,7 +238,7 @@
                                         <span>⚡</span>
                                         <span>Seçenek 1 (Önerilen): Modluksuz &amp; Bot Rozetli Kurulum</span>
                                     </div>
-                                    <a href="https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect" target="_blank" rel="noopener noreferrer"
+                                    <a id="connectStreamerBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=!atla" target="_blank" rel="noopener noreferrer"
                                        class="inline-flex items-center gap-1.5 bg-[#53fc18] hover:bg-[#46db14] text-black font-bold text-[11px] px-3 py-1.5 rounded-lg transition shadow-sm">
                                         <span>Kick ile Botu Bağla</span>
                                     </a>
@@ -296,11 +296,11 @@
                                     <div class="space-y-1.5 text-[10.5px]">
                                         <div class="text-gray-300 flex flex-wrap items-center gap-1">
                                             <span class="text-cyan-400 font-bold mr-1">İzleyici & Genel:</span>
-                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlakomutları</code>
-                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlacount</code>
-                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlalist</code>
-                                            <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlatop</code>
-                                            <code class="text-amber-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlahelp</code>
+                                            <code id="botCmdKomutlar" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlakomutları</code>
+                                            <code id="botCmdCount" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlacount</code>
+                                            <code id="botCmdList" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlalist</code>
+                                            <code id="botCmdTop" class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlatop</code>
+                                            <code id="botCmdHelp" class="text-amber-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!atlahelp</code>
                                             <code class="text-cyan-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!crossweq</code>
                                         </div>
                                         <div class="text-gray-300 flex flex-wrap items-center gap-1">
@@ -315,7 +315,7 @@
                                             <code class="text-purple-400 bg-gray-800 px-1 py-0.5 rounded font-mono">!resetdroplisthelp</code>
                                         </div>
                                     </div>
-                                    <p class="text-gray-400 text-[10px]" data-i18n="botStep4Desc">
+                                    <p id="botStep4Desc" class="text-gray-400 text-[10px]" data-i18n="botStep4Desc">
                                         !atlahelp komutunu chate yazan herkese bot yayıncı yardım menüsünü sunar. İzleyiciler kendi veya başkasının istatistiklerini (!atlacount @kullanıcı) ve sıralama listelerini sorgulayabilir.
                                     </p>
                                 </div>
@@ -820,6 +820,7 @@
             // Modal içeriğini de güncelle (inputta ne varsa ona göre oluştur)
             const currentCmd = document.getElementById('cmdInput').value.trim() || (lang === 'tr' ? '!atla' : '!drop');
             document.getElementById('helpContent').innerHTML = getHelpContent(currentCmd, lang);
+            updateBotCommandsUI();
 
             // Update placeholder
             document.getElementById('twitchChannelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
@@ -896,12 +897,44 @@
             return true;
         }
 
+        function updateBotCommandsUI() {
+            const rawCmd = (document.getElementById('cmdInput').value || '').trim() || (lang === 'tr' ? '!atla' : '!drop');
+            const cmd = rawCmd.startsWith('!') ? rawCmd : ('!' + rawCmd);
+            const komutCmd = (lang === 'en' && cmd.toLowerCase() === '!drop') ? `${cmd}commands` : `${cmd}komutları`;
+
+            const map = {
+                botCmdKomutlar: komutCmd,
+                botCmdCount: `${cmd}count`,
+                botCmdList: `${cmd}list`,
+                botCmdTop: `${cmd}top`,
+                botCmdHelp: `${cmd}help`
+            };
+            Object.entries(map).forEach(([id, text]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            });
+
+            const descEl = document.getElementById('botStep4Desc');
+            if (descEl) {
+                descEl.textContent = lang === 'tr'
+                    ? `İzleyiciler komut listesini (${komutCmd}), canlı yayın ilk 5'ini (${cmd}list) veya Tüm Zamanlar Top 10'unu (${cmd}top) görebilir. Yayıncı ise ${cmd}help ile yayıncı komutlarını alabilir.`
+                    : `Viewers can see commands (${komutCmd}), live stream top 5 (${cmd}list) or All-Time Top 10 (${cmd}top). Streamers can type ${cmd}help for broadcaster commands.`;
+            }
+
+            const connectBtn = document.getElementById('connectStreamerBotBtn');
+            if (connectBtn) {
+                connectBtn.href = `https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=${encodeURIComponent(cmd)}`;
+            }
+        }
+
         // Setup custom validation messages for inputs on load
         document.addEventListener('DOMContentLoaded', () => {
             
             // İlk açılışta modal içeriğini doldur
             const initialCmd = document.getElementById('cmdInput').value.trim() || '!atla';
             document.getElementById('helpContent').innerHTML = getHelpContent(initialCmd, lang);
+            updateBotCommandsUI();
+            document.getElementById('cmdInput').addEventListener('input', updateBotCommandsUI);
 
             document.querySelectorAll('input[required]').forEach(input => {
                 input.addEventListener('invalid', function(e) {

@@ -2313,6 +2313,19 @@
                                 addDropPoolLog(username, 'ATLAYIŞ', 'Normal atlayış başlattı.');
                                 updateDropPoolStats(username, 'JUMP');
                                 spawnCharacter(username, selfEmoteUrl, null, -50, false, false, false, false);
+
+                                if (targetKey !== username.toLowerCase() && ctx.source === 'kick' && broadcasterId) {
+                                    fetch(`${KICK_API_WORKER}/bot/duo-warn`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            id: broadcasterId,
+                                            channel: channelName,
+                                            sender: username,
+                                            target: withMatch[1]
+                                        })
+                                    }).catch(() => {});
+                                }
                             }
                         }
                         return;
