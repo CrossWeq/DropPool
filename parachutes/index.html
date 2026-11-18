@@ -2007,7 +2007,7 @@
             let subscribeData = null;
             for (let attempt = 1; attempt <= 3 && !broadcasterId; attempt++) {
                 try {
-                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}`);
+                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}`);
                     const data = await res.json();
                     if (data && data.id) {
                         broadcasterId = data.id;
@@ -2322,7 +2322,8 @@
                                             id: broadcasterId,
                                             channel: channelName,
                                             sender: username,
-                                            target: withMatch[1]
+                                            target: withMatch[1],
+                                            lang: overlayLang
                                         })
                                     }).catch(() => {});
                                 }
