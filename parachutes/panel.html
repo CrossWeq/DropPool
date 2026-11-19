@@ -254,7 +254,7 @@
                                         <span>⚡</span>
                                         <span data-i18n="kickOpt1Title">Seçenek 1 (Önerilen): Modluksuz &amp; Bot Rozetli Kurulum</span>
                                     </div>
-                                    <a id="connectStreamerBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=!atla&lang=tr" target="_blank" rel="noopener noreferrer"
+                                    <a id="connectStreamerBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect?cmd=!atla&lang=tr" target="_blank"
                                        class="inline-flex items-center gap-1.5 bg-[#53fc18] hover:bg-[#46db14] text-black font-bold text-[11px] px-3 py-1.5 rounded-lg transition shadow-sm">
                                         <span data-i18n="kickOpt1Btn">Kick ile Botu Bağla</span>
                                     </a>
@@ -365,7 +365,7 @@
                                     <span>⚡</span>
                                     <span data-i18n="twBotConnectTitle">Twitch ile Tek Tıkla Kurulum</span>
                                 </div>
-                                <a id="connectTwitchBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/twitch/bot/connect?cmd=!atla&lang=tr" target="_blank" rel="noopener noreferrer"
+                                <a id="connectTwitchBotBtn" href="https://droppool-kick-api.crosweq204.workers.dev/twitch/bot/connect?cmd=!atla&lang=tr" target="_blank"
                                    class="inline-flex items-center gap-1.5 bg-[#9146FF] hover:bg-[#772ce8] text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition shadow-sm">
                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>
                                     <span data-i18n="twBotConnectBtn">Twitch ile Botu Bağla</span>
@@ -974,6 +974,7 @@
                     input.setCustomValidity(lang === 'tr' ? 'Lütfen bu alanı doldurun.' : 'Please fill out this field.');
                 }
             });
+            savePanelState();
         }
         async function validateKickChannel(channelName) {
             if (!channelName) return false;
@@ -1050,14 +1051,120 @@
             }
         }
 
+        const PANEL_STATE_KEY = 'droppool_panel_state_v1';
+        let isRestoringPanelState = false;
+
+        function populateBirthdayDays(month) {
+            const birthDaySelect = document.getElementById('birthDay');
+            if (!birthDaySelect) return;
+            birthDaySelect.innerHTML = `<option value="" data-i18n="daySelect">${i18n.daySelect[lang]}</option>`;
+            if (!month) {
+                birthDaySelect.disabled = true;
+                return;
+            }
+            birthDaySelect.disabled = false;
+            let daysInMonth = 31;
+            if (month === 2) daysInMonth = 29;
+            else if ([4, 6, 9, 11].includes(month)) daysInMonth = 30;
+            for (let i = 1; i <= daysInMonth; i++) {
+                birthDaySelect.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+        }
+
+        function savePanelState() {
+            if (isRestoringPanelState) return;
+            try {
+                const state = {
+                    lang,
+                    platform: getPlatform(),
+                    channel: document.getElementById('channelInput').value,
+                    twitchChannel: document.getElementById('twitchChannelInput').value,
+                    cmd: document.getElementById('cmdInput').value,
+                    cd: document.getElementById('cooldownInput').value,
+                    bg: document.getElementById('bgToggle').checked,
+                    tr: document.getElementById('trailToggle').checked,
+                    poolSize: (document.querySelector('input[name="poolSize"]:checked') || {}).value || '1',
+                    lbColor: (document.querySelector('input[name="lbColor"]:checked') || {}).value || '0',
+                    themes: Array.from(document.querySelectorAll('input[name="themes"]:checked')).map(cb => cb.value),
+                    parachutes: Array.from(document.querySelectorAll('input[name="parachutes"]:checked')).map(cb => cb.value),
+                    birthMonth: document.getElementById('birthMonth').value,
+                    birthDay: document.getElementById('birthDay').value
+                };
+                localStorage.setItem(PANEL_STATE_KEY, JSON.stringify(state));
+            } catch (e) { }
+        }
+
+        function restorePanelState() {
+            let saved = null;
+            try {
+                const raw = localStorage.getItem(PANEL_STATE_KEY);
+                if (raw) saved = JSON.parse(raw);
+            } catch (e) { saved = null; }
+            if (!saved || typeof saved !== 'object') return;
+
+            isRestoringPanelState = true;
+            try {
+                if ((saved.lang === 'en' || saved.lang === 'tr') && saved.lang !== lang) {
+                    toggleLang();
+                }
+                if (saved.platform) {
+                    const pRadio = document.querySelector(`input[name="platform"][value="${saved.platform}"]`);
+                    if (pRadio) pRadio.checked = true;
+                }
+                if (typeof saved.channel === 'string') document.getElementById('channelInput').value = saved.channel;
+                if (typeof saved.twitchChannel === 'string') document.getElementById('twitchChannelInput').value = saved.twitchChannel;
+                if (typeof saved.cmd === 'string' && saved.cmd.trim()) document.getElementById('cmdInput').value = saved.cmd;
+                if (saved.cd !== undefined && saved.cd !== null && String(saved.cd) !== '') document.getElementById('cooldownInput').value = saved.cd;
+                if (typeof saved.bg === 'boolean') document.getElementById('bgToggle').checked = saved.bg;
+                if (typeof saved.tr === 'boolean') document.getElementById('trailToggle').checked = saved.tr;
+                if (saved.poolSize !== undefined) {
+                    const psRadio = document.querySelector(`input[name="poolSize"][value="${saved.poolSize}"]`);
+                    if (psRadio) psRadio.checked = true;
+                }
+                if (saved.lbColor !== undefined) {
+                    const lcRadio = document.querySelector(`input[name="lbColor"][value="${saved.lbColor}"]`);
+                    if (lcRadio) lcRadio.checked = true;
+                }
+                if (Array.isArray(saved.themes) && saved.themes.length > 0) {
+                    const tSet = new Set(saved.themes.map(String));
+                    document.querySelectorAll('input[name="themes"]').forEach(cb => { cb.checked = tSet.has(String(cb.value)); });
+                }
+                if (Array.isArray(saved.parachutes) && saved.parachutes.length > 0) {
+                    const pSet = new Set(saved.parachutes.map(String));
+                    document.querySelectorAll('input[name="parachutes"]').forEach(cb => { cb.checked = pSet.has(String(cb.value)); });
+                }
+                if (saved.birthMonth) {
+                    document.getElementById('birthMonth').value = String(saved.birthMonth);
+                    populateBirthdayDays(parseInt(saved.birthMonth, 10));
+                    if (saved.birthDay) document.getElementById('birthDay').value = String(saved.birthDay);
+                }
+            } finally {
+                isRestoringPanelState = false;
+            }
+            applyPlatform();
+            updateBotCommandsUI();
+            const curCmd = document.getElementById('cmdInput').value.trim() || (lang === 'tr' ? '!atla' : '!drop');
+            document.getElementById('helpContent').innerHTML = getHelpContent(curCmd, lang);
+        }
+
         // Setup custom validation messages for inputs on load
         document.addEventListener('DOMContentLoaded', () => {
-            
+            restorePanelState();
+
             // İlk açılışta modal içeriğini doldur
             const initialCmd = document.getElementById('cmdInput').value.trim() || '!atla';
             document.getElementById('helpContent').innerHTML = getHelpContent(initialCmd, lang);
             updateBotCommandsUI();
             document.getElementById('cmdInput').addEventListener('input', updateBotCommandsUI);
+
+            const formEl = document.getElementById('settingsForm');
+            formEl.addEventListener('input', savePanelState);
+            formEl.addEventListener('change', savePanelState);
+            ['connectStreamerBotBtn', 'connectTwitchBotBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.addEventListener('click', savePanelState);
+            });
+            window.addEventListener('focus', refreshTwitchBotStatus);
 
             document.querySelectorAll('input[required]').forEach(input => {
                 input.addEventListener('invalid', function(e) {
@@ -1105,25 +1212,8 @@
 
             // Doğum günü dinamik gün doldurma
             const birthMonthSelect = document.getElementById('birthMonth');
-            const birthDaySelect = document.getElementById('birthDay');
-            
             birthMonthSelect.addEventListener('change', function() {
-                const month = parseInt(this.value);
-                birthDaySelect.innerHTML = `<option value="" data-i18n="daySelect">${i18n.daySelect[lang]}</option>`;
-                
-                if (!month) {
-                    birthDaySelect.disabled = true;
-                    return;
-                }
-                
-                birthDaySelect.disabled = false;
-                let daysInMonth = 31;
-                if (month === 2) daysInMonth = 29;
-                else if ([4, 6, 9, 11].includes(month)) daysInMonth = 30;
-                
-                for (let i = 1; i <= daysInMonth; i++) {
-                    birthDaySelect.innerHTML += `<option value="${i}">${i}</option>`;
-                }
+                populateBirthdayDays(parseInt(this.value));
             });
         });
 
