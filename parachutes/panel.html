@@ -106,7 +106,10 @@
         </div>
         
         <div class="absolute top-6 right-6 flex gap-3 z-20">
-
+            <a href="global.html" target="_blank" class="bg-black/40 border border-amber-500/40 text-amber-300 font-semibold py-2 px-3.5 rounded-xl hover:bg-amber-500/10 transition-colors shadow-lg flex items-center gap-1.5 text-sm">
+                <span>🏆</span>
+                <span data-i18n="globalLbBtn">Genel Sıralama</span>
+            </a>
             <button type="button" onclick="toggleHelpModal()" class="w-10 h-10 bg-black/40 border border-gray-700/50 text-white font-bold rounded-xl hover:bg-white/10 transition-colors shadow-lg flex items-center justify-center">?</button>
             <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/50 text-white font-bold py-2 px-4 rounded-xl hover:bg-white/10 transition-colors shadow-lg">ENG</button>
         </div>
@@ -598,6 +601,15 @@
                     </svg>
                     <span data-i18n="btnHelpInfo">Kurulum ve özellikler hakkında bilgi almak için tıklayınız</span>
                 </button>
+                <!-- Genel Sıralama İzni (Opt-in) -->
+                <label class="flex items-start gap-3 bg-black/30 border border-gray-700/50 hover:border-amber-500/40 rounded-xl px-4 py-3.5 cursor-pointer transition-colors">
+                    <input type="checkbox" id="publicStatsToggle" class="mt-0.5 w-4 h-4 rounded accent-amber-400 cursor-pointer shrink-0">
+                    <div class="space-y-0.5">
+                        <span class="text-sm font-medium text-gray-200 block" data-i18n="publicStatsLabel">Kanal adımın, toplam atlama sayımın ve en yüksek atlayış verilerimin Genel Sıralama sayfasında görüntülenmesine izin veriyorum.</span>
+                        <span class="text-xs text-gray-500 block" data-i18n="publicStatsDesc">İşaretlerseniz kanalınız Genel Sıralama sayfasındaki Yayıncılar sekmesinde listelenir ve izleyicileriniz kanalınızdaki en çok atlayan ilk 5 kişiyi görebilir.</span>
+                    </div>
+                </label>
+
                 <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 text-lg flex items-center justify-center gap-2 group">
                 <span data-i18n="btnGen">Bağlantıları Oluştur</span>
                 <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -678,6 +690,7 @@
 
     <script>
         const i18n = {
+            globalLbBtn: { tr: "Genel Sıralama", en: "Global Ranking" },
             subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
             bgToggleTitle: { tr: "Zemin Görselleri", en: "Floor Visuals" },
             bgToggleDesc: { tr: "Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.", en: "If disabled, only the pool is visible and the floor becomes transparent." },
@@ -730,6 +743,8 @@
             parachutes: { tr: "Aktif Paraşütler", en: "Active Parachutes" },
             min1: { tr: "En az 1 seçim zorunlu", en: "Min 1 selection required" },
             btnHelpInfo: { tr: "Kurulum ve özellikler hakkında bilgi almak için tıklayınız", en: "Click here for installation and features information" },
+            publicStatsLabel: { tr: "Kanal adımın, toplam atlama sayımın ve en yüksek atlayış verilerimin Genel Sıralama sayfasında görüntülenmesine izin veriyorum.", en: "I allow my channel name, total drop count, and top drop stats to be displayed on the Global Leaderboard page." },
+            publicStatsDesc: { tr: "İşaretlerseniz kanalınız Genel Sıralama sayfasındaki Yayıncılar sekmesinde listelenir ve izleyicileriniz kanalınızdaki en çok atlayan ilk 5 kişiyi görebilir.", en: "If checked, your channel will appear in the Streamers tab on the Global Leaderboard page, showing the top 5 droppers in your channel." },
             btnGen: { tr: "Bağlantıları Oluştur", en: "Generate Links" },
             res1Title: { tr: "1. Ana Oyun Ekranı", en: "1. Main Overlay" },
             res1Desc: { tr: 'Bu linki OBS\'te yeni bir "Tarayıcı (Browser)" kaynağı oluşturarak ekleyin (Önerilen: 1920x1080).', en: 'Add this link to OBS as a new "Browser" source (Recommended: 1920x1080).' },
@@ -1083,6 +1098,7 @@
                     cd: document.getElementById('cooldownInput').value,
                     bg: document.getElementById('bgToggle').checked,
                     tr: document.getElementById('trailToggle').checked,
+                    publicStats: document.getElementById('publicStatsToggle').checked,
                     poolSize: (document.querySelector('input[name="poolSize"]:checked') || {}).value || '1',
                     lbColor: (document.querySelector('input[name="lbColor"]:checked') || {}).value || '0',
                     themes: Array.from(document.querySelectorAll('input[name="themes"]:checked')).map(cb => cb.value),
@@ -1117,6 +1133,7 @@
                 if (saved.cd !== undefined && saved.cd !== null && String(saved.cd) !== '') document.getElementById('cooldownInput').value = saved.cd;
                 if (typeof saved.bg === 'boolean') document.getElementById('bgToggle').checked = saved.bg;
                 if (typeof saved.tr === 'boolean') document.getElementById('trailToggle').checked = saved.tr;
+                if (typeof saved.publicStats === 'boolean') document.getElementById('publicStatsToggle').checked = saved.publicStats;
                 if (saved.poolSize !== undefined) {
                     const psRadio = document.querySelector(`input[name="poolSize"][value="${saved.poolSize}"]`);
                     if (psRadio) psRadio.checked = true;
@@ -1454,6 +1471,7 @@
             
             const bgToggle = document.getElementById('bgToggle').checked ? 1 : 0;
             const trailToggle = document.getElementById('trailToggle').checked ? 1 : 0;
+            const publicStats = document.getElementById('publicStatsToggle').checked ? 1 : 0;
             const poolSizeVal = document.querySelector('input[name="poolSize"]:checked').value;
             const lbColorVal = document.querySelector('input[name="lbColor"]:checked').value;
             
@@ -1470,6 +1488,7 @@
                 rc: lbColorVal,
                 t: selectedThemes.join(','),
                 p: selectedParachutes.join(','),
+                pub: publicStats,
                 lang: lang
             });
 

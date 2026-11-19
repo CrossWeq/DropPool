@@ -114,6 +114,7 @@
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
         const showTrail = urlParams.get('tr') !== '0'; // Varsayılan olarak true (1)
         const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
+        const publicStatsOptIn = urlParams.get('pub') === '1';
         const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
         let broadcasterId = null;
         let twitchRoomId = null; // Twitch kanalının sayısal ID'si (IRC ROOMSTATE'ten alınır)
@@ -558,7 +559,7 @@
 
                 localStorage.setItem('droppool_stats', JSON.stringify(stats));
                 syncChannel.postMessage({ type: 'STATS_UPDATE', stats: stats });
-                if (type === 'SCORE') {
+                if (type === 'SCORE' || type === 'JUMP') {
                     syncScoresToWorker();
                 }
             } catch (e) {
@@ -616,6 +617,7 @@
                             leaderboard: currentLb,
                             top10: top10,
                             users: usersStats,
+                            pub: publicStatsOptIn,
                             force: !!force
                         })
                     });
@@ -2102,7 +2104,7 @@
             let workerSubscribed = false;
             for (let attempt = 1; attempt <= 3 && !workerSubscribed; attempt++) {
                 try {
-                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}`);
+                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}&pub=${publicStatsOptIn ? '1' : '0'}`);
                     const data = await res.json();
                     if (data && data.id) {
                         broadcasterId = data.id;
@@ -2587,6 +2589,7 @@
                         room: String(twitchRoomId),
                         cmd: commandStr,
                         lang: overlayLang,
+                        pub: publicStatsOptIn,
                         kick: (usePlatKick && broadcasterId) ? String(broadcasterId) : ''
                     })
                 }).catch(() => {});

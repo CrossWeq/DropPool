@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropPool - Genel Sıralama &amp; Yayıncılar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0b101e 0%, #12182b 50%, #090e1a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.25));
+            border-color: rgba(56, 189, 248, 0.55);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 md:p-10">
+    <div class="glass-panel w-full max-w-5xl rounded-3xl p-6 sm:p-8 md:p-10 relative mx-auto overflow-hidden">
+        <!-- Dekoratif Glow -->
+        <div class="absolute inset-0 pointer-events-none z-0">
+            <div class="absolute -top-28 -right-28 w-72 h-72 bg-amber-500 rounded-full mix-blend-screen filter blur-[140px] opacity-15"></div>
+            <div class="absolute -bottom-28 -left-28 w-72 h-72 bg-cyan-500 rounded-full mix-blend-screen filter blur-[140px] opacity-15"></div>
+        </div>
+
+        <!-- Üst Çubuk -->
+        <div class="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-8">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                    <span>🏆</span>
+                    <span data-i18n="title">DropPool Genel Sıralama</span>
+                </h1>
+                <p class="text-sm text-gray-400 mt-1" data-i18n="subtitle">Tüm yayıncılardaki en iyi atlayış rekorları, haftalık en aktifler ve izin veren yayıncılar.</p>
+            </div>
+            <div class="flex items-center gap-2.5">
+                <a href="panel.html" class="bg-black/40 border border-gray-700/60 text-gray-200 hover:bg-white/10 text-sm font-semibold py-2 px-3.5 rounded-xl transition-colors" data-i18n="backPanel">Kurulum Paneli</a>
+                <button type="button" id="refreshBtn" onclick="loadData(true)" class="bg-black/40 border border-gray-700/60 text-cyan-300 hover:bg-cyan-500/10 text-sm font-semibold py-2 px-3.5 rounded-xl transition-colors" data-i18n="refresh">Yenile</button>
+                <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/60 text-white font-bold py-2 px-3.5 rounded-xl hover:bg-white/10 transition-colors text-sm">ENG</button>
+            </div>
+        </div>
+
+        <!-- Sekmeler -->
+        <div class="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <button type="button" id="tabGlobalBtn" onclick="switchTab('global')" class="tab-btn active flex items-center justify-center gap-2 rounded-2xl border border-gray-700/60 bg-black/30 px-4 py-3.5 text-sm font-bold text-gray-300 transition-all hover:bg-white/5">
+                <span>🥇</span>
+                <span data-i18n="tabGlobal">Genel Sıralama (İlk 100)</span>
+            </button>
+            <button type="button" id="tabWeeklyBtn" onclick="switchTab('weekly')" class="tab-btn flex items-center justify-center gap-2 rounded-2xl border border-gray-700/60 bg-black/30 px-4 py-3.5 text-sm font-bold text-gray-300 transition-all hover:bg-white/5">
+                <span>🔥</span>
+                <span data-i18n="tabWeekly">Haftalık Top 5 Yayıncı</span>
+            </button>
+            <button type="button" id="tabStreamersBtn" onclick="switchTab('streamers')" class="tab-btn flex items-center justify-center gap-2 rounded-2xl border border-gray-700/60 bg-black/30 px-4 py-3.5 text-sm font-bold text-gray-300 transition-all hover:bg-white/5">
+                <span>📺</span>
+                <span data-i18n="tabStreamers">Yayıncılar</span>
+            </button>
+        </div>
+
+        <!-- Sekme 1: Genel Sıralama İlk 100 -->
+        <div id="globalSection" class="relative z-10 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p class="text-xs text-gray-400" data-i18n="globalRule">
+                    Bir oyuncu birden fazla yayıncıda dereceye girdiyse yalnızca en yüksek rekor puanıyla 1 kez listelenir.
+                </p>
+                <input type="text" id="searchInput" oninput="renderGlobalTable()" placeholder="Kullanıcı veya kanal ara..."
+                    class="w-full sm:w-64 bg-black/40 border border-gray-700/60 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-gray-800 bg-black/30">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 bg-black/30">
+                            <th class="py-3.5 px-4 w-16 text-center">#</th>
+                            <th class="py-3.5 px-4" data-i18n="colUser">Kullanıcı Adı</th>
+                            <th class="py-3.5 px-4" data-i18n="colChannel">Rekor Aldığı Kanal</th>
+                            <th class="py-3.5 px-4 text-right" data-i18n="colScore">Rekor Puan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="globalTableBody" class="divide-y divide-gray-800/70 text-sm">
+                        <tr>
+                            <td colspan="4" class="py-10 text-center text-gray-500" data-i18n="loading">Yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sekme 2: Haftalık En Çok Atlama (Top 5 Yayıncı) -->
+        <div id="weeklySection" class="relative z-10 hidden space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-black/30 border border-gray-800 rounded-2xl px-4 py-3">
+                <div class="text-xs sm:text-sm text-gray-300 flex items-center gap-2">
+                    <span>🗓️</span>
+                    <span data-i18n="weeklyRule">Her hafta Pazartesi 00:00 (TSİ) itibarıyla sıfırlanır.</span>
+                </div>
+                <div id="resetCountdown" class="text-xs font-mono font-semibold text-amber-300 bg-amber-950/50 border border-amber-700/50 px-3 py-1.5 rounded-xl">
+                    --
+                </div>
+            </div>
+
+            <div id="weeklyCards" class="space-y-3">
+                <div class="py-10 text-center text-gray-500 text-sm" data-i18n="loading">Yükleniyor...</div>
+            </div>
+        </div>
+
+        <!-- Sekme 3: İzin Veren Yayıncılar Listesi -->
+        <div id="streamersSection" class="relative z-10 hidden space-y-4">
+            <!-- Liste Görünümü -->
+            <div id="streamersListView" class="space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <p class="text-xs text-gray-400" data-i18n="streamersRule">
+                        Kurulum panelinden verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Kanal detayını görmek için bir kanala tıklayın.
+                    </p>
+                    <input type="text" id="streamerSearchInput" oninput="renderStreamersTable()" placeholder="Kanal ara..."
+                        class="w-full sm:w-64 bg-black/40 border border-gray-700/60 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-gray-800 bg-black/30">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 bg-black/30">
+                                <th class="py-3.5 px-4 w-16 text-center">#</th>
+                                <th class="py-3.5 px-4" data-i18n="colStreamerChannel">Kanal Adı</th>
+                                <th class="py-3.5 px-4 text-right" data-i18n="colTotalJumps">Toplam Atlama</th>
+                                <th class="py-3.5 px-4 text-right" data-i18n="colRecordScore">Rekor Puan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="streamersTableBody" class="divide-y divide-gray-800/70 text-sm">
+                            <tr>
+                                <td colspan="4" class="py-10 text-center text-gray-500" data-i18n="loading">Yükleniyor...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kanal Detay Görünümü -->
+            <div id="channelDetailView" class="hidden space-y-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <button type="button" onclick="closeChannelDetail()" class="inline-flex items-center gap-2 bg-black/40 border border-gray-700/60 hover:bg-white/10 text-gray-200 text-sm font-semibold py-2 px-4 rounded-xl transition-colors">
+                        <span>←</span>
+                        <span data-i18n="backList">Listeye Dön</span>
+                    </button>
+                    <a id="detailExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-xs font-semibold text-cyan-300 hover:text-cyan-200 underline underline-offset-4" data-i18n="openChannel">Kanala Git ↗</a>
+                </div>
+
+                <div id="detailHeaderCard" class="rounded-2xl border border-gray-800 bg-black/35 p-5 flex flex-wrap items-center justify-between gap-4">
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
+                        <span>🪂</span>
+                        <span data-i18n="topJumpersTitle">Bu Kanalda En Çok Atlayış Yapan İlk 5 Kişi</span>
+                    </h2>
+                    <div class="overflow-x-auto rounded-2xl border border-gray-800 bg-black/30">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 bg-black/30">
+                                    <th class="py-3.5 px-4 w-16 text-center">#</th>
+                                    <th class="py-3.5 px-4" data-i18n="colUser">Kullanıcı Adı</th>
+                                    <th class="py-3.5 px-4 text-right" data-i18n="colPlayerJumps">Toplam Atlama</th>
+                                    <th class="py-3.5 px-4 text-right" data-i18n="colPlayerMax">Max Puan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailTopJumpersBody" class="divide-y divide-gray-800/70 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alt Bilgi -->
+        <div class="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+            <span id="metaStats"></span>
+            <span id="lastUpdated"></span>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = (new URLSearchParams(window.location.search).get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
+        let lang = (new URLSearchParams(window.location.search).get('lang') || 'tr').toLowerCase() === 'en' ? 'en' : 'tr';
+        let activeTab = 'global';
+        let selectedStreamerId = null;
+        let cachedData = null;
+        let countdownTimer = null;
+
+        const i18n = {
+            title: { tr: 'DropPool Genel Sıralama', en: 'DropPool Global Leaderboard' },
+            subtitle: { tr: 'Tüm yayıncılardaki en iyi atlayış rekorları, haftalık en aktifler ve izin veren yayıncılar.', en: 'Best drop records across all streamers, weekly top channels, and opted-in streamers.' },
+            backPanel: { tr: 'Kurulum Paneli', en: 'Setup Panel' },
+            refresh: { tr: 'Yenile', en: 'Refresh' },
+            tabGlobal: { tr: 'Genel Sıralama (İlk 100)', en: 'Global Ranking (Top 100)' },
+            tabWeekly: { tr: 'Haftalık Top 5 Yayıncı', en: 'Weekly Top 5 Streamers' },
+            tabStreamers: { tr: 'Yayıncılar', en: 'Streamers' },
+            globalRule: { tr: 'Bir oyuncu birden fazla yayıncıda dereceye girdiyse yalnızca en yüksek rekor puanıyla 1 kez listelenir.', en: 'If a player ranks on multiple channels, only their single highest record score is listed.' },
+            colUser: { tr: 'Kullanıcı Adı', en: 'Username' },
+            colChannel: { tr: 'Rekor Aldığı Kanal', en: 'Channel' },
+            colScore: { tr: 'Rekor Puan', en: 'Best Score' },
+            weeklyRule: { tr: 'Her hafta Pazartesi 00:00 (TSİ) itibarıyla sıfırlanır.', en: 'Resets every Monday at 00:00 (TRT / UTC+3).' },
+            streamersRule: { tr: 'Kurulum panelinden verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Detaylar için bir kanala tıklayın.', en: 'Streamers who opted in from the setup panel are ranked by total drops. Click a channel to see its top 5 droppers.' },
+            colStreamerChannel: { tr: 'Kanal Adı', en: 'Channel Name' },
+            colTotalJumps: { tr: 'Toplam Atlama', en: 'Total Drops' },
+            colRecordScore: { tr: 'Rekor Puan', en: 'Record Score' },
+            backList: { tr: 'Listeye Dön', en: 'Back to List' },
+            openChannel: { tr: 'Kanala Git ↗', en: 'Visit Channel ↗' },
+            topJumpersTitle: { tr: 'Bu Kanalda En Çok Atlayış Yapan İlk 5 Kişi', en: 'Top 5 Droppers in This Channel' },
+            colPlayerJumps: { tr: 'Toplam Atlama', en: 'Total Drops' },
+            colPlayerMax: { tr: 'Max Puan', en: 'Max Score' },
+            loading: { tr: 'Yükleniyor...', en: 'Loading...' },
+            noRecords: { tr: 'Henüz kayıtlı skor bulunmuyor.', en: 'No recorded scores yet.' },
+            noMatch: { tr: 'Aramanızla eşleşen kayıt bulunamadı.', en: 'No matching records found.' },
+            noWeekly: { tr: 'Bu hafta henüz atlayış kaydı oluşmadı.', en: 'No drops recorded this week yet.' },
+            noStreamers: { tr: 'Henüz sıralamada görünmeye izin veren yayıncı bulunmuyor.', en: 'No opted-in streamers yet.' },
+            noJumpers: { tr: 'Bu kanalda henüz atlayış kaydı bulunmuyor.', en: 'No drop records in this channel yet.' },
+            jumpsLabel: { tr: 'atlayış', en: 'drops' },
+            recordLabel: { tr: 'Rekor:', en: 'Record:' },
+            searchPlaceholder: { tr: 'Kullanıcı veya kanal ara...', en: 'Search user or channel...' },
+            streamerSearchPlaceholder: { tr: 'Kanal ara...', en: 'Search channel...' },
+            resetIn: { tr: 'Sıfırlamaya kalan:', en: 'Resets in:' },
+            updatedAt: { tr: 'Son güncelleme:', en: 'Last updated:' },
+            totalPlayers: { tr: 'Toplam kayıtlı benzersiz oyuncu:', en: 'Total unique players:' },
+            errorLoad: { tr: 'Veriler yüklenemedi. Lütfen tekrar deneyin.', en: 'Failed to load data. Please try again.' }
+        };
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function applyLang() {
+            document.getElementById('langBtn').innerText = lang === 'tr' ? 'ENG' : 'TR';
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.getAttribute('data-i18n');
+                if (i18n[k]) el.innerText = i18n[k][lang];
+            });
+            document.getElementById('searchInput').placeholder = i18n.searchPlaceholder[lang];
+            document.getElementById('streamerSearchInput').placeholder = i18n.streamerSearchPlaceholder[lang];
+            if (cachedData) {
+                renderGlobalTable();
+                renderWeeklyCards();
+                renderStreamersTable();
+                if (selectedStreamerId) renderChannelDetail(selectedStreamerId);
+                renderMeta();
+                updateCountdown();
+            }
+        }
+
+        function toggleLang() {
+            lang = lang === 'tr' ? 'en' : 'tr';
+            applyLang();
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('globalSection').classList.toggle('hidden', tab !== 'global');
+            document.getElementById('weeklySection').classList.toggle('hidden', tab !== 'weekly');
+            document.getElementById('streamersSection').classList.toggle('hidden', tab !== 'streamers');
+            document.getElementById('tabGlobalBtn').classList.toggle('active', tab === 'global');
+            document.getElementById('tabWeeklyBtn').classList.toggle('active', tab === 'weekly');
+            document.getElementById('tabStreamersBtn').classList.toggle('active', tab === 'streamers');
+            if (tab !== 'streamers') {
+                closeChannelDetail();
+            }
+        }
+
+        function platformBadge(platform) {
+            if (platform === 'twitch') {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#9146FF]/20 text-[#bf94ff] border border-[#9146FF]/40">TWITCH</span>';
+            }
+            if (platform === 'both') {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">KICK + TW</span>';
+            }
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#53FC18]/15 text-[#53FC18] border border-[#53FC18]/40">KICK</span>';
+        }
+
+        function externalChannelHref(item) {
+            if (!item || !item.channelSlug) return null;
+            const slug = encodeURIComponent(item.channelSlug);
+            return item.platform === 'twitch' ? `https://twitch.tv/${slug}` : `https://kick.com/${slug}`;
+        }
+
+        function channelLink(item) {
+            const name = esc(item.channel || '-');
+            const href = externalChannelHref(item);
+            if (!href) return `<span class="font-medium text-gray-200">${name}</span>`;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="font-medium text-gray-200 hover:text-cyan-300 transition-colors">${name}</a>`;
+        }
+
+        function renderGlobalTable() {
+            const tbody = document.getElementById('globalTableBody');
+            const list = (cachedData && Array.isArray(cachedData.top100)) ? cachedData.top100 : [];
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noRecords[lang])}</td></tr>`;
+                return;
+            }
+            const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+            const indexed = list.map((item, idx) => ({ ...item, rank: idx + 1 }));
+            const filtered = q
+                ? indexed.filter(it => (it.username || '').toLowerCase().includes(q) || (it.channel || '').toLowerCase().includes(q))
+                : indexed;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noMatch[lang])}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                let rankHtml = `<span class="text-gray-400 font-mono font-semibold">${item.rank}</span>`;
+                let rowBg = 'hover:bg-white/[0.03]';
+                if (item.rank === 1) { rankHtml = '<span class="text-lg">🥇</span>'; rowBg = 'bg-amber-500/10 hover:bg-amber-500/15'; }
+                else if (item.rank === 2) { rankHtml = '<span class="text-lg">🥈</span>'; rowBg = 'bg-slate-400/10 hover:bg-slate-400/15'; }
+                else if (item.rank === 3) { rankHtml = '<span class="text-lg">🥉</span>'; rowBg = 'bg-orange-600/10 hover:bg-orange-600/15'; }
+
+                return `
+                    <tr class="${rowBg} transition-colors">
+                        <td class="py-3 px-4 text-center">${rankHtml}</td>
+                        <td class="py-3 px-4 font-semibold text-white">${esc(item.username)}</td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${platformBadge(item.platform)}
+                                ${channelLink(item)}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(item.score).toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderWeeklyCards() {
+            const box = document.getElementById('weeklyCards');
+            const list = (cachedData && Array.isArray(cachedData.weeklyTop5)) ? cachedData.weeklyTop5 : [];
+            if (list.length === 0) {
+                box.innerHTML = `<div class="py-10 text-center text-gray-500 text-sm rounded-2xl border border-gray-800 bg-black/30">${esc(i18n.noWeekly[lang])}</div>`;
+                return;
+            }
+            const maxJumps = Math.max(1, ...list.map(x => Number(x.jumps) || 0));
+            box.innerHTML = list.map((item, idx) => {
+                const rank = idx + 1;
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+                const pct = Math.max(6, Math.round(((Number(item.jumps) || 0) / maxJumps) * 100));
+                return `
+                    <div class="rounded-2xl border border-gray-800 bg-black/35 p-4 space-y-2.5">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 text-center text-lg font-extrabold text-amber-300">${medal}</span>
+                                ${platformBadge(item.platform)}
+                                <span class="text-base sm:text-lg font-bold text-white">${channelLink(item)}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.jumps).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US')}</span>
+                                <span class="text-xs text-gray-400 ml-1">${esc(i18n.jumpsLabel[lang])}</span>
+                            </div>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-gray-800/80 overflow-hidden">
+                            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500" style="width:${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStreamersTable() {
+            const tbody = document.getElementById('streamersTableBody');
+            const list = (cachedData && Array.isArray(cachedData.publicStreamers)) ? cachedData.publicStreamers : [];
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noStreamers[lang])}</td></tr>`;
+                return;
+            }
+            const q = (document.getElementById('streamerSearchInput').value || '').trim().toLowerCase();
+            const indexed = list.map((item, idx) => ({ ...item, rank: idx + 1 }));
+            const filtered = q
+                ? indexed.filter(it => (it.channel || '').toLowerCase().includes(q) || (it.recordHolder || '').toLowerCase().includes(q))
+                : indexed;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noMatch[lang])}</td></tr>`;
+                return;
+            }
+
+            const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+            tbody.innerHTML = filtered.map(item => {
+                let rankHtml = `<span class="text-gray-400 font-mono font-semibold">${item.rank}</span>`;
+                if (item.rank === 1) rankHtml = '<span class="text-lg">🥇</span>';
+                else if (item.rank === 2) rankHtml = '<span class="text-lg">🥈</span>';
+                else if (item.rank === 3) rankHtml = '<span class="text-lg">🥉</span>';
+
+                const holderHtml = item.recordHolder
+                    ? `<span class="text-[11px] text-gray-400 ml-1.5">(${esc(item.recordHolder)})</span>`
+                    : '';
+
+                return `
+                    <tr onclick="openChannelDetail('${esc(item.id)}')" class="cursor-pointer hover:bg-cyan-500/10 transition-colors">
+                        <td class="py-3.5 px-4 text-center">${rankHtml}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${platformBadge(item.platform)}
+                                <span class="font-bold text-white hover:text-cyan-300 transition-colors">${esc(item.channel)}</span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-mono font-bold text-cyan-300 tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</td>
+                        <td class="py-3.5 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openChannelDetail(id) {
+            selectedStreamerId = String(id);
+            renderChannelDetail(selectedStreamerId);
+            document.getElementById('streamersListView').classList.add('hidden');
+            document.getElementById('channelDetailView').classList.remove('hidden');
+        }
+
+        function closeChannelDetail() {
+            selectedStreamerId = null;
+            document.getElementById('channelDetailView').classList.add('hidden');
+            document.getElementById('streamersListView').classList.remove('hidden');
+        }
+
+        function renderChannelDetail(id) {
+            const list = (cachedData && Array.isArray(cachedData.publicStreamers)) ? cachedData.publicStreamers : [];
+            const item = list.find(s => String(s.id) === String(id));
+            if (!item) {
+                closeChannelDetail();
+                return;
+            }
+            const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+            const extLink = document.getElementById('detailExternalLink');
+            const href = externalChannelHref(item);
+            if (href) {
+                extLink.href = href;
+                extLink.classList.remove('hidden');
+            } else {
+                extLink.classList.add('hidden');
+            }
+
+            const holderText = item.recordHolder ? ` <span class="text-xs text-gray-400">(${esc(item.recordHolder)})</span>` : '';
+            document.getElementById('detailHeaderCard').innerHTML = `
+                <div class="flex items-center gap-3 flex-wrap">
+                    ${platformBadge(item.platform)}
+                    <span class="text-2xl font-extrabold text-white">${esc(item.channel)}</span>
+                </div>
+                <div class="flex items-center gap-6 flex-wrap text-sm">
+                    <div>
+                        <div class="text-xs text-gray-400">${esc(i18n.colTotalJumps[lang])}</div>
+                        <div class="text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400">${esc(i18n.colRecordScore[lang])}</div>
+                        <div class="text-xl font-extrabold font-mono text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderText}</div>
+                    </div>
+                </div>
+            `;
+
+            const tbody = document.getElementById('detailTopJumpersBody');
+            const jumpers = Array.isArray(item.topJumpers) ? item.topJumpers : [];
+            if (jumpers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noJumpers[lang])}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = jumpers.map((j, idx) => {
+                const rank = idx + 1;
+                const rankHtml = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `<span class="text-gray-400 font-mono">${rank}</span>`;
+                return `
+                    <tr class="hover:bg-white/[0.03] transition-colors">
+                        <td class="py-3 px-4 text-center text-base">${rankHtml}</td>
+                        <td class="py-3 px-4 font-semibold text-white">${esc(j.username)}</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-cyan-300 tabular-nums">${Number(j.jumps || 0).toLocaleString(locale)}</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(j.maxScore || 0).toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateCountdown() {
+            const el = document.getElementById('resetCountdown');
+            if (!el || !cachedData || !cachedData.nextReset) return;
+            const diff = Math.max(0, cachedData.nextReset - Date.now());
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            const pad = n => String(n).padStart(2, '0');
+            el.textContent = lang === 'en'
+                ? `${i18n.resetIn.en} ${d}d ${pad(h)}:${pad(m)}:${pad(s)}`
+                : `${i18n.resetIn.tr} ${d}g ${pad(h)}:${pad(m)}:${pad(s)}`;
+        }
+
+        function renderMeta() {
+            if (!cachedData) return;
+            const totalEl = document.getElementById('metaStats');
+            const updEl = document.getElementById('lastUpdated');
+            if (totalEl) {
+                const n = Number(cachedData.totalUniquePlayers || 0).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US');
+                totalEl.textContent = `${i18n.totalPlayers[lang]} ${n}`;
+            }
+            if (updEl && cachedData.updatedAt) {
+                const dt = new Date(cachedData.updatedAt);
+                updEl.textContent = `${i18n.updatedAt[lang]} ${dt.toLocaleTimeString(lang === 'tr' ? 'tr-TR' : 'en-US')}`;
+            }
+        }
+
+        async function loadData(fresh = false) {
+            try {
+                const res = await fetch(`${API_BASE}/global-leaderboard${fresh ? '?fresh=1' : ''}`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!data || !data.ok) throw new Error('Invalid response');
+                cachedData = data;
+                renderGlobalTable();
+                renderWeeklyCards();
+                renderStreamersTable();
+                if (selectedStreamerId) renderChannelDetail(selectedStreamerId);
+                renderMeta();
+                updateCountdown();
+                if (countdownTimer) clearInterval(countdownTimer);
+                countdownTimer = setInterval(updateCountdown, 1000);
+            } catch (e) {
+                document.getElementById('globalTableBody').innerHTML = `<tr><td colspan="4" class="py-10 text-center text-red-400">${esc(i18n.errorLoad[lang])}</td></tr>`;
+                document.getElementById('weeklyCards').innerHTML = `<div class="py-10 text-center text-red-400 text-sm">${esc(i18n.errorLoad[lang])}</div>`;
+                document.getElementById('streamersTableBody').innerHTML = `<tr><td colspan="4" class="py-10 text-center text-red-400">${esc(i18n.errorLoad[lang])}</td></tr>`;
+            }
+        }
+
+        applyLang();
+        loadData(false);
+    </script>
+</body>
+</html>
