@@ -100,9 +100,21 @@
             <div class="absolute -bottom-32 -left-32 w-64 h-64 bg-cyan-500 rounded-full mix-blend-screen filter blur-[120px] opacity-10"></div>
         </div>
 
-        <div class="mb-12 text-center relative z-10">
+        <div class="mb-10 text-center relative z-10">
             <h1 class="text-4xl font-bold mb-3 tracking-tight text-white">DropPool</h1>
             <p class="text-gray-400 font-light" data-i18n="subtitle">OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.</p>
+            <div id="panelLiveStats" class="mt-4 inline-flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+                <div class="inline-flex items-center gap-2 rounded-full bg-black/40 border border-cyan-500/25 px-3.5 py-1.5 text-xs sm:text-sm text-gray-300 shadow">
+                    <span>🪂</span>
+                    <span data-i18n="statTotalDrops">Toplam Atlayış:</span>
+                    <strong id="panelTotalDrops" class="font-mono font-bold text-cyan-300 tabular-nums">--</strong>
+                </div>
+                <div class="inline-flex items-center gap-2 rounded-full bg-black/40 border border-amber-500/25 px-3.5 py-1.5 text-xs sm:text-sm text-gray-300 shadow">
+                    <span>📺</span>
+                    <span data-i18n="statTotalChannels">Toplam Kanal:</span>
+                    <strong id="panelTotalChannels" class="font-mono font-bold text-amber-300 tabular-nums">--</strong>
+                </div>
+            </div>
         </div>
         
         <div class="absolute top-6 right-6 flex gap-3 z-20">
@@ -691,6 +703,8 @@
     <script>
         const i18n = {
             globalLbBtn: { tr: "Genel Sıralama", en: "Global Ranking" },
+            statTotalDrops: { tr: "Toplam Atlayış:", en: "Total Drops:" },
+            statTotalChannels: { tr: "Toplam Kanal:", en: "Total Channels:" },
             subtitle: { tr: "OBS Overlay bağlantılarınızı özelleştirin ve oluşturun.", en: "Customize and generate your OBS Overlay links." },
             bgToggleTitle: { tr: "Zemin Görselleri", en: "Floor Visuals" },
             bgToggleDesc: { tr: "Kapatırsanız sadece havuz görünür, zemin tamamen şeffaf olur.", en: "If disabled, only the pool is visible and the floor becomes transparent." },
@@ -949,6 +963,7 @@
             document.getElementById('helpContent').innerHTML = getHelpContent(currentCmd, lang);
             updateBotCommandsUI();
             renderTwitchBotStatusBadge();
+            renderPanelPublicStats();
 
             // Update placeholder
             document.getElementById('twitchChannelInput').placeholder = lang === 'tr' ? 'Örn: crossweq' : 'e.g. crossweq';
@@ -1628,6 +1643,33 @@
                 }
             }
         });
+
+        let panelPublicStatsData = null;
+        function renderPanelPublicStats() {
+            if (!panelPublicStatsData) return;
+            const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+            const dropsEl = document.getElementById('panelTotalDrops');
+            const chEl = document.getElementById('panelTotalChannels');
+            if (dropsEl && typeof panelPublicStatsData.totalDrops === 'number') {
+                dropsEl.textContent = Number(panelPublicStatsData.totalDrops).toLocaleString(locale);
+            }
+            if (chEl && typeof panelPublicStatsData.totalChannels === 'number') {
+                chEl.textContent = Number(panelPublicStatsData.totalChannels).toLocaleString(locale);
+            }
+        }
+
+        async function loadPanelPublicStats() {
+            try {
+                const res = await fetch('https://droppool-kick-api.crosweq204.workers.dev/public-stats');
+                if (!res.ok) return;
+                const d = await res.json();
+                if (d && d.ok) {
+                    panelPublicStatsData = d;
+                    renderPanelPublicStats();
+                }
+            } catch (e) { }
+        }
+        loadPanelPublicStats();
 
     </script>
 </body>

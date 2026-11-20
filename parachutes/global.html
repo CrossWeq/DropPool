@@ -51,6 +51,24 @@
             </div>
         </div>
 
+        <!-- Genel Özet İstatistikleri -->
+        <div class="relative z-10 grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+            <div class="rounded-xl sm:rounded-2xl border border-gray-800/90 bg-black/35 px-3.5 py-2.5 sm:px-5 sm:py-3.5 flex items-center gap-3">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-base sm:text-lg shrink-0">🪂</div>
+                <div class="min-w-0">
+                    <div class="text-[11px] sm:text-xs text-gray-400 truncate" data-i18n="statTotalDrops">Toplam Atlayış</div>
+                    <div id="statTotalDrops" class="text-base sm:text-xl font-extrabold font-mono text-cyan-300 tabular-nums">--</div>
+                </div>
+            </div>
+            <div class="rounded-xl sm:rounded-2xl border border-gray-800/90 bg-black/35 px-3.5 py-2.5 sm:px-5 sm:py-3.5 flex items-center gap-3">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-base sm:text-lg shrink-0">📺</div>
+                <div class="min-w-0">
+                    <div class="text-[11px] sm:text-xs text-gray-400 truncate" data-i18n="statTotalChannels">Toplam Kanal</div>
+                    <div id="statTotalChannels" class="text-base sm:text-xl font-extrabold font-mono text-amber-300 tabular-nums">--</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Sekmeler -->
         <div class="relative z-10 grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
             <button type="button" id="tabGlobalBtn" onclick="switchTab('global')" class="tab-btn active flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
@@ -197,6 +215,8 @@
         const i18n = {
             title: { tr: 'DropPool Genel Sıralama', en: 'DropPool Global Leaderboard' },
             subtitle: { tr: 'En iyi atlayış rekorları ve haftalık en aktif kanallar.', en: 'Best drop records and weekly top active channels.' },
+            statTotalDrops: { tr: 'Toplam Atlayış', en: 'Total Drops' },
+            statTotalChannels: { tr: 'Toplam Kanal', en: 'Total Channels' },
             refresh: { tr: 'Yenile', en: 'Refresh' },
             tabGlobal: { tr: 'İlk 100', en: 'Top 100' },
             tabWeekly: { tr: 'Haftalık Top 5', en: 'Weekly Top 5' },
@@ -506,15 +526,24 @@
 
         function renderMeta() {
             if (!cachedData) return;
+            const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+            const dropsEl = document.getElementById('statTotalDrops');
+            const channelsEl = document.getElementById('statTotalChannels');
+            if (dropsEl && typeof cachedData.totalDrops === 'number') {
+                dropsEl.textContent = Number(cachedData.totalDrops).toLocaleString(locale);
+            }
+            if (channelsEl && typeof cachedData.totalChannels === 'number') {
+                channelsEl.textContent = Number(cachedData.totalChannels).toLocaleString(locale);
+            }
             const totalEl = document.getElementById('metaStats');
             const updEl = document.getElementById('lastUpdated');
             if (totalEl) {
-                const n = Number(cachedData.totalUniquePlayers || 0).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US');
+                const n = Number(cachedData.totalUniquePlayers || 0).toLocaleString(locale);
                 totalEl.textContent = `${i18n.totalPlayers[lang]} ${n}`;
             }
             if (updEl && cachedData.updatedAt) {
                 const dt = new Date(cachedData.updatedAt);
-                updEl.textContent = `${i18n.updatedAt[lang]} ${dt.toLocaleTimeString(lang === 'tr' ? 'tr-TR' : 'en-US')}`;
+                updEl.textContent = `${i18n.updatedAt[lang]} ${dt.toLocaleTimeString(locale)}`;
             }
         }
 
