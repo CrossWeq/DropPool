@@ -28,8 +28,8 @@
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 md:p-10">
-    <div class="glass-panel w-full max-w-5xl rounded-3xl p-6 sm:p-8 md:p-10 relative mx-auto overflow-hidden">
+<body class="p-2.5 sm:p-6 md:p-10">
+    <div class="glass-panel w-full max-w-5xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 relative mx-auto overflow-hidden">
         <!-- Dekoratif Glow -->
         <div class="absolute inset-0 pointer-events-none z-0">
             <div class="absolute -top-28 -right-28 w-72 h-72 bg-amber-500 rounded-full mix-blend-screen filter blur-[140px] opacity-15"></div>
@@ -37,58 +37,57 @@
         </div>
 
         <!-- Üst Çubuk -->
-        <div class="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-8">
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 sm:mb-8">
             <div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center gap-2.5 sm:gap-3">
                     <span>🏆</span>
                     <span data-i18n="title">DropPool Genel Sıralama</span>
                 </h1>
-                <p class="text-sm text-gray-400 mt-1" data-i18n="subtitle">Tüm yayıncılardaki en iyi atlayış rekorları, haftalık en aktifler ve izin veren yayıncılar.</p>
+                <p class="text-xs sm:text-sm text-gray-400 mt-1" data-i18n="subtitle">İzin veren yayıncılardaki en iyi atlayış rekorları ve haftalık en aktif kanallar.</p>
             </div>
-            <div class="flex items-center gap-2.5">
-                <a href="panel.html" class="bg-black/40 border border-gray-700/60 text-gray-200 hover:bg-white/10 text-sm font-semibold py-2 px-3.5 rounded-xl transition-colors" data-i18n="backPanel">Kurulum Paneli</a>
-                <button type="button" id="refreshBtn" onclick="loadData(true)" class="bg-black/40 border border-gray-700/60 text-cyan-300 hover:bg-cyan-500/10 text-sm font-semibold py-2 px-3.5 rounded-xl transition-colors" data-i18n="refresh">Yenile</button>
-                <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/60 text-white font-bold py-2 px-3.5 rounded-xl hover:bg-white/10 transition-colors text-sm">ENG</button>
+            <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <button type="button" id="refreshBtn" onclick="loadData(true)" class="bg-black/40 border border-gray-700/60 text-cyan-300 hover:bg-cyan-500/10 text-xs sm:text-sm font-semibold py-2 px-3 sm:px-3.5 rounded-xl transition-colors" data-i18n="refresh">Yenile</button>
+                <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/60 text-white font-bold py-2 px-3 sm:px-3.5 rounded-xl hover:bg-white/10 transition-colors text-xs sm:text-sm">ENG</button>
             </div>
         </div>
 
         <!-- Sekmeler -->
-        <div class="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            <button type="button" id="tabGlobalBtn" onclick="switchTab('global')" class="tab-btn active flex items-center justify-center gap-2 rounded-2xl border border-gray-700/60 bg-black/30 px-4 py-3.5 text-sm font-bold text-gray-300 transition-all hover:bg-white/5">
-                <span>🥇</span>
-                <span data-i18n="tabGlobal">Genel Sıralama (İlk 100)</span>
+        <div class="relative z-10 grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
+            <button type="button" id="tabGlobalBtn" onclick="switchTab('global')" class="tab-btn active flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
+                <span class="text-base sm:text-sm">🥇</span>
+                <span data-i18n="tabGlobal">İlk 100</span>
             </button>
-            <button type="button" id="tabWeeklyBtn" onclick="switchTab('weekly')" class="tab-btn flex items-center justify-center gap-2 rounded-2xl border border-gray-700/60 bg-black/30 px-4 py-3.5 text-sm font-bold text-gray-300 transition-all hover:bg-white/5">
-                <span>🔥</span>
-                <span data-i18n="tabWeekly">Haftalık Top 5 Yayıncı</span>
+            <button type="button" id="tabWeeklyBtn" onclick="switchTab('weekly')" class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
+                <span class="text-base sm:text-sm">🔥</span>
+                <span data-i18n="tabWeekly">Haftalık Top 5</span>
             </button>
-            <button type="button" id="tabStreamersBtn" onclick="switchTab('streamers')" class="tab-btn flex items-center justify-center gap-2 rounded-2xl border border-gray-700/60 bg-black/30 px-4 py-3.5 text-sm font-bold text-gray-300 transition-all hover:bg-white/5">
-                <span>📺</span>
+            <button type="button" id="tabStreamersBtn" onclick="switchTab('streamers')" class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
+                <span class="text-base sm:text-sm">📺</span>
                 <span data-i18n="tabStreamers">Yayıncılar</span>
             </button>
         </div>
 
         <!-- Sekme 1: Genel Sıralama İlk 100 -->
-        <div id="globalSection" class="relative z-10 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <p class="text-xs text-gray-400" data-i18n="globalRule">
+        <div id="globalSection" class="relative z-10 space-y-3 sm:space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+                <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed" data-i18n="globalRule">
                     Bir oyuncu birden fazla yayıncıda dereceye girdiyse yalnızca en yüksek rekor puanıyla 1 kez listelenir.
                 </p>
                 <input type="text" id="searchInput" oninput="renderGlobalTable()" placeholder="Kullanıcı veya kanal ara..."
                     class="w-full sm:w-64 bg-black/40 border border-gray-700/60 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
             </div>
 
-            <div class="overflow-x-auto rounded-2xl border border-gray-800 bg-black/30">
+            <div class="overflow-hidden rounded-2xl border border-gray-800 bg-black/30">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 bg-black/30">
-                            <th class="py-3.5 px-4 w-16 text-center">#</th>
-                            <th class="py-3.5 px-4" data-i18n="colUser">Kullanıcı Adı</th>
-                            <th class="py-3.5 px-4" data-i18n="colChannel">Rekor Aldığı Kanal</th>
-                            <th class="py-3.5 px-4 text-right" data-i18n="colScore">Rekor Puan</th>
+                        <tr class="border-b border-gray-800 text-[11px] sm:text-xs uppercase tracking-wider text-gray-400 bg-black/30">
+                            <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 w-11 sm:w-16 text-center">#</th>
+                            <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colUser">Kullanıcı Adı</th>
+                            <th class="hidden sm:table-cell py-3.5 px-4" data-i18n="colChannel">Rekor Aldığı Kanal</th>
+                            <th class="py-3 px-3 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colScore">Rekor Puan</th>
                         </tr>
                     </thead>
-                    <tbody id="globalTableBody" class="divide-y divide-gray-800/70 text-sm">
+                    <tbody id="globalTableBody" class="divide-y divide-gray-800/70 text-xs sm:text-sm">
                         <tr>
                             <td colspan="4" class="py-10 text-center text-gray-500" data-i18n="loading">Yükleniyor...</td>
                         </tr>
@@ -98,45 +97,45 @@
         </div>
 
         <!-- Sekme 2: Haftalık En Çok Atlama (Top 5 Yayıncı) -->
-        <div id="weeklySection" class="relative z-10 hidden space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3 bg-black/30 border border-gray-800 rounded-2xl px-4 py-3">
+        <div id="weeklySection" class="relative z-10 hidden space-y-3 sm:space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-black/30 border border-gray-800 rounded-2xl px-3.5 py-3 sm:px-4">
                 <div class="text-xs sm:text-sm text-gray-300 flex items-center gap-2">
                     <span>🗓️</span>
                     <span data-i18n="weeklyRule">Her hafta Pazartesi 00:00 (TSİ) itibarıyla sıfırlanır.</span>
                 </div>
-                <div id="resetCountdown" class="text-xs font-mono font-semibold text-amber-300 bg-amber-950/50 border border-amber-700/50 px-3 py-1.5 rounded-xl">
+                <div id="resetCountdown" class="self-start sm:self-auto text-xs font-mono font-semibold text-amber-300 bg-amber-950/50 border border-amber-700/50 px-3 py-1.5 rounded-xl">
                     --
                 </div>
             </div>
 
-            <div id="weeklyCards" class="space-y-3">
+            <div id="weeklyCards" class="space-y-2.5 sm:space-y-3">
                 <div class="py-10 text-center text-gray-500 text-sm" data-i18n="loading">Yükleniyor...</div>
             </div>
         </div>
 
         <!-- Sekme 3: İzin Veren Yayıncılar Listesi -->
-        <div id="streamersSection" class="relative z-10 hidden space-y-4">
+        <div id="streamersSection" class="relative z-10 hidden space-y-3 sm:space-y-4">
             <!-- Liste Görünümü -->
-            <div id="streamersListView" class="space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <p class="text-xs text-gray-400" data-i18n="streamersRule">
-                        Kurulum panelinden verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Kanal detayını görmek için bir kanala tıklayın.
+            <div id="streamersListView" class="space-y-3 sm:space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+                    <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed" data-i18n="streamersRule">
+                        Verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Detay için bir kanala dokunun.
                     </p>
                     <input type="text" id="streamerSearchInput" oninput="renderStreamersTable()" placeholder="Kanal ara..."
                         class="w-full sm:w-64 bg-black/40 border border-gray-700/60 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border border-gray-800 bg-black/30">
+                <div class="overflow-hidden rounded-2xl border border-gray-800 bg-black/30">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 bg-black/30">
-                                <th class="py-3.5 px-4 w-16 text-center">#</th>
-                                <th class="py-3.5 px-4" data-i18n="colStreamerChannel">Kanal Adı</th>
-                                <th class="py-3.5 px-4 text-right" data-i18n="colTotalJumps">Toplam Atlama</th>
-                                <th class="py-3.5 px-4 text-right" data-i18n="colRecordScore">Rekor Puan</th>
+                            <tr class="border-b border-gray-800 text-[11px] sm:text-xs uppercase tracking-wider text-gray-400 bg-black/30">
+                                <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 w-11 sm:w-16 text-center">#</th>
+                                <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colStreamerChannel">Kanal Adı</th>
+                                <th class="py-3 px-3 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colTotalJumps">Toplam Atlama</th>
+                                <th class="hidden sm:table-cell py-3.5 px-4 text-right whitespace-nowrap" data-i18n="colRecordScore">Rekor Puan</th>
                             </tr>
                         </thead>
-                        <tbody id="streamersTableBody" class="divide-y divide-gray-800/70 text-sm">
+                        <tbody id="streamersTableBody" class="divide-y divide-gray-800/70 text-xs sm:text-sm">
                             <tr>
                                 <td colspan="4" class="py-10 text-center text-gray-500" data-i18n="loading">Yükleniyor...</td>
                             </tr>
@@ -148,32 +147,32 @@
             <!-- Kanal Detay Görünümü -->
             <div id="channelDetailView" class="hidden space-y-4">
                 <div class="flex items-center justify-between gap-3 flex-wrap">
-                    <button type="button" onclick="closeChannelDetail()" class="inline-flex items-center gap-2 bg-black/40 border border-gray-700/60 hover:bg-white/10 text-gray-200 text-sm font-semibold py-2 px-4 rounded-xl transition-colors">
+                    <button type="button" onclick="closeChannelDetail()" class="inline-flex items-center gap-2 bg-black/40 border border-gray-700/60 hover:bg-white/10 text-gray-200 text-xs sm:text-sm font-semibold py-2 px-3.5 sm:px-4 rounded-xl transition-colors">
                         <span>←</span>
                         <span data-i18n="backList">Listeye Dön</span>
                     </button>
                     <a id="detailExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-xs font-semibold text-cyan-300 hover:text-cyan-200 underline underline-offset-4" data-i18n="openChannel">Kanala Git ↗</a>
                 </div>
 
-                <div id="detailHeaderCard" class="rounded-2xl border border-gray-800 bg-black/35 p-5 flex flex-wrap items-center justify-between gap-4">
+                <div id="detailHeaderCard" class="rounded-2xl border border-gray-800 bg-black/35 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 </div>
 
                 <div class="space-y-2">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
+                    <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
                         <span>🪂</span>
                         <span data-i18n="topJumpersTitle">Bu Kanalda En Çok Atlayış Yapan İlk 5 Kişi</span>
                     </h2>
-                    <div class="overflow-x-auto rounded-2xl border border-gray-800 bg-black/30">
+                    <div class="overflow-hidden rounded-2xl border border-gray-800 bg-black/30">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 bg-black/30">
-                                    <th class="py-3.5 px-4 w-16 text-center">#</th>
-                                    <th class="py-3.5 px-4" data-i18n="colUser">Kullanıcı Adı</th>
-                                    <th class="py-3.5 px-4 text-right" data-i18n="colPlayerJumps">Toplam Atlama</th>
-                                    <th class="py-3.5 px-4 text-right" data-i18n="colPlayerMax">Max Puan</th>
+                                <tr class="border-b border-gray-800 text-[11px] sm:text-xs uppercase tracking-wider text-gray-400 bg-black/30">
+                                    <th class="py-3 px-2 sm:py-3.5 sm:px-4 w-10 sm:w-16 text-center">#</th>
+                                    <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colUser">Kullanıcı Adı</th>
+                                    <th class="py-3 px-2 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colPlayerJumps">Atl.</th>
+                                    <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colPlayerMax">Max</th>
                                 </tr>
                             </thead>
-                            <tbody id="detailTopJumpersBody" class="divide-y divide-gray-800/70 text-sm"></tbody>
+                            <tbody id="detailTopJumpersBody" class="divide-y divide-gray-800/70 text-xs sm:text-sm"></tbody>
                         </table>
                     </div>
                 </div>
@@ -181,7 +180,7 @@
         </div>
 
         <!-- Alt Bilgi -->
-        <div class="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+        <div class="relative z-10 mt-5 sm:mt-6 flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs text-gray-500">
             <span id="metaStats"></span>
             <span id="lastUpdated"></span>
         </div>
@@ -197,25 +196,24 @@
 
         const i18n = {
             title: { tr: 'DropPool Genel Sıralama', en: 'DropPool Global Leaderboard' },
-            subtitle: { tr: 'Tüm yayıncılardaki en iyi atlayış rekorları, haftalık en aktifler ve izin veren yayıncılar.', en: 'Best drop records across all streamers, weekly top channels, and opted-in streamers.' },
-            backPanel: { tr: 'Kurulum Paneli', en: 'Setup Panel' },
+            subtitle: { tr: 'İzin veren yayıncılardaki en iyi atlayış rekorları ve haftalık en aktif kanallar.', en: 'Best drop records from opted-in streamers and weekly top active channels.' },
             refresh: { tr: 'Yenile', en: 'Refresh' },
-            tabGlobal: { tr: 'Genel Sıralama (İlk 100)', en: 'Global Ranking (Top 100)' },
-            tabWeekly: { tr: 'Haftalık Top 5 Yayıncı', en: 'Weekly Top 5 Streamers' },
+            tabGlobal: { tr: 'İlk 100', en: 'Top 100' },
+            tabWeekly: { tr: 'Haftalık Top 5', en: 'Weekly Top 5' },
             tabStreamers: { tr: 'Yayıncılar', en: 'Streamers' },
             globalRule: { tr: 'Bir oyuncu birden fazla yayıncıda dereceye girdiyse yalnızca en yüksek rekor puanıyla 1 kez listelenir.', en: 'If a player ranks on multiple channels, only their single highest record score is listed.' },
             colUser: { tr: 'Kullanıcı Adı', en: 'Username' },
             colChannel: { tr: 'Rekor Aldığı Kanal', en: 'Channel' },
             colScore: { tr: 'Rekor Puan', en: 'Best Score' },
             weeklyRule: { tr: 'Her hafta Pazartesi 00:00 (TSİ) itibarıyla sıfırlanır.', en: 'Resets every Monday at 00:00 (TRT / UTC+3).' },
-            streamersRule: { tr: 'Kurulum panelinden verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Detaylar için bir kanala tıklayın.', en: 'Streamers who opted in from the setup panel are ranked by total drops. Click a channel to see its top 5 droppers.' },
+            streamersRule: { tr: 'Verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Detay için bir kanala dokunun.', en: 'Streamers who opted in are ranked by total drops. Tap a channel to see its top 5 droppers.' },
             colStreamerChannel: { tr: 'Kanal Adı', en: 'Channel Name' },
             colTotalJumps: { tr: 'Toplam Atlama', en: 'Total Drops' },
             colRecordScore: { tr: 'Rekor Puan', en: 'Record Score' },
             backList: { tr: 'Listeye Dön', en: 'Back to List' },
             openChannel: { tr: 'Kanala Git ↗', en: 'Visit Channel ↗' },
             topJumpersTitle: { tr: 'Bu Kanalda En Çok Atlayış Yapan İlk 5 Kişi', en: 'Top 5 Droppers in This Channel' },
-            colPlayerJumps: { tr: 'Toplam Atlama', en: 'Total Drops' },
+            colPlayerJumps: { tr: 'Atlayış', en: 'Drops' },
             colPlayerMax: { tr: 'Max Puan', en: 'Max Score' },
             loading: { tr: 'Yükleniyor...', en: 'Loading...' },
             noRecords: { tr: 'Henüz kayıtlı skor bulunmuyor.', en: 'No recorded scores yet.' },
@@ -275,12 +273,12 @@
 
         function platformBadge(platform) {
             if (platform === 'twitch') {
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#9146FF]/20 text-[#bf94ff] border border-[#9146FF]/40">TWITCH</span>';
+                return '<span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-[#9146FF]/20 text-[#bf94ff] border border-[#9146FF]/40">TWITCH</span>';
             }
             if (platform === 'both') {
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">KICK + TW</span>';
+                return '<span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">KICK + TW</span>';
             }
-            return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#53FC18]/15 text-[#53FC18] border border-[#53FC18]/40">KICK</span>';
+            return '<span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-[#53FC18]/15 text-[#53FC18] border border-[#53FC18]/40">KICK</span>';
         }
 
         function externalChannelHref(item) {
@@ -317,21 +315,27 @@
             tbody.innerHTML = filtered.map(item => {
                 let rankHtml = `<span class="text-gray-400 font-mono font-semibold">${item.rank}</span>`;
                 let rowBg = 'hover:bg-white/[0.03]';
-                if (item.rank === 1) { rankHtml = '<span class="text-lg">🥇</span>'; rowBg = 'bg-amber-500/10 hover:bg-amber-500/15'; }
-                else if (item.rank === 2) { rankHtml = '<span class="text-lg">🥈</span>'; rowBg = 'bg-slate-400/10 hover:bg-slate-400/15'; }
-                else if (item.rank === 3) { rankHtml = '<span class="text-lg">🥉</span>'; rowBg = 'bg-orange-600/10 hover:bg-orange-600/15'; }
+                if (item.rank === 1) { rankHtml = '<span class="text-base sm:text-lg">🥇</span>'; rowBg = 'bg-amber-500/10 hover:bg-amber-500/15'; }
+                else if (item.rank === 2) { rankHtml = '<span class="text-base sm:text-lg">🥈</span>'; rowBg = 'bg-slate-400/10 hover:bg-slate-400/15'; }
+                else if (item.rank === 3) { rankHtml = '<span class="text-base sm:text-lg">🥉</span>'; rowBg = 'bg-orange-600/10 hover:bg-orange-600/15'; }
 
                 return `
                     <tr class="${rowBg} transition-colors">
-                        <td class="py-3 px-4 text-center">${rankHtml}</td>
-                        <td class="py-3 px-4 font-semibold text-white">${esc(item.username)}</td>
-                        <td class="py-3 px-4">
+                        <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-center">${rankHtml}</td>
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4">
+                            <div class="font-semibold text-white break-words">${esc(item.username)}</div>
+                            <div class="sm:hidden mt-1 flex items-center gap-1.5 flex-wrap text-[11px] text-gray-400">
+                                ${platformBadge(item.platform)}
+                                ${channelLink(item)}
+                            </div>
+                        </td>
+                        <td class="hidden sm:table-cell py-3 px-4">
                             <div class="flex items-center gap-2 flex-wrap">
                                 ${platformBadge(item.platform)}
                                 ${channelLink(item)}
                             </div>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(item.score).toFixed(2)}</td>
+                        <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-right font-mono font-bold text-amber-300 tabular-nums whitespace-nowrap">${Number(item.score).toFixed(2)}</td>
                     </tr>
                 `;
             }).join('');
@@ -350,16 +354,16 @@
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
                 const pct = Math.max(6, Math.round(((Number(item.jumps) || 0) / maxJumps) * 100));
                 return `
-                    <div class="rounded-2xl border border-gray-800 bg-black/35 p-4 space-y-2.5">
-                        <div class="flex items-center justify-between gap-3 flex-wrap">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 text-center text-lg font-extrabold text-amber-300">${medal}</span>
+                    <div class="rounded-2xl border border-gray-800 bg-black/35 p-3.5 sm:p-4 space-y-2.5">
+                        <div class="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
+                            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                                <span class="w-7 sm:w-8 text-center text-base sm:text-lg font-extrabold text-amber-300 shrink-0">${medal}</span>
                                 ${platformBadge(item.platform)}
-                                <span class="text-base sm:text-lg font-bold text-white">${channelLink(item)}</span>
+                                <span class="text-sm sm:text-lg font-bold text-white truncate">${channelLink(item)}</span>
                             </div>
-                            <div class="text-right">
-                                <span class="text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.jumps).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US')}</span>
-                                <span class="text-xs text-gray-400 ml-1">${esc(i18n.jumpsLabel[lang])}</span>
+                            <div class="text-right shrink-0">
+                                <span class="text-base sm:text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.jumps).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US')}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-400 ml-1">${esc(i18n.jumpsLabel[lang])}</span>
                             </div>
                         </div>
                         <div class="w-full h-2 rounded-full bg-gray-800/80 overflow-hidden">
@@ -391,25 +395,28 @@
             const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
             tbody.innerHTML = filtered.map(item => {
                 let rankHtml = `<span class="text-gray-400 font-mono font-semibold">${item.rank}</span>`;
-                if (item.rank === 1) rankHtml = '<span class="text-lg">🥇</span>';
-                else if (item.rank === 2) rankHtml = '<span class="text-lg">🥈</span>';
-                else if (item.rank === 3) rankHtml = '<span class="text-lg">🥉</span>';
+                if (item.rank === 1) rankHtml = '<span class="text-base sm:text-lg">🥇</span>';
+                else if (item.rank === 2) rankHtml = '<span class="text-base sm:text-lg">🥈</span>';
+                else if (item.rank === 3) rankHtml = '<span class="text-base sm:text-lg">🥉</span>';
 
                 const holderHtml = item.recordHolder
-                    ? `<span class="text-[11px] text-gray-400 ml-1.5">(${esc(item.recordHolder)})</span>`
+                    ? `<span class="text-[11px] text-gray-400 ml-1">(${esc(item.recordHolder)})</span>`
                     : '';
 
                 return `
                     <tr onclick="openChannelDetail('${esc(item.id)}')" class="cursor-pointer hover:bg-cyan-500/10 transition-colors">
-                        <td class="py-3.5 px-4 text-center">${rankHtml}</td>
-                        <td class="py-3.5 px-4">
-                            <div class="flex items-center gap-2 flex-wrap">
+                        <td class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-center">${rankHtml}</td>
+                        <td class="py-3 px-2 sm:py-3.5 sm:px-4">
+                            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 ${platformBadge(item.platform)}
                                 <span class="font-bold text-white hover:text-cyan-300 transition-colors">${esc(item.channel)}</span>
                             </div>
+                            <div class="sm:hidden mt-1 text-[11px] text-amber-300/90 font-mono">
+                                ${esc(i18n.recordLabel[lang])} ${Number(item.recordScore || 0).toFixed(2)}${holderHtml}
+                            </div>
                         </td>
-                        <td class="py-3.5 px-4 text-right font-mono font-bold text-cyan-300 tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</td>
-                        <td class="py-3.5 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderHtml}</td>
+                        <td class="py-3 px-3 sm:py-3.5 sm:px-4 text-right font-mono font-bold text-cyan-300 tabular-nums whitespace-nowrap">${Number(item.totalJumps || 0).toLocaleString(locale)}</td>
+                        <td class="hidden sm:table-cell py-3.5 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderHtml}</td>
                     </tr>
                 `;
             }).join('');
@@ -447,18 +454,18 @@
 
             const holderText = item.recordHolder ? ` <span class="text-xs text-gray-400">(${esc(item.recordHolder)})</span>` : '';
             document.getElementById('detailHeaderCard').innerHTML = `
-                <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
                     ${platformBadge(item.platform)}
-                    <span class="text-2xl font-extrabold text-white">${esc(item.channel)}</span>
+                    <span class="text-xl sm:text-2xl font-extrabold text-white">${esc(item.channel)}</span>
                 </div>
-                <div class="flex items-center gap-6 flex-wrap text-sm">
+                <div class="grid grid-cols-2 sm:flex items-center gap-4 sm:gap-6 text-sm w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-800/80">
                     <div>
-                        <div class="text-xs text-gray-400">${esc(i18n.colTotalJumps[lang])}</div>
-                        <div class="text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</div>
+                        <div class="text-[11px] sm:text-xs text-gray-400">${esc(i18n.colTotalJumps[lang])}</div>
+                        <div class="text-lg sm:text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</div>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400">${esc(i18n.colRecordScore[lang])}</div>
-                        <div class="text-xl font-extrabold font-mono text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderText}</div>
+                        <div class="text-[11px] sm:text-xs text-gray-400">${esc(i18n.colRecordScore[lang])}</div>
+                        <div class="text-lg sm:text-xl font-extrabold font-mono text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderText}</div>
                     </div>
                 </div>
             `;
@@ -474,10 +481,10 @@
                 const rankHtml = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `<span class="text-gray-400 font-mono">${rank}</span>`;
                 return `
                     <tr class="hover:bg-white/[0.03] transition-colors">
-                        <td class="py-3 px-4 text-center text-base">${rankHtml}</td>
-                        <td class="py-3 px-4 font-semibold text-white">${esc(j.username)}</td>
-                        <td class="py-3 px-4 text-right font-mono font-bold text-cyan-300 tabular-nums">${Number(j.jumps || 0).toLocaleString(locale)}</td>
-                        <td class="py-3 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(j.maxScore || 0).toFixed(2)}</td>
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 text-center text-sm sm:text-base">${rankHtml}</td>
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 font-semibold text-white break-words">${esc(j.username)}</td>
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 text-right font-mono font-bold text-cyan-300 tabular-nums">${Number(j.jumps || 0).toLocaleString(locale)}</td>
+                        <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(j.maxScore || 0).toFixed(2)}</td>
                     </tr>
                 `;
             }).join('');
