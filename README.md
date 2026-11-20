@@ -2,6 +2,8 @@
 
 ![DropPool](https://img.shields.io/badge/Version-8.7-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick%20%7C%20Twitch-green)
 
+🔗 **Kurulum Sayfası / Setup Page:** [https://crossweq.github.io/DropPool/parachutes/panel.html](https://crossweq.github.io/DropPool/parachutes/panel.html)
+
 🇹🇷 **DropPool**, hem **Kick** hem de **Twitch** ile tam uyumlu çalışan (ister tek platformda, ister iki platform aynı anda ortak olarak kullanılabilen) açık kaynaklı ve interaktif bir OBS aracıdır. İzleyicilerinizin sohbete (chat) belirlediğiniz komutu yazarak ekrandaki havuza kendi isimleriyle paraşütle atlamasını sağlar.
 
 🇬🇧 **DropPool** is an open-source, interactive OBS overlay fully compatible with both **Kick** and **Twitch** (usable on a single platform or both platforms simultaneously). It allows your viewers to drop into a pool with their custom parachutes and names by typing a command in the chat.
