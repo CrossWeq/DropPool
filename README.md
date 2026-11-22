@@ -1,6 +1,6 @@
 # DropPool 🪂
 
-![DropPool](https://img.shields.io/badge/Version-8.7-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick%20%7C%20Twitch-green)
+![DropPool](https://img.shields.io/badge/Version-10.0-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Kick%20%7C%20Twitch-green)
 
 🔗 **Kurulum Sayfası / Setup Page:** [https://crossweq.github.io/DropPool/parachutes/panel.html](https://crossweq.github.io/DropPool/parachutes/panel.html)
 
@@ -13,7 +13,7 @@
 ## 🚀 Özellikler / Features
 
 - 🟢🟣 **Kick & Twitch Tam Uyumluluk (Kick & Twitch Compatibility):** Kurulum ekranından **Kick**, **Twitch** ya da **Kick + Twitch** seçilebilir. Kick + Twitch modunda her iki platformun izleyicileri aynı oyunda, aynı sıralamada ve aynı toplu atlayış kuyruğunda buluşur. (Works seamlessly with Kick, Twitch, or both platforms combined in the same game, leaderboard, and group-drop queue.)
-- 🤖 **Resmi Kick & Twitch Chatbot Entegrasyonu (v8.7):** DropPoolBot ile hem Kick hem Twitch sohbetinde canlı liderlik sıralaması (`!atlalist`), tüm zamanlar rekorları (`!atlatop`), kullanıcıya özel genel sıralama ve atlayış karnesi (`!atlacount`), dinamik komut listesi (`!atlakomutları` / seçilen komuta göre `!{cmd}komutları`), Duo uyarıları, TR/EN otomatik dil desteği ve toplu atlayış anonsları.
+- 🤖 **Resmi Kick & Twitch Chatbot Entegrasyonu (v10.0):** DropPoolBot ile hem Kick hem Twitch sohbetinde canlı liderlik sıralaması (`!atlalist`), tüm zamanlar rekorları (`!atlatop`), kullanıcıya özel genel sıralama ve atlayış karnesi (`!atlacount`), dinamik komut listesi (`!atlakomutları` / seçilen komuta göre `!{cmd}komutları`), Duo uyarıları, TR/EN otomatik dil desteği ve toplu atlayış anonsları.
 - 🎨 **Özelleştirilebilir Temalar (Custom Themes):** İlkbahar, Sonbahar, Kış ve Cehennem temaları. (Spring, Autumn, Winter, Hell)
 - 🪂 **Renk Seçenekleri (Parachute Colors):** İzleyiciler için 8 farklı havalı paraşüt rengi. (8 different parachute colors)
 - 😂 **Kick & Twitch Emote Desteği:** İzleyiciler komutla birlikte bir Kick ya da Twitch emote'u yazdığında o emote ekranda düşen karakter olur! GIF/WEBP dahil (Kick). (Kick & Twitch emotes become the falling character)
@@ -44,7 +44,7 @@
 
 **🇹🇷 Türkçe:**
 1. `panel.html` dosyasını tarayıcınızda açın.
-2. Önce **Yayın Platformu**'nu seçin: **Kick** (varsayılan), **Twitch** ya da **Kick + Twitch**. Seçime göre **Kick** ve/veya **Twitch kanal adınızı** girin. Ardından tetikleyici komutu (Örn: `!atla`) ve bekleme süresini ayarlayın.
+2. Önce **Yayın Platformu**'nu seçin: **Kick**, **Twitch** ya da **Kick + Twitch**. Kick için Kick hesabınızla, Twitch için Twitch hesabınızla giriş yapın; **Kick + Twitch** seçeneğinde iki hesabı da bağlayın. Kanal adları giriş yapılan hesaplardan otomatik alınır. Ardından tetikleyici komutu (Örn: `!atla`) ve bekleme süresini ayarlayın.
 3. İstediğiniz temaları, oyun boyutunu, sıralama renk stilini ve aktif paraşüt renklerini seçin.
 4. **"Bağlantıları Oluştur"** butonuna tıklayın.
 5. Oluşan **"1. Ana Oyun Ekranı"** linkini kopyalayın ve OBS'te yeni bir **Tarayıcı (Browser)** kaynağı oluşturarak URL kısmına yapıştırın. (Genişlik: 1920, Yükseklik: 1080 olmalıdır).
@@ -55,7 +55,7 @@
 
 **🇬🇧 English:**
 1. Open the `panel.html` file in your browser.
-2. Choose your **Streaming Platform**: **Kick** (default), **Twitch** or **Kick + Twitch**. Enter your **Kick** and/or **Twitch channel name** accordingly. Then set the trigger command (e.g. `!drop`) and cooldown duration.
+2. Choose your **Streaming Platform**: **Kick**, **Twitch** or **Kick + Twitch**. Sign in with Kick for Kick, Twitch for Twitch, or connect both accounts for **Kick + Twitch**. Channel names are retrieved automatically from the connected accounts. Then set the trigger command (e.g. `!drop`) and cooldown duration.
 3. Select your desired themes, game size, leaderboard color style, and active parachute colors.
 4. Click the **"Generate Links"** button.
 5. Copy the **"1. Main Overlay"** link and add a new **Browser Source** in **OBS Studio** (Width: 1920, Height: 1080).
@@ -138,37 +138,29 @@
 
 ---
 
-## 🤖 Resmi Kick & Twitch Chatbotu (v8.7) / Official Kick & Twitch Chatbot
+## 🤖 Resmi Kick & Twitch Chatbotu (v10.0) / Official Kick & Twitch Chatbot
 
 🇹🇷 **DropPoolBot Nasıl Kullanılır?**
-- **Kick — Seçenek 1 (Önerilen — Modluksuz & Resmi Bot Rozetli):**
-  1. [Kick ile Botu Bağla](https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect) bağlantısından yalnızca `user:read` ve `chat:write` izniyle giriş yapın.
-  2. `/mod` vermenize gerek kalmadan bot anında aktifleşir ve sohbete resmi **Bot** rozetiyle yazar.
-  3. Tokenlarınız ayrı bir D1 tablosunda **AES-256-GCM** ile şifreli tutulur, hiçbir arayüzden görüntülenemez. İstediğiniz zaman sohbete `!droppoolbot disconnect` yazarak tokenı kalıcı olarak silebilirsiniz.
-- **Kick — Seçenek 2 (Klasik Yöntem):**
-  1. Kick sohbetinizde bota moderatör yetkisi verin: `/mod DropPoolBot`
-  2. Botu açmak için sohbete yazın: `!droppoolbot enable`
-  3. Kapatmak istediğinizde yazın: `!droppoolbot disable`
+- Kurulum ekranındaki **Sohbet botunu etkinleştir** seçeneğiyle Kick botunu açın veya kapalı bırakın. Sonradan Kick sohbetinden yalnızca yayıncı `!droppoolbot enable` / `!droppoolbot disable` komutlarıyla değiştirebilir. Bota mod verme adımı yoktur.
 - **Twitch (EventSub Webhook & Tek Tıkla OAuth):**
-  1. Kurulum panelinden **Twitch** veya **Kick + Twitch** seçin ve **"Twitch ile Botu Bağla"** butonuna tıklayarak giriş yapın (`/mod` gerekmez, kullanıcı tokenı saklanmaz).
-  2. Panelde belirlediğiniz tetikleyici komut (ör. `!hopla`) ve dil (`TR`/`EN`) bota otomatik aktarılır; `!droppoolbot disable` / `enable` / `disconnect` komutları Twitch sohbetinden de çalışır.
+  1. **Twitch** modunda Twitch hesabınızla, **Kick + Twitch** modunda hem Kick hem Twitch hesabınızla giriş yapın. Twitch girişi sohbet botu izinlerini de verir (`/mod` gerekmez, Twitch kullanıcı tokenı saklanmaz).
+  2. Kurulumdaki chatbot tercihiniz Twitch botunu da kontrol eder; sonradan `!droppoolbot disable` / `enable` komutları Twitch sohbetinden kullanılabilir.
   3. **Kick + Twitch** modunda her iki bot kendi sohbetine cevap verir ve ortak skor/sıralamayı paylaşır.
 - Bot tamamen resmi Kick Webhook ve Twitch EventSub API'leri + Cloudflare Edge altyapısı üzerinde çalışır; sıfır polling ile anlık yanıt verir.
 
 🇬🇧 **How to Use DropPoolBot?**
-- **Kick — Option 1 (Recommended — No Mod Required & Official Bot Badge):**
-  1. Sign in via [Connect Bot with Kick](https://droppool-kick-api.crosweq204.workers.dev/streamer/bot/connect) granting only `user:read` and `chat:write`.
-  2. The bot activates immediately without `/mod` and posts with the official **Bot** badge.
-  3. Your tokens are stored AES-256-GCM encrypted in an isolated D1 table and never exposed anywhere. Type `!droppoolbot disconnect` in chat anytime to revoke and delete your token.
-- **Kick — Option 2 (Classic Method):**
-  1. Give moderator privileges to the bot in your Kick chat: `/mod DropPoolBot`
-  2. Turn on the bot by typing: `!droppoolbot enable`
-  3. Turn off whenever you want by typing: `!droppoolbot disable`
+- Use the **Enable chatbot** option in setup to turn the Kick bot on or leave it off. Later, only the broadcaster can change it from Kick chat with `!droppoolbot enable` / `!droppoolbot disable`. No moderator grant is needed.
 - **Twitch (EventSub Webhook & One-Click OAuth):**
-  1. Select **Twitch** or **Kick + Twitch** in the setup panel and click **"Connect Bot with Twitch"** (no `/mod` needed, no user token is stored).
-  2. Your custom trigger command and selected language (`TR`/`EN`) are automatically synced to the bot; `!droppoolbot disable` / `enable` / `disconnect` work in Twitch chat as well.
+  1. Sign in with Twitch in **Twitch** mode. In **Kick + Twitch** mode, sign in with both Kick and Twitch. Twitch sign-in also grants chatbot permissions (no `/mod` needed; the Twitch user token is not stored).
+  2. The chatbot preference in setup also controls the Twitch bot; later, use `!droppoolbot disable` / `enable` in Twitch chat.
   3. In **Kick + Twitch** mode both bots reply in their respective chats while sharing the same game leaderboard and stats.
 - Powered by official Kick Webhooks & Twitch EventSub on Cloudflare Edge; zero polling and instant responses.
+
+## 🔒 Gizlilik / Privacy
+
+Seçilen platforma göre Kick ve/veya Twitch hesabıyla giriş yapılır; parola DropPool'a verilmez. Kick kullanıcı numarası ve kanal adı, Twitch kullanıcı numarası ve kanal giriş adı alınır. Twitch izni sohbeti okuma/yazma ve botu bağlama kapsamlarını içerir. Platform seçimi, ayarlar, chatbot tercihi ve oyun istatistikleri de hizmeti sunmak için işlenir. Genel sıralamada yayıncı verilerinin paylaşılması ayrı bir izin seçeneğine bağlıdır. OAuth erişim belirteçleri doğrulama sırasında kullanılır ve saklanmaz; hesap/kanal kimlikleri panel oturumunu korumak için tarayıcıda tutulur. Veriler HTTPS üzerinden aktarılır ve Worker hizmetinin saklama altyapısında tutulur; saklanan chatbot tokenları AES-256-GCM ile şifrelenir.
+
+Users sign in with Kick and/or Twitch depending on the selected platform; DropPool does not receive their passwords. The Kick user ID and channel name, Twitch user ID and channel login, platform selection, settings, chatbot preference, and game statistics are processed to provide the service. Twitch authorization includes chat read/write and bot connection scopes. Displaying broadcaster data on the global leaderboard requires separate consent. OAuth access tokens are used during verification and are not stored; account/channel identities are kept in the browser to retain the panel session. Data is transmitted over HTTPS and stored by the Worker service; stored chatbot tokens are encrypted with AES-256-GCM.
 
 ---
 
@@ -210,5 +202,3 @@
 Developed with ❤️ by **CrossWeq**
 
 İletişim / Contact: [crosweq204@gmail.com](mailto:crosweq204@gmail.com)
-
-
