@@ -242,7 +242,7 @@
             thScore: { tr: "Rekor Puan", en: "Best Score" },
             thLastJump: { tr: "Son Atlayış", en: "Last Drop" },
             confirmTitle: { tr: "Emin misiniz?", en: "Are you sure?" },
-            confirmClearShort: { tr: "Tüm istatistikler ve geçmiş kalıcı olarak silinecek!", en: "All stats and history will be permanently deleted!" },
+            confirmClearShort: { tr: "Yerel OBS istatistikleri ve geçmişi silinecek! (Bot/sunucu skorlarını da sıfırlamak için sohbetten !resetdropall yazın veya Kurulum Paneli > Gizlilik menüsünü kullanın.)", en: "Local OBS stats and history will be cleared! (To also reset bot/server scores, type !resetdropall in chat or use Setup Panel > Privacy.)" },
             cancelBtn: { tr: "İptal", en: "Cancel" },
             confirmBtn: { tr: "Sil", en: "Delete" },
             noStats: { tr: "Henüz istatistik bulunmuyor.", en: "No statistics available yet." },
@@ -566,11 +566,15 @@
 
                     if (!broadcasterId && !channelName && top10.length === 0) return false;
 
+                    const clientResetAt = (() => {
+                        try { return Number(localStorage.getItem('droppool_last_reset_at') || 0) || 0; } catch (e) { return 0; }
+                    })();
                     const payload = {
                         id: broadcasterId || undefined,
                         channel: channelName || undefined,
                         top10: top10,
                         users: usersStats,
+                        clientResetAt,
                         force: !!force
                     };
                     if (hasLbInStorage) {
@@ -583,6 +587,19 @@
                         body: JSON.stringify(payload)
                     });
                     const resData = await res.json();
+                    if (resData && resData.resetRequired && resData.statsResetAt) {
+                        logs = [];
+                        statsData = {};
+                        try {
+                            localStorage.removeItem('droppool_logs');
+                            localStorage.removeItem('droppool_stats');
+                            localStorage.removeItem('droppool_leaderboard');
+                            localStorage.setItem('droppool_last_reset_at', String(resData.statsResetAt));
+                        } catch (e) { }
+                        renderLogs();
+                        renderStats();
+                        return true;
+                    }
                     if (resData && resData.ok) {
                         console.log('[DropPool Data] Skorlar bota eşitlendi.');
                         return true;

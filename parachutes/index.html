@@ -498,6 +498,28 @@
             syncScoresToWorker();
         }
 
+        const LAST_RESET_AT_KEY = 'droppool_last_reset_at';
+        function getClientResetAt() {
+            try { return Number(localStorage.getItem(LAST_RESET_AT_KEY) || 0) || 0; } catch (e) { return 0; }
+        }
+        function applyServerStatsReset(serverResetAt, forceLocal = false) {
+            const ts = Number(serverResetAt) || 0;
+            const localTs = getClientResetAt();
+            if (!forceLocal && (ts <= 0 || ts <= localTs)) return false;
+            const nextTs = Math.max(ts, Date.now());
+            leaderboard = [];
+            try {
+                localStorage.removeItem('droppool_stats');
+                localStorage.removeItem('droppool_logs');
+                localStorage.removeItem('droppool_leaderboard');
+                localStorage.setItem(LAST_RESET_AT_KEY, String(nextTs));
+            } catch (e) { }
+            syncChannel.postMessage({ type: 'CLEAR_LOGS' });
+            syncChannel.postMessage({ type: 'LEADERBOARD_RESET' });
+            console.log('[DropPool] Tüm kanal istatistikleri ve sıralamalar sıfırlandı.');
+            return true;
+        }
+
         // Sıralamayı manuel sıfırlamak için global fonksiyon
         window.resetLeaderboard = function () {
             leaderboard = [];
@@ -636,10 +658,15 @@
                             top10: top10,
                             users: usersStats,
                             pub: publicStatsOptIn,
+                            clientResetAt: getClientResetAt(),
                             force: !!force
                         })
                     });
                     const resData = await res.json().catch(() => null);
+                    if (resData && resData.resetRequired && resData.statsResetAt) {
+                        applyServerStatsReset(resData.statsResetAt, false);
+                        return;
+                    }
                     // İlk 20 sn cooldown'una denk gelip D1'e yazılmadıysa ve canlı sıralama doluysa 22 sn sonra 1 kez yedek eşitleme yap
                     if (!isRetry && resData && resData.ok && resData.kvWritten === false && currentLb.length > 0) {
                         if (syncScoresRetryTimer) clearTimeout(syncScoresRetryTimer);
@@ -2161,6 +2188,7 @@
                             localStorage.setItem('droppool_channel_name', String(channelName));
                             syncChannel.postMessage({ type: 'BROADCASTER_INFO', broadcasterId: data.id, channelName: channelName });
                         } catch (e) { }
+                        if (data.statsResetAt) applyServerStatsReset(data.statsResetAt, false);
                         syncScoresToWorker(true);
                         registerTwitchWithWorker();
                     } else {
@@ -2357,6 +2385,15 @@
                     addDropPoolLog(username, 'SİSTEM', logMsg);
                     console.log(`[DropPool] ${kind === 'meteor' ? 'Meteor Yağmuru' : 'Toplu atlayış (Drop Together)'} modu AKTİF (${owner})${durationSec > 0 ? ` [${durationSec}s sayaç]` : ''}${takeover ? ' — devralındı, sıra korundu' : ''}. İzleyiciler sıraya alınıyor.`);
                 };
+
+                // Tüm kanal istatistiklerini ve sıralamayı sıfırlama: !resetdropall / !resetstats / !resetallstats
+                const isResetAllStats = lowerMsg === '!resetdropall' || lowerMsg === '!resetstats' || lowerMsg === '!resetallstats';
+                if (isResetAllStats) {
+                    if (isBroadcaster() || isAdmin) {
+                        applyServerStatsReset(Date.now(), true);
+                        return;
+                    }
+                }
 
                 // Sıralama sıfırlama komutları: !resetdroplist, !resetlist, !resetdrop list
                 const isResetList = lowerMsg === '!resetdroplist' || lowerMsg === '!resetlist' || lowerMsg === '!atlaresetlist' ||
@@ -2645,6 +2682,11 @@
                     if (!response.ok) {
                         const error = await response.json().catch(() => ({}));
                         console.error('[Twitch] Worker kaydı başarısız:', error.error || response.status);
+                    } else {
+                        const twRegData = await response.json().catch(() => null);
+                        if (twRegData && twRegData.statsResetAt) {
+                            applyServerStatsReset(twRegData.statsResetAt, false);
+                        }
                     }
                 } catch (error) {
                     console.error('[Twitch] Worker kaydına ulaşılamadı.', error);

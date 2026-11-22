@@ -85,6 +85,7 @@
 | `!atlatop` | Bot | Tüm zamanların en yüksek rekoruna sahip ilk 10 oyuncusunu listeler. |
 | `!atlakomutlar` / `!atlakomutları` | Bot | Botu ve oyunu tetikleyen tüm interaktif komutları sohbete döker. |
 | `!atlahelp` (veya `!help`) | Bot | Yayıncı yardım komutlarını listeler (Herkes yazabilir). |
+| `!global` | Bot | DropPool Genel Sıralama bağlantısını sohbete gönderir *(yalnızca genel sıralamaya onay veren kanallarda aktif)*. |
 | `!crossweq` | Bot | DropPool Kurulum Paneli bağlantısını sohbete gönderir. |
 
 **🇹🇷 Yayıncı Komutları *(Sadece Yayıncı)*:**
@@ -96,6 +97,7 @@
 | `!meteor [saniye]` | **Meteor Yağmuru Modunu** başlatır. Herkes paraşütsüz alevler içinde göktaşı gibi düşer. Bot sohbete otomatik anons geçer. |
 | `!resetdrop` | Bekleme sürelerini sıfırlar, varsa aktif toplu atlayışı iptal eder ve sahneyi temizler. |
 | `!resetdroplist` / `!resetlist` | Canlı yayın ilk 5 sıralamasını (overlay ve bot) anında sıfırlar. |
+| `!resetdropall` / `!resetstats` | Kanal içi tüm skor, istatistik, sıralama ve `log.html` verilerini sıfırlar *(genel toplam atlayış sayacı düşmez)*. |
 | `!droptogetherhelp` | Toplu atlayış modunun nasıl kullanıldığını açıklar. |
 | `!meteorhelp` | Meteor modunun nasıl kullanıldığını açıklar. |
 | `!resetdrophelp` | Sıfırlama komutunu ve OBS kaynak yenileme ipucunu açıklar. |
@@ -120,6 +122,7 @@
 | `!droptop` | Bot | Lists the all-time top 10 best scores. |
 | `!dropcommands` | Bot | Posts all game and bot commands into chat. |
 | `!drophelp` (or `!help`) | Bot | Displays broadcaster help menu (can be used by anyone). |
+| `!global` | Bot | Posts the Global Leaderboard URL into chat *(active only for opted-in channels)*. |
 | `!crossweq` | Bot | Posts the setup panel URL into chat. |
 
 **🇬🇧 Streamer Commands *(Streamer Only)*:**
@@ -131,6 +134,7 @@
 | `!meteor [seconds]` | Starts **Meteor Shower Mode**. Everyone crashes down like fiery meteors. Bot announces queue in chat. |
 | `!resetdrop` | Resets all viewer cooldowns, cancels ongoing group drops, and clears the screen. |
 | `!resetdroplist` / `!resetlist` | Instantly resets the live top 5 leaderboard (overlay and bot). |
+| `!resetdropall` / `!resetstats` | Resets all channel scores, stats, leaderboards, and `log.html` data *(global total drops counter is preserved)*. |
 | `!droptogetherhelp` | Explains how to use the plane drop mode. |
 | `!meteorhelp` | Explains how to use the meteor shower mode. |
 | `!resetdrophelp` | Explains resetdrop and OBS browser source refresh tips. |

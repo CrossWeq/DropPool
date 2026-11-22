@@ -863,7 +863,15 @@
                     <p id="privacyActionNotice" class="hidden text-xs font-mono px-3 py-2 rounded-lg border"></p>
                     <div class="flex flex-wrap gap-2.5">
                         <button type="button" id="withdrawConsentBtn" onclick="handleWithdrawConsent()" class="bg-[#171A21] hover:bg-[#212630] border border-[#F5A623]/45 text-[#F5A623] font-mono text-xs font-semibold px-3.5 py-2 rounded-lg transition-all duration-200 ease-expo active:scale-[0.98]" data-i18n="withdrawConsentBtn">Genel Sıralamadan Çık (Rızayı Geri Çek)</button>
+                        <button type="button" id="resetScoresBtn" onclick="promptResetScores()" class="bg-[#171A21] hover:bg-[#212630] border border-sky-400/40 text-sky-300 font-mono text-xs font-semibold px-3.5 py-2 rounded-lg transition-all duration-200 ease-expo active:scale-[0.98]" data-i18n="resetScoresBtn">Sadece Skor &amp; İstatistikleri Sıfırla</button>
                         <button type="button" id="deleteServerDataBtn" onclick="promptDeleteServerData()" class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 font-mono text-xs font-semibold px-3.5 py-2 rounded-lg transition-all duration-200 ease-expo active:scale-[0.98]" data-i18n="deleteServerDataBtn">Sunucu Verilerimi Kalıcı Sil</button>
+                    </div>
+                    <div id="resetScoresConfirmBox" class="hidden bg-sky-950/35 border border-sky-400/35 rounded-lg p-3 space-y-2.5">
+                        <p class="text-xs text-sky-100" data-i18n="resetScoresConfirmText">Kanalınıza ait tüm izleyici skorları, Top 10, canlı sıralama ve OBS log kayıtları sıfırlanacak; hesabınız ve chatbot bağlantınız korunacaktır. Onaylıyor musunuz?</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" id="confirmResetScoresBtn" onclick="executeResetScores()" class="bg-sky-500 hover:bg-sky-400 text-[#0A0B0E] font-mono text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all active:scale-[0.98]" data-i18n="resetScoresConfirmYes">Evet, Skorları Sıfırla</button>
+                            <button type="button" id="cancelResetScoresBtn" onclick="cancelResetScores()" class="bg-[#171A21] hover:bg-[#212630] border border-white/15 text-[#D5DBE3] font-mono text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-all active:scale-[0.98]" data-i18n="deleteConfirmNo">Vazgeç</button>
+                        </div>
                     </div>
                     <div id="deleteConfirmBox" class="hidden bg-red-950/35 border border-red-500/40 rounded-lg p-3 space-y-2.5">
                         <p class="text-xs text-red-200" data-i18n="deleteConfirmText">Kanal kaydınız, tüm sunucu skor/atlayış verileriniz, bot tokenınız ve webhook abonelikleriniz kalıcı olarak silinecek ve tarayıcı oturumunuz kapatılacaktır. Onaylıyor musunuz?</p>
@@ -945,6 +953,10 @@
             privacyRights: { tr: "6698 sayılı KVKK Madde 11 ve GDPR kapsamında; verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, işlenme amacını ve yurt içi/yurt dışı aktarılan tarafları bilme, düzeltilmesini veya silinmesini/yok edilmesini isteme ve verdiğiniz açık rızayı dilediğiniz zaman geri çekme hakkına sahipsiniz. Aşağıdaki kontrollerden anında işlem yapabilir veya crosweq204@gmail.com adresinden bize ulaşabilirsiniz.", en: "Under GDPR and Turkish Law No. 6698 (KVKK Art. 11), you have the right to know whether your data is processed, request access, learn the purpose and third-party recipients, request rectification or erasure (right to be forgotten), object to processing, and withdraw consent at any time. Use the self-service controls below or email crosweq204@gmail.com." },
             privacyActionsTitle: { tr: "Rıza Yönetimi ve Veri Silme (Self-Servis)", en: "Consent Management & Data Deletion (Self-Service)" },
             withdrawConsentBtn: { tr: "Genel Sıralamadan Çık (Rızayı Geri Çek)", en: "Opt Out of Global Leaderboard" },
+            resetScoresBtn: { tr: "Sadece Skor & İstatistikleri Sıfırla", en: "Reset Scores & Stats Only" },
+            resetScoresConfirmText: { tr: "Kanalınıza ait tüm izleyici skorları, Top 10, canlı sıralama ve OBS log kayıtları sıfırlanacak; hesabınız ve chatbot bağlantınız korunacaktır. Onaylıyor musunuz?", en: "All viewer scores, Top 10, live leaderboard, and OBS log data for your channel will be reset; your account and chatbot stay active. Confirm?" },
+            resetScoresConfirmYes: { tr: "Evet, Skorları Sıfırla", en: "Yes, Reset Scores" },
+            scoresResetSuccess: { tr: "Kanal skorları ve istatistikleri sıfırlandı.", en: "Channel scores and statistics have been reset." },
             deleteServerDataBtn: { tr: "Sunucu Verilerimi Kalıcı Sil", en: "Permanently Delete My Server Data" },
             deleteConfirmText: { tr: "Kanal kaydınız, tüm sunucu skor/atlayış verileriniz, bot tokenınız ve webhook abonelikleriniz kalıcı olarak silinecek ve tarayıcı oturumunuz kapatılacaktır. Onaylıyor musunuz?", en: "Your channel registration, all server score/drop data, bot tokens, and webhook subscriptions will be permanently deleted and your session signed out. Confirm?" },
             deleteConfirmYes: { tr: "Evet, Kalıcı Olarak Sil", en: "Yes, Delete Permanently" },
@@ -1093,6 +1105,7 @@
                     <li><code>!meteor</code> veya <code>!meteor [saniye]</code> - Meteor Yağmuru modunu başlatır (örn: <code>!meteor 60</code>). Herkes paraşütsüz, alevler içinde göktaşı gibi hızla düşer.</li>
                     <li><code>!resetdrop</code> - Chat'ten yazıldığında süreli atlayışı, kuyruğu ve bekleme sürelerini (cooldown) anında iptal edip sahneyi temizler.</li>
                     <li><code>!resetdroplist</code> (veya <code>!resetlist</code>) - Canlı yayın ilk 5 sıralamasını (ekran ve bot) anında sıfırlar.</li>
+                    <li><code>!resetdropall</code> (veya <code>!resetstats</code>) - Kanal içi tüm izleyici skorlarını, Top 10'u, canlı sıralamayı ve log geçmişini sıfırlar (hesap/bot ve genel toplam atlayış sayacı korunur).</li>
                 </ul>
 
                 <h3 class="font-mono text-sm font-bold uppercase tracking-wider text-[#F2F4F7] mt-5">04 // Chatbot ve Sohbet Komutları</h3>
@@ -1102,6 +1115,7 @@
                     <li><code>${cmd}top</code> - Tüm zamanların en yüksek rekoruna sahip ilk 10 oyuncusunu listeler.</li>
                     <li><code>${cmd}komutlar</code> veya <code>!dropcommands</code> - DropPool oyun ve bot komutlarının tümünü sohbete döker.</li>
                     <li><code>${cmd}help</code> (veya <code>!help</code>) - Yayıncı yardım rehberini sohbete yazar (herkes yazabilir).</li>
+                    <li><code>!global</code> - Genel Sıralama web sayfası linkini sohbete gönderir (yalnızca genel sıralamaya onay veren kanallarda aktif).</li>
                     <li><code>!crossweq</code> - DropPool Kurulum Paneli web sitesi linkini sohbete gönderir.</li>
                     <li><strong class="text-[#F2F4F7]">Yayıncı Bot Kontrolü:</strong> <code>!droppoolbot enable</code> ve <code>!droppoolbot disable</code> ile bot chate bağlanır/kapatılır.</li>
                     <li><strong class="text-[#F2F4F7]">Yayıncı Yardım Rehberleri:</strong> <code>!droptogetherhelp</code>, <code>!meteorhelp</code>, <code>!resetdrophelp</code> ve <code>!resetdroplisthelp</code> komutları ilgili modun nasıl çalıştığını ayrıntılı açıklar.</li>
@@ -1155,6 +1169,7 @@
                     <li><code>!meteor</code> or <code>!meteor [seconds]</code> - Starts Meteor Shower mode with optional duration (e.g. <code>!meteor 60</code>). Everyone drops without parachutes like blazing fire meteors.</li>
                     <li><code>!resetdrop</code> - Cancels any ongoing timed drop or queue immediately, clears cooldowns, and resets the scene.</li>
                     <li><code>!resetdroplist</code> (or <code>!resetlist</code>) - Instantly resets the live stream top 5 leaderboard (screen &amp; bot).</li>
+                    <li><code>!resetdropall</code> (or <code>!resetstats</code>) - Resets all channel viewer scores, Top 10, live leaderboard, and log history (account/bot and global total drops are preserved).</li>
                 </ul>
 
                 <h3 class="font-mono text-sm font-bold uppercase tracking-wider text-[#F2F4F7] mt-5">04 // Chatbot &amp; Chat Commands</h3>
@@ -1164,6 +1179,7 @@
                     <li><code>${cmd}top</code> - Lists the all-time top 10 players and their best scores.</li>
                     <li><code>${cmd}commands</code> or <code>!dropcommands</code> - Lists all interactive game and bot commands.</li>
                     <li><code>${cmd}help</code> (or <code>!help</code>) - Displays the broadcaster help guide (can be typed by anyone).</li>
+                    <li><code>!global</code> - Posts the Global Leaderboard URL into chat (active only for opted-in channels).</li>
                     <li><code>!crossweq</code> - Posts the DropPool setup panel link into chat.</li>
                     <li><strong class="text-[#F2F4F7]">Broadcaster Bot Toggle:</strong> <code>!droppoolbot enable</code> and <code>!droppoolbot disable</code> turn the chatbot on or off.</li>
                     <li><strong class="text-[#F2F4F7]">Broadcaster Help Guides:</strong> <code>!droptogetherhelp</code>, <code>!meteorhelp</code>, <code>!resetdrophelp</code>, and <code>!resetdroplisthelp</code> explain how each mode works in detail.</li>
@@ -1999,6 +2015,7 @@
                 const notice = document.getElementById('privacyActionNotice');
                 if (notice) notice.classList.add('hidden');
                 cancelDeleteServerData();
+                cancelResetScores();
                 openModalAnimated(modal);
             } else {
                 closeModalAnimated(modal);
@@ -2085,6 +2102,72 @@
             }
         }
 
+        function promptResetScores() {
+            const tokens = getActiveSessionTokens();
+            if (!tokens.kickToken && !tokens.twitchToken) {
+                showPrivacyNotice(i18n.reauthRequired[lang], 'info');
+                showCopyToast(i18n.reauthRequired[lang]);
+                return;
+            }
+            cancelDeleteServerData();
+            const box = document.getElementById('resetScoresConfirmBox');
+            if (box) box.classList.remove('hidden');
+        }
+
+        function cancelResetScores() {
+            const box = document.getElementById('resetScoresConfirmBox');
+            if (box) box.classList.add('hidden');
+        }
+
+        async function executeResetScores() {
+            const tokens = getActiveSessionTokens();
+            if (!tokens.kickToken && !tokens.twitchToken) {
+                cancelResetScores();
+                showPrivacyNotice(i18n.reauthRequired[lang], 'info');
+                showCopyToast(i18n.reauthRequired[lang]);
+                return;
+            }
+            const btn = document.getElementById('confirmResetScoresBtn');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch(`${KICK_API_WORKER}/streamer/reset-scores`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tokens)
+                });
+                if (res.status === 401) {
+                    cancelResetScores();
+                    showPrivacyNotice(i18n.reauthRequired[lang], 'info');
+                    showCopyToast(i18n.reauthRequired[lang]);
+                    return;
+                }
+                const d = await res.json();
+                if (res.ok && d && d.ok) {
+                    cancelResetScores();
+                    try {
+                        localStorage.removeItem('droppool_stats');
+                        localStorage.removeItem('droppool_logs');
+                        localStorage.removeItem('droppool_leaderboard');
+                        if (d.statsResetAt) localStorage.setItem('droppool_last_reset_at', String(d.statsResetAt));
+                    } catch (e) { }
+                    try {
+                        const bc = new BroadcastChannel('droppool_channel');
+                        bc.postMessage({ type: 'CLEAR_LOGS' });
+                        bc.postMessage({ type: 'LEADERBOARD_RESET' });
+                        bc.close();
+                    } catch (e) { }
+                    showPrivacyNotice(i18n.scoresResetSuccess[lang], 'success');
+                    showCopyToast(i18n.scoresResetSuccess[lang]);
+                } else {
+                    showPrivacyNotice(i18n.privacyRequestError[lang], 'error');
+                }
+            } catch (e) {
+                showPrivacyNotice(i18n.privacyRequestError[lang], 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
         function promptDeleteServerData() {
             const tokens = getActiveSessionTokens();
             if (!tokens.kickToken && !tokens.twitchToken) {
@@ -2092,6 +2175,7 @@
                 showCopyToast(i18n.reauthRequired[lang]);
                 return;
             }
+            cancelResetScores();
             const box = document.getElementById('deleteConfirmBox');
             if (box) box.classList.remove('hidden');
         }
