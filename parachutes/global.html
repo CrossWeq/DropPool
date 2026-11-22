@@ -5,212 +5,427 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DropPool - Genel Sıralama &amp; Yayıncılar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #0b101e 0%, #12182b 50%, #090e1a 100%);
-            color: #e2e8f0;
-            min-height: 100vh;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                    colors: {
+                        ground: '#0A0B0E',
+                        surface: '#111317',
+                        inset: '#0D0F13',
+                        elevated: '#171A21',
+                        accent: '#F5A623',
+                    }
+                }
+            }
         }
-        .glass-panel {
-            background: rgba(17, 24, 39, 0.72);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+    </script>
+    <style>
+        :root {
+            --bg: #0A0B0E;
+            --surface: #111317;
+            --inset: #0D0F13;
+            --elevated: #171A21;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text: #F2F4F7;
+            --text-muted: #9AA2B0;
+            --text-dim: #67707E;
+            --accent: #F5A623;
+            --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'IBM Plex Sans', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .ease-expo {
+            transition-timing-function: var(--ease-expo);
+        }
+        /* Layered depth + crisp 1px top specular highlight */
+        .surface-card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 36px -18px rgba(0, 0, 0, 0.78);
+        }
+        .sub-card {
+            background-color: var(--inset);
+            border: 1px solid rgba(255, 255, 255, 0.065);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        /* Subtle mouse-tracking border & surface spotlight */
+        .spotlight-card {
+            position: relative;
+            isolation: isolate;
+        }
+        .spotlight-card::before,
+        .spotlight-card::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 260ms var(--ease-expo);
+        }
+        .spotlight-card::before {
+            z-index: 0;
+            background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.04), transparent 65%);
+        }
+        .spotlight-card::after {
+            z-index: 2;
+            padding: 1px;
+            background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(245, 166, 35, 0.36), rgba(255, 255, 255, 0.14) 42%, transparent 72%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+        }
+        .spotlight-card:hover::before,
+        .spotlight-card:hover::after {
+            opacity: 1;
+        }
+        .spotlight-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sliding tab bar indicator */
+        #tabSlider {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 0;
+            border-radius: 8px;
+            background-color: #1A1E26;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px -4px rgba(0, 0, 0, 0.55);
+            pointer-events: none;
+            z-index: 0;
+            will-change: transform, width;
+            transition: transform 320ms var(--ease-expo), width 320ms var(--ease-expo);
+        }
+        #tabSlider::after {
+            content: '';
+            position: absolute;
+            left: 20%;
+            right: 20%;
+            bottom: -1px;
+            height: 2px;
+            border-radius: 9999px;
+            background-color: var(--accent);
+        }
+        .tab-btn {
+            position: relative;
+            z-index: 1;
+            color: var(--text-muted);
+            transition: color 200ms var(--ease-expo), transform 150ms var(--ease-expo);
+        }
+        .tab-btn:hover {
+            color: var(--text);
         }
         .tab-btn.active {
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.25));
-            border-color: rgba(56, 189, 248, 0.55);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+            color: var(--text);
+        }
+        .tab-btn.active .tab-code {
+            color: var(--accent);
+        }
+
+        /* Falling Characters Animation */
+        @keyframes fallDown {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+            5% { opacity: var(--max-opacity, 0.9); }
+            95% { opacity: var(--max-opacity, 0.9); }
+            100% { transform: translateY(110vh) rotate(var(--end-rot, 360deg)); opacity: 0; }
+        }
+
+        .falling-char {
+            position: fixed;
+            top: -100px;
+            animation: fallDown linear forwards;
+            pointer-events: none;
+            z-index: 0;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
+        }
+
+        /* Modal smooth scale + fade transitions */
+        .modal-backdrop {
+            transition: opacity 240ms var(--ease-expo);
+        }
+        .modal-panel {
+            transition: transform 280ms var(--ease-expo), opacity 240ms var(--ease-expo);
+            transform: scale(0.96) translateY(8px);
+            opacity: 0;
+        }
+        .modal-backdrop.is-open .modal-panel {
+            transform: scale(1) translateY(0);
+            opacity: 1;
         }
     </style>
 </head>
-<body class="p-2.5 sm:p-6 md:p-10">
-    <div class="glass-panel w-full max-w-5xl rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 relative mx-auto overflow-hidden">
-        <!-- Dekoratif Glow -->
-        <div class="absolute inset-0 pointer-events-none z-0">
-            <div class="absolute -top-28 -right-28 w-72 h-72 bg-amber-500 rounded-full mix-blend-screen filter blur-[140px] opacity-15"></div>
-            <div class="absolute -bottom-28 -left-28 w-72 h-72 bg-cyan-500 rounded-full mix-blend-screen filter blur-[140px] opacity-15"></div>
-        </div>
+<body class="px-3 py-5 sm:px-6 sm:py-8 md:px-10 md:py-10">
+    <div class="w-full max-w-5xl mx-auto space-y-5 relative z-10">
 
-        <!-- Üst Çubuk -->
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 sm:mb-8">
-            <div>
-                <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white flex items-center gap-2.5 sm:gap-3">
-                    <span>🏆</span>
-                    <span data-i18n="title">DropPool Genel Sıralama</span>
-                </h1>
-                <p class="text-xs sm:text-sm text-gray-400 mt-1" data-i18n="subtitle">En iyi atlayış rekorları ve haftalık en aktif kanallar.</p>
-            </div>
-            <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                <button type="button" id="refreshBtn" onclick="loadData(true)" class="bg-black/40 border border-gray-700/60 text-cyan-300 hover:bg-cyan-500/10 text-xs sm:text-sm font-semibold py-2 px-3 sm:px-3.5 rounded-xl transition-colors" data-i18n="refresh">Yenile</button>
-                <button type="button" id="langBtn" onclick="toggleLang()" class="bg-black/40 border border-gray-700/60 text-white font-bold py-2 px-3 sm:px-3.5 rounded-xl hover:bg-white/10 transition-colors text-xs sm:text-sm">ENG</button>
-            </div>
-        </div>
-
-        <!-- Genel Özet İstatistikleri -->
-        <div class="relative z-10 grid grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
-            <div class="rounded-xl sm:rounded-2xl border border-gray-800/90 bg-black/35 px-3.5 py-2.5 sm:px-5 sm:py-3.5 flex items-center gap-3">
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-base sm:text-lg shrink-0">🪂</div>
+        <!-- Üst Başlık ve Özet Telemetri Kartı -->
+        <header class="reveal-block surface-card spotlight-card rounded-xl overflow-hidden">
+            <div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-white/[0.07]">
                 <div class="min-w-0">
-                    <div class="text-[11px] sm:text-xs text-gray-400 truncate" data-i18n="statTotalDrops">Toplam Atlayış</div>
-                    <div id="statTotalDrops" class="text-base sm:text-xl font-extrabold font-mono text-cyan-300 tabular-nums">--</div>
+                    <div class="font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-[#F5A623] mb-1.5 flex items-center gap-2">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#F5A623]"></span>
+                        <span>DROPPOOL // TELEMETRY</span>
+                    </div>
+                    <h1 class="text-xl sm:text-3xl font-bold tracking-tight text-[#F2F4F7] leading-tight">
+                        <span data-i18n="title">DropPool Genel Sıralama</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm text-[#9AA2B0] mt-1" data-i18n="subtitle">En iyi atlayış rekorları ve haftalık en aktif kanallar.</p>
                 </div>
-            </div>
-            <div class="rounded-xl sm:rounded-2xl border border-gray-800/90 bg-black/35 px-3.5 py-2.5 sm:px-5 sm:py-3.5 flex items-center gap-3">
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-base sm:text-lg shrink-0">📺</div>
-                <div class="min-w-0">
-                    <div class="text-[11px] sm:text-xs text-gray-400 truncate" data-i18n="statTotalChannels">Toplam Kanal</div>
-                    <div id="statTotalChannels" class="text-base sm:text-xl font-extrabold font-mono text-amber-300 tabular-nums">--</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sekmeler -->
-        <div class="relative z-10 grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
-            <button type="button" id="tabGlobalBtn" onclick="switchTab('global')" class="tab-btn active flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
-                <span class="text-base sm:text-sm">🥇</span>
-                <span data-i18n="tabGlobal">İlk 100</span>
-            </button>
-            <button type="button" id="tabWeeklyBtn" onclick="switchTab('weekly')" class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
-                <span class="text-base sm:text-sm">🔥</span>
-                <span data-i18n="tabWeekly">Haftalık Top 5</span>
-            </button>
-            <button type="button" id="tabStreamersBtn" onclick="switchTab('streamers')" class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl sm:rounded-2xl border border-gray-700/60 bg-black/30 px-2 py-2.5 sm:px-4 sm:py-3.5 text-[11px] sm:text-sm font-bold text-gray-300 transition-all hover:bg-white/5 text-center leading-tight">
-                <span class="text-base sm:text-sm">📺</span>
-                <span data-i18n="tabStreamers">Yayıncılar</span>
-            </button>
-        </div>
-
-        <!-- Sekme 1: Genel Sıralama İlk 100 -->
-        <div id="globalSection" class="relative z-10 space-y-3 sm:space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-                <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed" data-i18n="globalRule">
-                    Bir oyuncu birden fazla yayıncıda dereceye girdiyse yalnızca en yüksek rekor puanıyla 1 kez listelenir.
-                </p>
-                <input type="text" id="searchInput" oninput="renderGlobalTable()" placeholder="Kullanıcı veya kanal ara..."
-                    class="w-full sm:w-64 bg-black/40 border border-gray-700/60 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
-            </div>
-
-            <div class="overflow-hidden rounded-2xl border border-gray-800 bg-black/30">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-gray-800 text-[11px] sm:text-xs uppercase tracking-wider text-gray-400 bg-black/30">
-                            <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 w-11 sm:w-16 text-center">#</th>
-                            <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colUser">Kullanıcı Adı</th>
-                            <th class="hidden sm:table-cell py-3.5 px-4" data-i18n="colChannel">Rekor Aldığı Kanal</th>
-                            <th class="py-3 px-3 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colScore">Rekor Puan</th>
-                        </tr>
-                    </thead>
-                    <tbody id="globalTableBody" class="divide-y divide-gray-800/70 text-xs sm:text-sm">
-                        <tr>
-                            <td colspan="4" class="py-10 text-center text-gray-500" data-i18n="loading">Yükleniyor...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Sekme 2: Haftalık En Çok Atlama (Top 5 Yayıncı) -->
-        <div id="weeklySection" class="relative z-10 hidden space-y-3 sm:space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-black/30 border border-gray-800 rounded-2xl px-3.5 py-3 sm:px-4">
-                <div class="text-xs sm:text-sm text-gray-300 flex items-center gap-2">
-                    <span>🗓️</span>
-                    <span data-i18n="weeklyRule">Her hafta Pazartesi 00:00 (TSİ) itibarıyla sıfırlanır.</span>
-                </div>
-                <div id="resetCountdown" class="self-start sm:self-auto text-xs font-mono font-semibold text-amber-300 bg-amber-950/50 border border-amber-700/50 px-3 py-1.5 rounded-xl">
-                    --
+                <div class="flex items-center gap-2 self-end sm:self-start shrink-0">
+                    <button type="button" onclick="togglePrivacyModal()" class="sub-card rounded-lg hover:border-[#F5A623]/60 text-[#D5DBE3] hover:text-[#F5A623] font-mono text-xs font-semibold uppercase tracking-wider py-2 px-3.5 transition-all duration-200 ease-expo active:scale-[0.98] focus-visible:outline-none focus-visible:border-[#F5A623]" data-i18n="privacyBtn">Gizlilik / KVKK</button>
+                    <button type="button" id="refreshBtn" onclick="loadData(true)" class="sub-card rounded-lg hover:border-[#F5A623]/60 text-[#F2F4F7] hover:text-[#F5A623] font-mono text-xs font-semibold uppercase tracking-wider py-2 px-3.5 transition-all duration-200 ease-expo active:scale-[0.98] focus-visible:outline-none focus-visible:border-[#F5A623]" data-i18n="refresh">Yenile</button>
+                    <button type="button" id="langBtn" onclick="toggleLang()" class="sub-card rounded-lg hover:border-white/20 text-[#F2F4F7] font-mono text-xs font-bold uppercase tracking-wider py-2 px-3.5 transition-all duration-200 ease-expo active:scale-[0.98] focus-visible:outline-none focus-visible:border-[#F5A623]">ENG</button>
                 </div>
             </div>
 
-            <div id="weeklyCards" class="space-y-2.5 sm:space-y-3">
-                <div class="py-10 text-center text-gray-500 text-sm" data-i18n="loading">Yükleniyor...</div>
-            </div>
-        </div>
-
-        <!-- Sekme 3: İzin Veren Yayıncılar Listesi -->
-        <div id="streamersSection" class="relative z-10 hidden space-y-3 sm:space-y-4">
-            <!-- Liste Görünümü -->
-            <div id="streamersListView" class="space-y-3 sm:space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-                    <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed" data-i18n="streamersRule">
-                        Verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Detay için bir kanala dokunun.
-                    </p>
-                    <input type="text" id="streamerSearchInput" oninput="renderStreamersTable()" placeholder="Kanal ara..."
-                        class="w-full sm:w-64 bg-black/40 border border-gray-700/60 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+            <!-- Genel Özet Telemetri Kartları -->
+            <div class="p-3 sm:p-4 grid grid-cols-2 gap-3 bg-[#0D0F13]/80">
+                <div class="sub-card spotlight-card rounded-xl px-4 py-3.5 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.14em] text-[#67707E] truncate" data-i18n="statTotalDrops">Toplam Atlayış</div>
+                        <div id="statTotalDrops" class="mt-1 text-lg sm:text-2xl font-extrabold font-mono text-[#F5A623] tabular-nums leading-none">--</div>
+                    </div>
+                    <span class="hidden sm:inline-block font-mono text-[10px] text-[#67707E] border border-white/[0.08] bg-white/[0.02] rounded-md px-2 py-0.5">ALL-TIME</span>
                 </div>
-
-                <div class="overflow-hidden rounded-2xl border border-gray-800 bg-black/30">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-gray-800 text-[11px] sm:text-xs uppercase tracking-wider text-gray-400 bg-black/30">
-                                <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 w-11 sm:w-16 text-center">#</th>
-                                <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colStreamerChannel">Kanal Adı</th>
-                                <th class="py-3 px-3 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colTotalJumps">Toplam Atlama</th>
-                                <th class="hidden sm:table-cell py-3.5 px-4 text-right whitespace-nowrap" data-i18n="colRecordScore">Rekor Puan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="streamersTableBody" class="divide-y divide-gray-800/70 text-xs sm:text-sm">
-                            <tr>
-                                <td colspan="4" class="py-10 text-center text-gray-500" data-i18n="loading">Yükleniyor...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="sub-card spotlight-card rounded-xl px-4 py-3.5 sm:px-5 sm:py-4 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.14em] text-[#67707E] truncate" data-i18n="statTotalChannels">Toplam Kanal</div>
+                        <div id="statTotalChannels" class="mt-1 text-lg sm:text-2xl font-extrabold font-mono text-[#F2F4F7] tabular-nums leading-none">--</div>
+                    </div>
+                    <span class="hidden sm:inline-block font-mono text-[10px] text-[#67707E] border border-white/[0.08] bg-white/[0.02] rounded-md px-2 py-0.5">40+ DROPS</span>
                 </div>
             </div>
+        </header>
 
-            <!-- Kanal Detay Görünümü -->
-            <div id="channelDetailView" class="hidden space-y-4">
-                <div class="flex items-center justify-between gap-3 flex-wrap">
-                    <button type="button" onclick="closeChannelDetail()" class="inline-flex items-center gap-2 bg-black/40 border border-gray-700/60 hover:bg-white/10 text-gray-200 text-xs sm:text-sm font-semibold py-2 px-3.5 sm:px-4 rounded-xl transition-colors">
-                        <span>←</span>
-                        <span data-i18n="backList">Listeye Dön</span>
+        <!-- Ana İçerik Kartı -->
+        <main class="reveal-block surface-card rounded-xl overflow-hidden">
+
+            <!-- Kayar Göstergeli Sekme Barı -->
+            <div class="p-3 sm:px-6 sm:pt-5 sm:pb-0">
+                <div id="tabBar" class="relative grid grid-cols-3 p-1 rounded-xl bg-[#0D0F13] border border-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div id="tabSlider" aria-hidden="true"></div>
+                    <button type="button" id="tabGlobalBtn" onclick="switchTab('global')" class="tab-btn active rounded-lg px-2 py-2.5 sm:px-4 sm:py-2.5 text-center flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 active:scale-[0.98] focus-visible:outline-none">
+                        <span class="tab-code font-mono text-[10px] sm:text-xs font-bold text-[#67707E]">01</span>
+                        <span class="text-xs sm:text-sm font-semibold tracking-tight leading-tight" data-i18n="tabGlobal">İlk 100</span>
                     </button>
-                    <a id="detailExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-xs font-semibold text-cyan-300 hover:text-cyan-200 underline underline-offset-4" data-i18n="openChannel">Kanala Git ↗</a>
+                    <button type="button" id="tabWeeklyBtn" onclick="switchTab('weekly')" class="tab-btn rounded-lg px-2 py-2.5 sm:px-4 sm:py-2.5 text-center flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 active:scale-[0.98] focus-visible:outline-none">
+                        <span class="tab-code font-mono text-[10px] sm:text-xs font-bold text-[#67707E]">02</span>
+                        <span class="text-xs sm:text-sm font-semibold tracking-tight leading-tight" data-i18n="tabWeekly">Haftalık Top 5</span>
+                    </button>
+                    <button type="button" id="tabStreamersBtn" onclick="switchTab('streamers')" class="tab-btn rounded-lg px-2 py-2.5 sm:px-4 sm:py-2.5 text-center flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 active:scale-[0.98] focus-visible:outline-none">
+                        <span class="tab-code font-mono text-[10px] sm:text-xs font-bold text-[#67707E]">03</span>
+                        <span class="text-xs sm:text-sm font-semibold tracking-tight leading-tight" data-i18n="tabStreamers">Yayıncılar</span>
+                    </button>
                 </div>
+            </div>
 
-                <div id="detailHeaderCard" class="rounded-2xl border border-gray-800 bg-black/35 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                </div>
+            <div class="p-3.5 sm:p-6">
+                <!-- Sekme 1: Genel Sıralama İlk 100 -->
+                <div id="globalSection" class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+                        <p class="text-[11px] sm:text-xs text-[#9AA2B0] leading-relaxed" data-i18n="globalRule">
+                            Bir oyuncu birden fazla yayıncıda dereceye girdiyse yalnızca en yüksek rekor puanıyla 1 kez listelenir.
+                        </p>
+                        <input type="text" id="searchInput" oninput="renderGlobalTable(false)" placeholder="Kullanıcı veya kanal ara..."
+                            class="w-full sm:w-64 shrink-0 bg-[#0D0F13] border border-white/[0.08] rounded-lg px-3.5 py-2 text-xs sm:text-sm text-[#F2F4F7] placeholder-[#67707E] focus:outline-none focus:border-[#F5A623] transition-colors ease-expo">
+                    </div>
 
-                <div class="space-y-2">
-                    <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
-                        <span>🪂</span>
-                        <span data-i18n="topJumpersTitle">Bu Kanalda En Çok Atlayış Yapan İlk 5 Kişi</span>
-                    </h2>
-                    <div class="overflow-hidden rounded-2xl border border-gray-800 bg-black/30">
+                    <div class="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#0D0F13] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="border-b border-gray-800 text-[11px] sm:text-xs uppercase tracking-wider text-gray-400 bg-black/30">
-                                    <th class="py-3 px-2 sm:py-3.5 sm:px-4 w-10 sm:w-16 text-center">#</th>
+                                <tr class="border-b border-white/[0.07] bg-[#151820] font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.12em] text-[#67707E]">
+                                    <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 w-12 sm:w-16 text-center">#</th>
                                     <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colUser">Kullanıcı Adı</th>
-                                    <th class="py-3 px-2 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colPlayerJumps">Atl.</th>
-                                    <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colPlayerMax">Max</th>
+                                    <th class="hidden sm:table-cell py-3.5 px-4" data-i18n="colChannel">Rekor Aldığı Kanal</th>
+                                    <th class="py-3 px-3 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colScore">Rekor Puan</th>
                                 </tr>
                             </thead>
-                            <tbody id="detailTopJumpersBody" class="divide-y divide-gray-800/70 text-xs sm:text-sm"></tbody>
+                            <tbody id="globalTableBody" class="divide-y divide-white/[0.05] text-xs sm:text-sm">
+                                <tr>
+                                    <td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]" data-i18n="loading">Yükleniyor...</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Alt Bilgi -->
-        <div class="relative z-10 mt-5 sm:mt-6 flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs text-gray-500">
-            <span id="metaStats"></span>
-            <span id="lastUpdated"></span>
+                <!-- Sekme 2: Haftalık En Çok Atlama (Top 5 Yayıncı) -->
+                <div id="weeklySection" class="hidden space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sub-card rounded-xl px-4 py-3">
+                        <div class="text-xs sm:text-sm text-[#9AA2B0] flex items-center gap-2.5">
+                            <span class="font-mono text-[10px] font-bold uppercase tracking-wider text-[#F5A623] bg-[#F5A623]/10 border border-[#F5A623]/30 rounded-md px-2 py-0.5">CYCLE</span>
+                            <span data-i18n="weeklyRule">Her hafta Pazartesi 00:00 (TSİ) itibarıyla sıfırlanır.</span>
+                        </div>
+                        <div id="resetCountdown" class="self-start sm:self-auto text-xs font-mono font-bold text-[#F5A623] bg-[#171A21] border border-[#F5A623]/30 rounded-lg px-3 py-1.5 tabular-nums whitespace-nowrap">
+                            --
+                        </div>
+                    </div>
+
+                    <div id="weeklyCards" class="space-y-2.5">
+                        <div class="sub-card rounded-xl py-10 text-center font-mono text-xs text-[#67707E]" data-i18n="loading">Yükleniyor...</div>
+                    </div>
+                </div>
+
+                <!-- Sekme 3: İzin Veren Yayıncılar Listesi -->
+                <div id="streamersSection" class="hidden space-y-4">
+                    <!-- Liste Görünümü -->
+                    <div id="streamersListView" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+                            <p class="text-[11px] sm:text-xs text-[#9AA2B0] leading-relaxed" data-i18n="streamersRule">
+                                Verilerinin paylaşılmasına izin veren yayıncılar toplam atlama sayısına göre sıralanır. Detay için bir kanala dokunun.
+                            </p>
+                            <input type="text" id="streamerSearchInput" oninput="renderStreamersTable(false)" placeholder="Kanal ara..."
+                                class="w-full sm:w-64 shrink-0 bg-[#0D0F13] border border-white/[0.08] rounded-lg px-3.5 py-2 text-xs sm:text-sm text-[#F2F4F7] placeholder-[#67707E] focus:outline-none focus:border-[#F5A623] transition-colors ease-expo">
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#0D0F13] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/[0.07] bg-[#151820] font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.12em] text-[#67707E]">
+                                        <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 w-12 sm:w-16 text-center">#</th>
+                                        <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colStreamerChannel">Kanal Adı</th>
+                                        <th class="py-3 px-3 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colTotalJumps">Toplam Atlama</th>
+                                        <th class="hidden sm:table-cell py-3.5 px-4 text-right whitespace-nowrap" data-i18n="colRecordScore">Rekor Puan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="streamersTableBody" class="divide-y divide-white/[0.05] text-xs sm:text-sm">
+                                    <tr>
+                                        <td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]" data-i18n="loading">Yükleniyor...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Kanal Detay Görünümü -->
+                    <div id="channelDetailView" class="hidden space-y-4">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <button type="button" onclick="closeChannelDetail()" class="inline-flex items-center gap-2 sub-card rounded-lg hover:border-[#F5A623]/60 text-[#F2F4F7] hover:text-[#F5A623] font-mono text-xs font-semibold uppercase tracking-wider py-2 px-3.5 transition-all duration-200 ease-expo active:scale-[0.98]">
+                                <span>←</span>
+                                <span data-i18n="backList">Listeye Dön</span>
+                            </button>
+                            <a id="detailExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden font-mono text-xs font-semibold text-[#F5A623] hover:underline underline-offset-4" data-i18n="openChannel">Kanala Git ↗</a>
+                        </div>
+
+                        <div id="detailHeaderCard" class="sub-card spotlight-card rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <h2 class="font-mono text-[11px] sm:text-xs font-bold uppercase tracking-[0.14em] text-[#9AA2B0] flex items-center gap-2">
+                                <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#F5A623]"></span>
+                                <span data-i18n="topJumpersTitle">Bu Kanalda En Çok Atlayış Yapan İlk 5 Kişi</span>
+                            </h2>
+                            <div class="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#0D0F13] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-white/[0.07] bg-[#151820] font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.12em] text-[#67707E]">
+                                            <th class="py-3 px-2 sm:py-3.5 sm:px-4 w-11 sm:w-16 text-center">#</th>
+                                            <th class="py-3 px-2 sm:py-3.5 sm:px-4" data-i18n="colUser">Kullanıcı Adı</th>
+                                            <th class="py-3 px-2 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colPlayerJumps">Atl.</th>
+                                            <th class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-right whitespace-nowrap" data-i18n="colPlayerMax">Max</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailTopJumpersBody" class="divide-y divide-white/[0.05] text-xs sm:text-sm"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alt Telemetri Çubuğu & Sorumluluk Reddi -->
+            <footer class="border-t border-white/[0.07] bg-[#0D0F13]/85 px-4 py-3 sm:px-6 space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] text-[#67707E] tabular-nums">
+                    <span id="metaStats"></span>
+                    <span id="lastUpdated"></span>
+                </div>
+                <div class="pt-2 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#67707E]">
+                    <p data-i18n="disclaimer">DropPool bağımsız bir üçüncü taraf araçtır; Kick veya Twitch ile resmi bir bağlantısı veya ortaklığı yoktur.</p>
+                    <div class="flex items-center gap-3 font-mono shrink-0">
+                        <button type="button" onclick="togglePrivacyModal()" class="text-[#9AA2B0] hover:text-[#F5A623] underline underline-offset-2 transition-colors" data-i18n="privacyBtn">Gizlilik / KVKK</button>
+                        <a href="mailto:crosweq204@gmail.com" class="text-[#F5A623] hover:underline">crosweq204@gmail.com</a>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Gizlilik / KVKK & GDPR Modalı -->
+    <div id="privacyModal" onclick="if(event.target === this) togglePrivacyModal()" class="modal-backdrop fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 opacity-0">
+        <div class="modal-panel surface-card border-[#F5A623]/40 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative">
+            <button type="button" onclick="togglePrivacyModal()" class="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center sub-card text-[#9AA2B0] hover:text-[#F5A623] hover:border-[#F5A623]/60 transition-all duration-200 ease-expo active:scale-[0.96]" aria-label="Close privacy information">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#F5A623] mb-1">KVKK &amp; GDPR // PRIVACY</div>
+            <h2 class="text-xl sm:text-2xl font-bold text-[#F2F4F7] mb-4 pb-3 border-b border-white/[0.08]" data-i18n="privacyTitle">Gizlilik Politikası ve KVKK Aydınlatma Metni</h2>
+            <div class="space-y-3.5 text-[#D5DBE3] text-xs sm:text-sm leading-relaxed">
+                <div>
+                    <h3 class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5A623] mb-1" data-i18n="privH1">1. Veri Sorumlusu ve İletişim</h3>
+                    <p><span data-i18n="privController">DropPool projesi kapsamında veri sorumlusu CrossWeq geliştiricisidir. Veri silme, bilgi talep etme ve diğer tüm KVKK/GDPR başvurularınız için:</span> <a href="mailto:crosweq204@gmail.com" class="text-[#F5A623] underline">crosweq204@gmail.com</a></p>
+                </div>
+                <div>
+                    <h3 class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5A623] mb-1" data-i18n="privH2">2. Bu Sayfada Görüntülenen Veriler ve Açık Rıza</h3>
+                    <p data-i18n="privData">Genel Sıralama sayfasında yalnızca açık rıza (opt-in) veren yayıncıların kanal adları, platform bilgisi, toplam/haftalık atlayış sayıları ve bu kanallarda yarışan izleyicilerin herkese açık Kick/Twitch kullanıcı adları ile oyun skorları gösterilir. İzin vermeyen yayıncıların kanal adları ve oyuncu kayıtları listelerde yer almaz. Üst kısımdaki genel "Toplam Atlayış" ve "Toplam Kanal" sayaçları ise kişisel kimlik içermeyen anonimleştirilmiş sistem toplamlarıdır.</p>
+                </div>
+                <div>
+                    <h3 class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5A623] mb-1" data-i18n="privH3">3. Yurt Dışına Veri Aktarımı (KVKK Md. 9 / GDPR)</h3>
+                    <p data-i18n="privTransfer">Hizmetin teknik altyapısı gereği veriler HTTPS üzerinden yurt dışında bulunan Cloudflare (Workers &amp; D1), GitHub Pages, Pusher, Kick API, Twitch API ve teknik kütüphane/yazı tipi sağlayıcıları (Tailwind CDN, Cloudflare cdnjs, Google Fonts) aracılığıyla işlenebilir ve aktarılabilir.</p>
+                </div>
+                <div>
+                    <h3 class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5A623] mb-1" data-i18n="privH4">4. Çerezler ve İzleme</h3>
+                    <p data-i18n="privCookies">Bu sayfada hiçbir reklam, analitik veya üçüncü taraf izleme (tracking) çerezi kullanılmaz; tarayıcınıza veri kaydedilmez.</p>
+                </div>
+                <div>
+                    <h3 class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5A623] mb-1" data-i18n="privH5">5. Haklarınız (KVKK Md. 11 &amp; GDPR) ve Veri Silme</h3>
+                    <p data-i18n="privRights">6698 sayılı KVKK Madde 11 ve GDPR kapsamında verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini veya silinmesini/yok edilmesini isteme ve açık rızanızı dilediğiniz zaman geri çekme hakkına sahipsiniz. Yayıncılar Kurulum Paneli üzerinden tek tıkla genel sıralamadan çıkabilir veya tüm sunucu verilerini silebilir; izleyiciler ve yayıncılar ayrıca crosweq204@gmail.com adresinden silme talebi iletebilir.</p>
+                </div>
+                <div class="pt-3 border-t border-white/[0.08] text-[11px] text-[#9AA2B0]">
+                    <p data-i18n="disclaimer">DropPool bağımsız bir üçüncü taraf araçtır; Kick veya Twitch ile resmi bir bağlantısı veya ortaklığı yoktur.</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const API_BASE = (new URLSearchParams(window.location.search).get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
+        const DEFAULT_API_BASE = 'https://droppool-kick-api.crosweq204.workers.dev';
+        const ALLOWED_API_ORIGINS = new Set([DEFAULT_API_BASE]);
+        const API_BASE = (() => {
+            const raw = (new URLSearchParams(window.location.search).get('api') || '').trim().replace(/\/+$/, '');
+            if (!raw) return DEFAULT_API_BASE;
+            try {
+                const u = new URL(raw);
+                if (ALLOWED_API_ORIGINS.has(u.origin)) return u.origin;
+            } catch (e) { }
+            return DEFAULT_API_BASE;
+        })();
         let lang = (new URLSearchParams(window.location.search).get('lang') || 'tr').toLowerCase() === 'en' ? 'en' : 'tr';
         let activeTab = 'global';
         let selectedStreamerId = null;
         let cachedData = null;
         let countdownTimer = null;
+        const prefersReducedMotion = false;
 
         const i18n = {
             title: { tr: 'DropPool Genel Sıralama', en: 'DropPool Global Leaderboard' },
@@ -248,11 +463,106 @@
             resetIn: { tr: 'Sıfırlamaya kalan:', en: 'Resets in:' },
             updatedAt: { tr: 'Son güncelleme:', en: 'Last updated:' },
             totalPlayers: { tr: 'Toplam kayıtlı benzersiz oyuncu:', en: 'Total unique players:' },
-            errorLoad: { tr: 'Veriler yüklenemedi. Lütfen tekrar deneyin.', en: 'Failed to load data. Please try again.' }
+            errorLoad: { tr: 'Veriler yüklenemedi. Lütfen tekrar deneyin.', en: 'Failed to load data. Please try again.' },
+            privacyBtn: { tr: 'Gizlilik / KVKK', en: 'Privacy / GDPR' },
+            privacyTitle: { tr: 'Gizlilik Politikası ve KVKK Aydınlatma Metni', en: 'Privacy Policy & GDPR / KVKK Notice' },
+            privH1: { tr: '1. Veri Sorumlusu ve İletişim', en: '1. Data Controller & Contact' },
+            privController: { tr: 'DropPool projesi kapsamında veri sorumlusu CrossWeq geliştiricisidir. Veri silme, bilgi talep etme ve diğer tüm KVKK/GDPR başvurularınız için:', en: 'The data controller for DropPool is the CrossWeq developer. For data deletion, access requests, or any GDPR/KVKK inquiries, contact:' },
+            privH2: { tr: '2. Bu Sayfada Görüntülenen Veriler ve Açık Rıza', en: '2. Displayed Data & Explicit Consent (Opt-In)' },
+            privData: { tr: 'Genel Sıralama sayfasında yalnızca açık rıza (opt-in) veren yayıncıların kanal adları, platform bilgisi, toplam/haftalık atlayış sayıları ve bu kanallarda yarışan izleyicilerin herkese açık Kick/Twitch kullanıcı adları ile oyun skorları gösterilir. İzin vermeyen yayıncıların kanal adları ve oyuncu kayıtları listelerde yer almaz. Üst kısımdaki genel "Toplam Atlayış" ve "Toplam Kanal" sayaçları ise kişisel kimlik içermeyen anonimleştirilmiş sistem toplamlarıdır.', en: 'The Global Leaderboard displays only channels of streamers who explicitly opted in, including channel name, platform, drop counts, and public Kick/Twitch viewer usernames with game scores. Channels that did not opt in are excluded from all public lists. The aggregate "Total Drops" and "Total Channels" counters at the top are anonymized system totals containing no personal identifiers.' },
+            privH3: { tr: '3. Yurt Dışına Veri Aktarımı (KVKK Md. 9 / GDPR)', en: '3. International Data Transfers (GDPR / KVKK Art. 9)' },
+            privTransfer: { tr: 'Hizmetin teknik altyapısı gereği veriler HTTPS üzerinden yurt dışında bulunan Cloudflare (Workers & D1), GitHub Pages, Pusher, Kick API, Twitch API ve teknik kütüphane/yazı tipi sağlayıcıları (Tailwind CDN, Cloudflare cdnjs, Google Fonts) aracılığıyla işlenebilir ve aktarılabilir.', en: 'Due to technical infrastructure requirements, data may be processed and transferred internationally over HTTPS via Cloudflare (Workers & D1), GitHub Pages, Pusher, Kick API, Twitch API, and technical CDN/font providers (Tailwind CDN, Cloudflare cdnjs, Google Fonts).' },
+            privH4: { tr: '4. Çerezler ve İzleme', en: '4. Cookies & Tracking' },
+            privCookies: { tr: 'Bu sayfada hiçbir reklam, analitik veya üçüncü taraf izleme (tracking) çerezi kullanılmaz; tarayıcınıza veri kaydedilmez.', en: 'This page uses no advertising, analytics, or third-party tracking cookies and stores no data in your browser.' },
+            privH5: { tr: '5. Haklarınız (KVKK Md. 11 & GDPR) ve Veri Silme', en: '5. Your Rights (GDPR & KVKK Art. 11) & Erasure' },
+            privRights: { tr: '6698 sayılı KVKK Madde 11 ve GDPR kapsamında verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini veya silinmesini/yok edilmesini isteme ve açık rızanızı dilediğiniz zaman geri çekme hakkına sahipsiniz. Yayıncılar Kurulum Paneli üzerinden tek tıkla genel sıralamadan çıkabilir veya tüm sunucu verilerini silebilir; izleyiciler ve yayıncılar ayrıca crosweq204@gmail.com adresinden silme talebi iletebilir.', en: 'Under GDPR and Turkish Law No. 6698 (KVKK Art. 11), you have the right to access, rectify, erase your data, object to processing, and withdraw consent at any time. Streamers can opt out of the leaderboard or permanently delete their server data with one click from the Setup Panel; viewers and streamers may also request erasure via crosweq204@gmail.com.' },
+            disclaimer: { tr: 'DropPool bağımsız bir üçüncü taraf araçtır; Kick veya Twitch ile resmi bir bağlantısı veya ortaklığı yoktur.', en: 'DropPool is an independent third-party tool and is not affiliated with or endorsed by Kick or Twitch.' }
         };
 
         function esc(s) {
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Mouse-tracking subtle spotlight across all .spotlight-card elements
+        document.addEventListener('pointermove', (e) => {
+            const card = e.target && e.target.closest ? e.target.closest('.spotlight-card') : null;
+            if (!card) return;
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+            card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+        }, { passive: true });
+
+        function animateCountUp(el, target, locale) {
+            if (!el || typeof target !== 'number' || !Number.isFinite(target)) return;
+            const prevTarget = el.dataset.countedTarget !== undefined ? Number(el.dataset.countedTarget) : null;
+            el.dataset.countedTarget = String(target);
+            if (prefersReducedMotion || prevTarget === target) {
+                el.textContent = Math.round(target).toLocaleString(locale);
+                return;
+            }
+            const startVal = prevTarget !== null && Number.isFinite(prevTarget) ? prevTarget : 0;
+            if (window.gsap) {
+                const state = { val: startVal };
+                window.gsap.to(state, {
+                    val: target,
+                    duration: 1.05,
+                    ease: 'power3.out',
+                    overwrite: 'auto',
+                    onUpdate: () => {
+                        el.textContent = Math.round(state.val).toLocaleString(locale);
+                    }
+                });
+            } else {
+                const startTime = performance.now();
+                const duration = 900;
+                const tick = (now) => {
+                    const p = Math.min(1, (now - startTime) / duration);
+                    const eased = 1 - Math.pow(1 - p, 3);
+                    el.textContent = Math.round(startVal + (target - startVal) * eased).toLocaleString(locale);
+                    if (p < 1) requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            }
+        }
+
+        function staggerElements(container, selector) {
+            if (prefersReducedMotion || !window.gsap || !container) return;
+            const nodes = Array.from(container.querySelectorAll(selector)).slice(0, 24);
+            if (!nodes.length) return;
+            window.gsap.fromTo(nodes,
+                { y: 10, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.38, stagger: 0.018, ease: 'power3.out', clearProps: 'transform,opacity', overwrite: 'auto' }
+            );
+        }
+
+        function updateTabSlider(animate = true) {
+            const slider = document.getElementById('tabSlider');
+            const activeBtnId = activeTab === 'weekly' ? 'tabWeeklyBtn' : (activeTab === 'streamers' ? 'tabStreamersBtn' : 'tabGlobalBtn');
+            const btn = document.getElementById(activeBtnId);
+            if (!slider || !btn) return;
+            if (!animate) slider.style.transition = 'none';
+            slider.style.width = btn.offsetWidth + 'px';
+            slider.style.transform = `translateX(${btn.offsetLeft}px)`;
+            if (!animate) {
+                slider.offsetHeight; // force reflow
+                slider.style.transition = '';
+            }
+        }
+
+        window.addEventListener('resize', () => updateTabSlider(false));
+
+        function formatRankBadge(rank) {
+            const label = String(rank).padStart(2, '0');
+            if (rank === 1) {
+                return `<span class="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md font-mono text-[11px] font-extrabold bg-[#F5A623] text-[#0A0B0E] tabular-nums">${label}</span>`;
+            }
+            if (rank === 2) {
+                return `<span class="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md font-mono text-[11px] font-bold border border-white/25 bg-white/[0.04] text-[#E2E8F0] tabular-nums">${label}</span>`;
+            }
+            if (rank === 3) {
+                return `<span class="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md font-mono text-[11px] font-bold border border-[#C68B59]/50 bg-[#C68B59]/10 text-[#DFAD82] tabular-nums">${label}</span>`;
+            }
+            return `<span class="font-mono text-xs font-medium text-[#67707E] tabular-nums">${label}</span>`;
         }
 
         function applyLang() {
@@ -263,11 +573,12 @@
             });
             document.getElementById('searchInput').placeholder = i18n.searchPlaceholder[lang];
             document.getElementById('streamerSearchInput').placeholder = i18n.streamerSearchPlaceholder[lang];
+            requestAnimationFrame(() => updateTabSlider(false));
             if (cachedData) {
-                renderGlobalTable();
-                renderWeeklyCards();
-                renderStreamersTable();
-                if (selectedStreamerId) renderChannelDetail(selectedStreamerId);
+                renderGlobalTable(false);
+                renderWeeklyCards(false);
+                renderStreamersTable(false);
+                if (selectedStreamerId) renderChannelDetail(selectedStreamerId, false);
                 renderMeta();
                 updateCountdown();
             }
@@ -286,19 +597,25 @@
             document.getElementById('tabGlobalBtn').classList.toggle('active', tab === 'global');
             document.getElementById('tabWeeklyBtn').classList.toggle('active', tab === 'weekly');
             document.getElementById('tabStreamersBtn').classList.toggle('active', tab === 'streamers');
+            updateTabSlider(true);
             if (tab !== 'streamers') {
                 closeChannelDetail();
+            }
+            if (cachedData) {
+                if (tab === 'global') staggerElements(document.getElementById('globalTableBody'), 'tr');
+                if (tab === 'weekly') staggerElements(document.getElementById('weeklyCards'), '.weekly-row');
+                if (tab === 'streamers') staggerElements(document.getElementById('streamersTableBody'), 'tr');
             }
         }
 
         function platformBadge(platform) {
             if (platform === 'twitch') {
-                return '<span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-[#9146FF]/20 text-[#bf94ff] border border-[#9146FF]/40">TWITCH</span>';
+                return '<span class="inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] font-bold tracking-wider bg-[#9146FF]/15 text-[#C4A1FF] border border-[#9146FF]/40">TWITCH</span>';
             }
             if (platform === 'both') {
-                return '<span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/40">KICK + TW</span>';
+                return '<span class="inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] font-bold tracking-wider bg-white/[0.05] text-[#F2F4F7] border border-white/15">KICK+TW</span>';
             }
-            return '<span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-[#53FC18]/15 text-[#53FC18] border border-[#53FC18]/40">KICK</span>';
+            return '<span class="inline-flex items-center px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] font-bold tracking-wider bg-[#53FC18]/10 text-[#53FC18] border border-[#53FC18]/35">KICK</span>';
         }
 
         function externalChannelHref(item) {
@@ -310,15 +627,15 @@
         function channelLink(item) {
             const name = esc(item.channel || '-');
             const href = externalChannelHref(item);
-            if (!href) return `<span class="font-medium text-gray-200">${name}</span>`;
-            return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="font-medium text-gray-200 hover:text-cyan-300 transition-colors">${name}</a>`;
+            if (!href) return `<span class="font-medium text-[#D5DBE3]">${name}</span>`;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="font-medium text-[#D5DBE3] hover:text-[#F5A623] transition-colors">${name}</a>`;
         }
 
-        function renderGlobalTable() {
+        function renderGlobalTable(animate = true) {
             const tbody = document.getElementById('globalTableBody');
             const list = (cachedData && Array.isArray(cachedData.top100)) ? cachedData.top100 : [];
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noRecords[lang])}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]">${esc(i18n.noRecords[lang])}</td></tr>`;
                 return;
             }
             const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
@@ -328,23 +645,21 @@
                 : indexed;
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noMatch[lang])}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]">${esc(i18n.noMatch[lang])}</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map(item => {
-                let rankHtml = `<span class="text-gray-400 font-mono font-semibold">${item.rank}</span>`;
-                let rowBg = 'hover:bg-white/[0.03]';
-                if (item.rank === 1) { rankHtml = '<span class="text-base sm:text-lg">🥇</span>'; rowBg = 'bg-amber-500/10 hover:bg-amber-500/15'; }
-                else if (item.rank === 2) { rankHtml = '<span class="text-base sm:text-lg">🥈</span>'; rowBg = 'bg-slate-400/10 hover:bg-slate-400/15'; }
-                else if (item.rank === 3) { rankHtml = '<span class="text-base sm:text-lg">🥉</span>'; rowBg = 'bg-orange-600/10 hover:bg-orange-600/15'; }
+                const rowBg = item.rank === 1
+                    ? 'bg-[#F5A623]/[0.05] hover:bg-[#F5A623]/[0.09]'
+                    : 'hover:bg-white/[0.03]';
 
                 return `
-                    <tr class="${rowBg} transition-colors">
-                        <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-center">${rankHtml}</td>
+                    <tr class="${rowBg} transition-colors duration-150">
+                        <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-center">${formatRankBadge(item.rank)}</td>
                         <td class="py-2.5 px-2 sm:py-3 sm:px-4">
-                            <div class="font-semibold text-white break-words">${esc(item.username)}</div>
-                            <div class="sm:hidden mt-1 flex items-center gap-1.5 flex-wrap text-[11px] text-gray-400">
+                            <div class="font-semibold text-[#F2F4F7] break-words">${esc(item.username)}</div>
+                            <div class="sm:hidden mt-1 flex items-center gap-1.5 flex-wrap text-[11px] text-[#9AA2B0]">
                                 ${platformBadge(item.platform)}
                                 ${channelLink(item)}
                             </div>
@@ -355,50 +670,53 @@
                                 ${channelLink(item)}
                             </div>
                         </td>
-                        <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-right font-mono font-bold text-amber-300 tabular-nums whitespace-nowrap">${Number(item.score).toFixed(2)}</td>
+                        <td class="py-2.5 px-3 sm:py-3 sm:px-4 text-right font-mono font-bold text-[#F5A623] tabular-nums whitespace-nowrap">${Number(item.score).toFixed(2)}</td>
                     </tr>
                 `;
             }).join('');
+
+            if (animate && activeTab === 'global') staggerElements(tbody, 'tr');
         }
 
-        function renderWeeklyCards() {
+        function renderWeeklyCards(animate = true) {
             const box = document.getElementById('weeklyCards');
             const list = (cachedData && Array.isArray(cachedData.weeklyTop5)) ? cachedData.weeklyTop5 : [];
             if (list.length === 0) {
-                box.innerHTML = `<div class="py-10 text-center text-gray-500 text-sm rounded-2xl border border-gray-800 bg-black/30">${esc(i18n.noWeekly[lang])}</div>`;
+                box.innerHTML = `<div class="sub-card rounded-xl py-10 text-center font-mono text-xs text-[#67707E]">${esc(i18n.noWeekly[lang])}</div>`;
                 return;
             }
             const maxJumps = Math.max(1, ...list.map(x => Number(x.jumps) || 0));
             box.innerHTML = list.map((item, idx) => {
                 const rank = idx + 1;
-                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
-                const pct = Math.max(6, Math.round(((Number(item.jumps) || 0) / maxJumps) * 100));
+                const pct = Math.max(4, Math.round(((Number(item.jumps) || 0) / maxJumps) * 100));
                 return `
-                    <div class="rounded-2xl border border-gray-800 bg-black/35 p-3.5 sm:p-4 space-y-2.5">
+                    <div class="weekly-row sub-card spotlight-card rounded-xl p-4 space-y-3 transition-colors duration-200">
                         <div class="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
                             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                                <span class="w-7 sm:w-8 text-center text-base sm:text-lg font-extrabold text-amber-300 shrink-0">${medal}</span>
+                                <span class="shrink-0">${formatRankBadge(rank)}</span>
                                 ${platformBadge(item.platform)}
-                                <span class="text-sm sm:text-lg font-bold text-white truncate">${channelLink(item)}</span>
+                                <span class="text-sm sm:text-base font-bold text-[#F2F4F7] truncate">${channelLink(item)}</span>
                             </div>
                             <div class="text-right shrink-0">
-                                <span class="text-base sm:text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.jumps).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US')}</span>
-                                <span class="text-[11px] sm:text-xs text-gray-400 ml-1">${esc(i18n.jumpsLabel[lang])}</span>
+                                <span class="text-base sm:text-lg font-extrabold font-mono text-[#F5A623] tabular-nums">${Number(item.jumps).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US')}</span>
+                                <span class="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-[#67707E] ml-1.5">${esc(i18n.jumpsLabel[lang])}</span>
                             </div>
                         </div>
-                        <div class="w-full h-2 rounded-full bg-gray-800/80 overflow-hidden">
-                            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500" style="width:${pct}%"></div>
+                        <div class="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div class="h-full rounded-full bg-[#F5A623] transition-all duration-500 ease-expo" style="width:${pct}%"></div>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            if (animate && activeTab === 'weekly') staggerElements(box, '.weekly-row');
         }
 
-        function renderStreamersTable() {
+        function renderStreamersTable(animate = true) {
             const tbody = document.getElementById('streamersTableBody');
             const list = (cachedData && Array.isArray(cachedData.publicStreamers)) ? cachedData.publicStreamers : [];
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noStreamers[lang])}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]">${esc(i18n.noStreamers[lang])}</td></tr>`;
                 return;
             }
             const q = (document.getElementById('streamerSearchInput').value || '').trim().toLowerCase();
@@ -408,45 +726,46 @@
                 : indexed;
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noMatch[lang])}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]">${esc(i18n.noMatch[lang])}</td></tr>`;
                 return;
             }
 
             const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
             tbody.innerHTML = filtered.map(item => {
-                let rankHtml = `<span class="text-gray-400 font-mono font-semibold">${item.rank}</span>`;
-                if (item.rank === 1) rankHtml = '<span class="text-base sm:text-lg">🥇</span>';
-                else if (item.rank === 2) rankHtml = '<span class="text-base sm:text-lg">🥈</span>';
-                else if (item.rank === 3) rankHtml = '<span class="text-base sm:text-lg">🥉</span>';
-
                 const holderHtml = item.recordHolder
-                    ? `<span class="text-[11px] text-gray-400 ml-1">(${esc(item.recordHolder)})</span>`
+                    ? `<span class="font-sans text-[11px] font-normal text-[#9AA2B0] ml-1.5">(${esc(item.recordHolder)})</span>`
                     : '';
 
                 return `
-                    <tr onclick="openChannelDetail('${esc(item.id)}')" class="cursor-pointer hover:bg-cyan-500/10 transition-colors">
-                        <td class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-center">${rankHtml}</td>
+                    <tr data-ch-id="${esc(item.id)}" onclick="openChannelDetail(this.dataset.chId)" class="cursor-pointer hover:bg-white/[0.035] transition-colors duration-150 group">
+                        <td class="py-3 px-2.5 sm:py-3.5 sm:px-4 text-center">${formatRankBadge(item.rank)}</td>
                         <td class="py-3 px-2 sm:py-3.5 sm:px-4">
                             <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 ${platformBadge(item.platform)}
-                                <span class="font-bold text-white hover:text-cyan-300 transition-colors">${esc(item.channel)}</span>
+                                <span class="font-bold text-[#F2F4F7] group-hover:text-[#F5A623] transition-colors">${esc(item.channel)}</span>
                             </div>
-                            <div class="sm:hidden mt-1 text-[11px] text-amber-300/90 font-mono">
+                            <div class="sm:hidden mt-1 text-[11px] text-[#F5A623] font-mono tabular-nums">
                                 ${esc(i18n.recordLabel[lang])} ${Number(item.recordScore || 0).toFixed(2)}${holderHtml}
                             </div>
                         </td>
-                        <td class="py-3 px-3 sm:py-3.5 sm:px-4 text-right font-mono font-bold text-cyan-300 tabular-nums whitespace-nowrap">${Number(item.totalJumps || 0).toLocaleString(locale)}</td>
-                        <td class="hidden sm:table-cell py-3.5 px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderHtml}</td>
+                        <td class="py-3 px-3 sm:py-3.5 sm:px-4 text-right font-mono font-bold text-[#F2F4F7] tabular-nums whitespace-nowrap">${Number(item.totalJumps || 0).toLocaleString(locale)}</td>
+                        <td class="hidden sm:table-cell py-3.5 px-4 text-right font-mono font-bold text-[#F5A623] tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderHtml}</td>
                     </tr>
                 `;
             }).join('');
+
+            if (animate && activeTab === 'streamers') staggerElements(tbody, 'tr');
         }
 
         function openChannelDetail(id) {
             selectedStreamerId = String(id);
-            renderChannelDetail(selectedStreamerId);
+            renderChannelDetail(selectedStreamerId, true);
             document.getElementById('streamersListView').classList.add('hidden');
-            document.getElementById('channelDetailView').classList.remove('hidden');
+            const detailView = document.getElementById('channelDetailView');
+            detailView.classList.remove('hidden');
+            if (!prefersReducedMotion && window.gsap) {
+                window.gsap.fromTo(detailView, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: 'power3.out', clearProps: 'transform,opacity' });
+            }
         }
 
         function closeChannelDetail() {
@@ -455,7 +774,7 @@
             document.getElementById('streamersListView').classList.remove('hidden');
         }
 
-        function renderChannelDetail(id) {
+        function renderChannelDetail(id, animate = true) {
             const list = (cachedData && Array.isArray(cachedData.publicStreamers)) ? cachedData.publicStreamers : [];
             const item = list.find(s => String(s.id) === String(id));
             if (!item) {
@@ -472,20 +791,20 @@
                 extLink.classList.add('hidden');
             }
 
-            const holderText = item.recordHolder ? ` <span class="text-xs text-gray-400">(${esc(item.recordHolder)})</span>` : '';
+            const holderText = item.recordHolder ? ` <span class="font-sans text-xs font-normal text-[#9AA2B0]">(${esc(item.recordHolder)})</span>` : '';
             document.getElementById('detailHeaderCard').innerHTML = `
                 <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
                     ${platformBadge(item.platform)}
-                    <span class="text-xl sm:text-2xl font-extrabold text-white">${esc(item.channel)}</span>
+                    <span class="text-lg sm:text-2xl font-bold text-[#F2F4F7]">${esc(item.channel)}</span>
                 </div>
-                <div class="grid grid-cols-2 sm:flex items-center gap-4 sm:gap-6 text-sm w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-800/80">
+                <div class="grid grid-cols-2 sm:flex items-center gap-4 sm:gap-6 text-sm w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-white/[0.07]">
                     <div>
-                        <div class="text-[11px] sm:text-xs text-gray-400">${esc(i18n.colTotalJumps[lang])}</div>
-                        <div class="text-lg sm:text-xl font-extrabold font-mono text-cyan-300 tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</div>
+                        <div class="font-mono text-[10px] uppercase tracking-wider text-[#67707E]">${esc(i18n.colTotalJumps[lang])}</div>
+                        <div class="text-lg sm:text-xl font-extrabold font-mono text-[#F2F4F7] tabular-nums">${Number(item.totalJumps || 0).toLocaleString(locale)}</div>
                     </div>
-                    <div>
-                        <div class="text-[11px] sm:text-xs text-gray-400">${esc(i18n.colRecordScore[lang])}</div>
-                        <div class="text-lg sm:text-xl font-extrabold font-mono text-amber-300 tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderText}</div>
+                    <div class="sm:border-l sm:border-white/[0.08] sm:pl-6">
+                        <div class="font-mono text-[10px] uppercase tracking-wider text-[#67707E]">${esc(i18n.colRecordScore[lang])}</div>
+                        <div class="text-lg sm:text-xl font-extrabold font-mono text-[#F5A623] tabular-nums">${Number(item.recordScore || 0).toFixed(2)}${holderText}</div>
                     </div>
                 </div>
             `;
@@ -493,21 +812,22 @@
             const tbody = document.getElementById('detailTopJumpersBody');
             const jumpers = Array.isArray(item.topJumpers) ? item.topJumpers : [];
             if (jumpers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">${esc(i18n.noJumpers[lang])}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-[#67707E]">${esc(i18n.noJumpers[lang])}</td></tr>`;
                 return;
             }
             tbody.innerHTML = jumpers.map((j, idx) => {
                 const rank = idx + 1;
-                const rankHtml = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `<span class="text-gray-400 font-mono">${rank}</span>`;
                 return `
-                    <tr class="hover:bg-white/[0.03] transition-colors">
-                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 text-center text-sm sm:text-base">${rankHtml}</td>
-                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 font-semibold text-white break-words">${esc(j.username)}</td>
-                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 text-right font-mono font-bold text-cyan-300 tabular-nums">${Number(j.jumps || 0).toLocaleString(locale)}</td>
-                        <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right font-mono font-bold text-amber-300 tabular-nums">${Number(j.maxScore || 0).toFixed(2)}</td>
+                    <tr class="hover:bg-white/[0.03] transition-colors duration-150">
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 text-center">${formatRankBadge(rank)}</td>
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 font-semibold text-[#F2F4F7] break-words">${esc(j.username)}</td>
+                        <td class="py-2.5 px-2 sm:py-3 sm:px-4 text-right font-mono font-bold text-[#F2F4F7] tabular-nums">${Number(j.jumps || 0).toLocaleString(locale)}</td>
+                        <td class="py-2.5 px-2.5 sm:py-3 sm:px-4 text-right font-mono font-bold text-[#F5A623] tabular-nums">${Number(j.maxScore || 0).toFixed(2)}</td>
                     </tr>
                 `;
             }).join('');
+
+            if (animate) staggerElements(tbody, 'tr');
         }
 
         function updateCountdown() {
@@ -530,10 +850,10 @@
             const dropsEl = document.getElementById('statTotalDrops');
             const channelsEl = document.getElementById('statTotalChannels');
             if (dropsEl && typeof cachedData.totalDrops === 'number') {
-                dropsEl.textContent = Number(cachedData.totalDrops).toLocaleString(locale);
+                animateCountUp(dropsEl, Number(cachedData.totalDrops), locale);
             }
             if (channelsEl && typeof cachedData.totalChannels === 'number') {
-                channelsEl.textContent = Number(cachedData.totalChannels).toLocaleString(locale);
+                animateCountUp(channelsEl, Number(cachedData.totalChannels), locale);
             }
             const totalEl = document.getElementById('metaStats');
             const updEl = document.getElementById('lastUpdated');
@@ -554,20 +874,117 @@
                 const data = await res.json();
                 if (!data || !data.ok) throw new Error('Invalid response');
                 cachedData = data;
-                renderGlobalTable();
-                renderWeeklyCards();
-                renderStreamersTable();
-                if (selectedStreamerId) renderChannelDetail(selectedStreamerId);
+                renderGlobalTable(true);
+                renderWeeklyCards(true);
+                renderStreamersTable(true);
+                if (selectedStreamerId) renderChannelDetail(selectedStreamerId, false);
                 renderMeta();
                 updateCountdown();
                 if (countdownTimer) clearInterval(countdownTimer);
                 countdownTimer = setInterval(updateCountdown, 1000);
             } catch (e) {
-                document.getElementById('globalTableBody').innerHTML = `<tr><td colspan="4" class="py-10 text-center text-red-400">${esc(i18n.errorLoad[lang])}</td></tr>`;
-                document.getElementById('weeklyCards').innerHTML = `<div class="py-10 text-center text-red-400 text-sm">${esc(i18n.errorLoad[lang])}</div>`;
-                document.getElementById('streamersTableBody').innerHTML = `<tr><td colspan="4" class="py-10 text-center text-red-400">${esc(i18n.errorLoad[lang])}</td></tr>`;
+                document.getElementById('globalTableBody').innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-red-400">${esc(i18n.errorLoad[lang])}</td></tr>`;
+                document.getElementById('weeklyCards').innerHTML = `<div class="sub-card rounded-xl py-10 text-center font-mono text-xs text-red-400">${esc(i18n.errorLoad[lang])}</div>`;
+                document.getElementById('streamersTableBody').innerHTML = `<tr><td colspan="4" class="py-10 text-center font-mono text-xs text-red-400">${esc(i18n.errorLoad[lang])}</td></tr>`;
             }
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateTabSlider(false);
+            if (!prefersReducedMotion && window.gsap) {
+                window.gsap.from('.reveal-block', {
+                    y: 14,
+                    opacity: 0,
+                    duration: 0.55,
+                    stagger: 0.08,
+                    ease: 'power3.out',
+                    clearProps: 'transform,opacity'
+                });
+            }
+        });
+
+        /* YUKARIDAN DÜŞEN KARAKTERLER SİSTEMİ */
+        const charImages = [
+            'characterdog.png', 'characterhurt.png', 'chracteralien.png',
+            'chractercat.png', 'chracterchef.png', 'characterfrog.png',
+            'charactercat3.png', 'charactercat2.png', 'characterdog2.png',
+            'charactersticth.png'
+        ];
+
+        function spawnFallingChar(isInitial = false) {
+            const char = document.createElement('img');
+            char.src = charImages[Math.floor(Math.random() * charImages.length)];
+            char.className = 'falling-char';
+
+            let pos;
+            const rand = Math.random();
+            if (rand < 0.4) {
+                pos = Math.random() * 18 + 2;
+            } else if (rand > 0.6) {
+                pos = Math.random() * 18 + 80;
+            } else {
+                pos = Math.random() * 60 + 20;
+            }
+            char.style.left = pos + 'vw';
+
+            const size = Math.random() * 45 + 30;
+            char.style.width = size + 'px';
+
+            const duration = Math.random() * 13 + 12;
+            char.style.animationDuration = duration + 's';
+
+            if (isInitial) {
+                char.style.animationDelay = -(Math.random() * duration) + 's';
+            }
+
+            const rot = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 360 + 180);
+            char.style.setProperty('--end-rot', rot + 'deg');
+
+            const opacity = (size - 30) / 45 * 0.4 + 0.6;
+            char.style.setProperty('--max-opacity', opacity);
+
+            char.addEventListener('animationend', () => {
+                char.remove();
+            });
+
+            document.body.appendChild(char);
+        }
+
+        for (let i = 0; i < 12; i++) {
+            spawnFallingChar(true);
+        }
+
+        function scheduleNextSpawn() {
+            if (document.visibilityState === 'visible') {
+                spawnFallingChar();
+            }
+            setTimeout(scheduleNextSpawn, Math.random() * 1000 + 500);
+        }
+
+        setTimeout(scheduleNextSpawn, 1000);
+
+        function togglePrivacyModal() {
+            const modal = document.getElementById('privacyModal');
+            if (!modal) return;
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.classList.add('is-open');
+                });
+            } else {
+                modal.classList.remove('is-open');
+                modal.classList.add('opacity-0');
+                setTimeout(() => { modal.classList.add('hidden'); }, 240);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const pm = document.getElementById('privacyModal');
+                if (pm && !pm.classList.contains('hidden')) togglePrivacyModal();
+            }
+        });
 
         applyLang();
         loadData(false);

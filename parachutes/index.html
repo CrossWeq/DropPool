@@ -109,13 +109,26 @@
             .replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '').replace(/^@+/, '').replace(/^#+/, '').trim().toLowerCase();
         const rawChannelName = urlParams.get('kanal') || 'testkanal';
         const channelName = rawChannelName.replace(/^https?:\/\/(www\.)?kick\.com\//i, '').replace(/^@+/, '').trim();
+        const kickOwnerId = (urlParams.get('owner') || '').trim();
+        const twitchOwnerId = (urlParams.get('twowner') || '').trim();
+        const chatbotEnabled = urlParams.get('bot') === '1';
         const commandStr = urlParams.get('cmd') || '!atla';
         const cooldownSec = parseFloat(urlParams.get('cd')) || 60;
         const showBackground = urlParams.get('bg') !== '0'; // Varsayılan olarak true (1)
         const showTrail = urlParams.get('tr') !== '0'; // Varsayılan olarak true (1)
         const overlayLang = (urlParams.get('lang') || 'tr').toLowerCase(); // 'tr' veya 'en'
         const publicStatsOptIn = urlParams.get('pub') === '1';
-        const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/$/, '');
+        const DEFAULT_KICK_API_WORKER = 'https://droppool-kick-api.crosweq204.workers.dev';
+        const ALLOWED_API_ORIGINS = new Set([DEFAULT_KICK_API_WORKER]);
+        const KICK_API_WORKER = (() => {
+            const raw = (urlParams.get('api') || '').trim().replace(/\/+$/, '');
+            if (!raw) return DEFAULT_KICK_API_WORKER;
+            try {
+                const u = new URL(raw);
+                if (ALLOWED_API_ORIGINS.has(u.origin)) return u.origin;
+            } catch (e) { }
+            return DEFAULT_KICK_API_WORKER;
+        })();
         let broadcasterId = null;
         let twitchRoomId = null; // Twitch kanalının sayısal ID'si (IRC ROOMSTATE'ten alınır)
 
@@ -568,11 +581,16 @@
         }
 
         let syncScoresTimer = null;
-        function syncScoresToWorker(force = false) {
+        let syncScoresRetryTimer = null;
+        function syncScoresToWorker(force = false, isRetry = false) {
             // Kick varsa skorlar Kick ID'sinde, sadece Twitch modunda 'tw_<twitchId>' anahtarında tutulur
             const scoreSyncId = broadcasterId || ((!usePlatKick && twitchRoomId) ? ('tw_' + twitchRoomId) : null);
             if (!scoreSyncId) return;
             if (syncScoresTimer) clearTimeout(syncScoresTimer);
+            if (!isRetry && syncScoresRetryTimer) {
+                clearTimeout(syncScoresRetryTimer);
+                syncScoresRetryTimer = null;
+            }
             const doSync = async () => {
                 try {
                     const currentLb = Array.isArray(leaderboard) ? leaderboard.slice(0, 5).map(item => ({
@@ -608,7 +626,7 @@
                         }
                     }
 
-                    await fetch(`${KICK_API_WORKER}/scores/sync`, {
+                    const res = await fetch(`${KICK_API_WORKER}/scores/sync`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -621,6 +639,15 @@
                             force: !!force
                         })
                     });
+                    const resData = await res.json().catch(() => null);
+                    // İlk 20 sn cooldown'una denk gelip D1'e yazılmadıysa ve canlı sıralama doluysa 22 sn sonra 1 kez yedek eşitleme yap
+                    if (!isRetry && resData && resData.ok && resData.kvWritten === false && currentLb.length > 0) {
+                        if (syncScoresRetryTimer) clearTimeout(syncScoresRetryTimer);
+                        syncScoresRetryTimer = setTimeout(() => {
+                            syncScoresRetryTimer = null;
+                            syncScoresToWorker(false, true);
+                        }, 22000);
+                    }
                 } catch (e) {
                     console.warn('[DropPool] Skor senkronizasyon uyarısı:', e);
                 }
@@ -2005,6 +2032,24 @@
                 console.log("Kick dinleyicisi atlandı (test kanalı veya Kick seçili değil).");
                 return;
             }
+            if (!/^\d+$/.test(kickOwnerId)) {
+                console.error('[Kick] Kick ile giriş bilgisi bulunamadı; DropPool bağlantısı başlatılmadı.');
+                return;
+            }
+
+            try {
+                const authUrl = `${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&owner=${encodeURIComponent(kickOwnerId)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}&pub=${publicStatsOptIn ? '1' : '0'}&bot=${chatbotEnabled ? '1' : '0'}`;
+                const authRes = await fetch(authUrl);
+                const authData = await authRes.json();
+                if (!authRes.ok || !authData.id) {
+                    console.error('[Kick] Kanal doğrulanamadı; Worker aboneliği reddetti:', authData.error || authRes.status);
+                    return;
+                }
+                broadcasterId = String(authData.id);
+            } catch (error) {
+                console.error('[Kick] Kick girişi doğrulanamadı; bağlantı durduruldu.', error);
+                return;
+            }
 
             console.log(`Kick chat bağlantısı kuruluyor... Kanal: ${channelName}`);
 
@@ -2104,7 +2149,7 @@
             let workerSubscribed = false;
             for (let attempt = 1; attempt <= 3 && !workerSubscribed; attempt++) {
                 try {
-                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}&pub=${publicStatsOptIn ? '1' : '0'}`);
+                    const res = await fetch(`${KICK_API_WORKER}/subscribe?channel=${encodeURIComponent(channelName)}&owner=${encodeURIComponent(kickOwnerId)}&cmd=${encodeURIComponent(commandStr)}&lang=${encodeURIComponent(overlayLang)}&pub=${publicStatsOptIn ? '1' : '0'}&bot=${chatbotEnabled ? '1' : '0'}`);
                     const data = await res.json();
                     if (data && data.id) {
                         broadcasterId = data.id;
@@ -2578,10 +2623,11 @@
         // --- 8.0 TWITCH BOT KAYDI: Bağlı Twitch botuna komut/dil/skor anahtarını bildirir (bot bağlı değilse worker yoksayar) ---
         let twitchRegisterTimer = null;
         function registerTwitchWithWorker() {
-            if (!useTwitch || !twitchChannelName || !twitchRoomId) return;
+            if (!useTwitch || !twitchChannelName || !twitchRoomId || !/^\d+$/.test(twitchOwnerId) || twitchRoomId !== twitchOwnerId) return;
             if (twitchRegisterTimer) clearTimeout(twitchRegisterTimer);
-            twitchRegisterTimer = setTimeout(() => {
-                fetch(`${KICK_API_WORKER}/twitch/register`, {
+            twitchRegisterTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch(`${KICK_API_WORKER}/twitch/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2590,19 +2636,52 @@
                         cmd: commandStr,
                         lang: overlayLang,
                         pub: publicStatsOptIn,
-                        kick: (usePlatKick && broadcasterId) ? String(broadcasterId) : ''
+                        kick: kickOwnerId,
+                        twowner: twitchOwnerId,
+                        platform: platParam,
+                        bot: chatbotEnabled
                     })
-                }).catch(() => {});
+                    });
+                    if (!response.ok) {
+                        const error = await response.json().catch(() => ({}));
+                        console.error('[Twitch] Worker kaydı başarısız:', error.error || response.status);
+                    }
+                } catch (error) {
+                    console.error('[Twitch] Worker kaydına ulaşılamadı.', error);
+                }
             }, 1500);
         }
 
         // --- 8.1 TWITCH CHAT (Anonim IRC WebSocket — sunucu/worker gerektirmez, tarayıcıdan doğrudan bağlanır) ---
-        function setupTwitchChatListener() {
+        async function setupTwitchChatListener() {
             if (!useTwitch || !twitchChannelName) return;
             if (!/^[a-z0-9_]{1,25}$/.test(twitchChannelName)) { console.error('[Twitch] Geçersiz kanal adı:', twitchChannelName); return; }
+            if (!/^\d+$/.test(twitchOwnerId)) {
+                console.error('[Twitch] Twitch hesabıyla giriş bilgisi bulunamadı; sohbet bağlantısı durduruldu.');
+                return;
+            }
+            if (platParam !== 'twitch') {
+                if (!/^\d+$/.test(kickOwnerId)) {
+                    console.error('[Twitch] Kick + Twitch bağlantısı için Kick girişi gerekiyor.');
+                    return;
+                }
+                try {
+                    const authRes = await fetch(`${KICK_API_WORKER}/streamer/status?user=${encodeURIComponent(kickOwnerId)}`);
+                    if (!authRes.ok) throw new Error(`Kimlik durumu alınamadı (${authRes.status}).`);
+                    const authData = await authRes.json();
+                    if (!authData.authenticated || authData.userId !== kickOwnerId) {
+                        console.error('[Twitch] Kick hesabı doğrulanmadı; bağlantı durduruldu.');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('[Twitch] Kick girişi doğrulanamadı; bağlantı durduruldu.', error);
+                    return;
+                }
+            }
             console.log(`[Twitch] Chat bağlantısı kuruluyor... Kanal: ${twitchChannelName}`);
             let ws = null;
             let retry = 0;
+            let twitchIdentityMismatch = false;
 
             const parseTags = (raw) => {
                 const tags = {};
@@ -2624,6 +2703,12 @@
                     rest = rest.slice(sp + 1);
                 }
                 // Kanal ID'si (room-id): skor senkronu ve Twitch bot kaydı için bir kez alınır
+                if (tags['room-id'] && /^\d+$/.test(tags['room-id']) && / (ROOMSTATE|PRIVMSG) #/.test(rest) && tags['room-id'] !== twitchOwnerId) {
+                    twitchIdentityMismatch = true;
+                    console.error('[Twitch] Giriş yapılan hesap ile sohbet kanalı eşleşmiyor; bağlantı durduruldu.');
+                    ws.close();
+                    return;
+                }
                 if (!twitchRoomId && tags['room-id'] && /^\d+$/.test(tags['room-id']) && / (ROOMSTATE|PRIVMSG) #/.test(rest)) {
                     twitchRoomId = tags['room-id'];
                     console.log('[Twitch] Kanal ID:', twitchRoomId);
@@ -2699,6 +2784,7 @@
                     });
                 };
                 ws.onclose = () => {
+                    if (twitchIdentityMismatch) return;
                     retry++;
                     const wait = Math.min(30000, 2000 * retry);
                     console.warn(`[Twitch] Bağlantı koptu, ${wait / 1000}s sonra yeniden denenecek.`);

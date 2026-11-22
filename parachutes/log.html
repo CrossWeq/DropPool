@@ -364,7 +364,7 @@
 
                 html += `
                     <tr class="hover:bg-white/5 transition-colors group">
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">${log.time}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-400 font-mono text-xs">${escapeHtml(log.time)}</td>
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-white">${escapeHtml(log.username)}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${actionBadge}</td>
                         <td class="px-6 py-4 text-gray-300 max-w-md truncate">${translatedDetail}</td>
@@ -474,7 +474,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-center text-purple-400 font-bold">%${hitRate.toFixed(1)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-yellow-400 font-bold">${totalScore.toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-green-400 font-bold">${u.maxScore.toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-500 font-mono text-xs">${lastJumpTime}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-500 font-mono text-xs">${escapeHtml(lastJumpTime)}</td>
                     </tr>
                 `;
             });
@@ -493,7 +493,17 @@
             if (!channelName) channelName = localStorage.getItem('droppool_channel_name') || '';
         } catch (e) { }
 
-        const KICK_API_WORKER = (urlParams.get('api') || 'https://droppool-kick-api.crosweq204.workers.dev').replace(/\/+$/, '');
+        const DEFAULT_KICK_API_WORKER = 'https://droppool-kick-api.crosweq204.workers.dev';
+        const ALLOWED_API_ORIGINS = new Set([DEFAULT_KICK_API_WORKER]);
+        const KICK_API_WORKER = (() => {
+            const raw = (urlParams.get('api') || '').trim().replace(/\/+$/, '');
+            if (!raw) return DEFAULT_KICK_API_WORKER;
+            try {
+                const u = new URL(raw);
+                if (ALLOWED_API_ORIGINS.has(u.origin)) return u.origin;
+            } catch (e) { }
+            return DEFAULT_KICK_API_WORKER;
+        })();
 
         let syncScoresTimer = null;
         async function syncScoresToWorker(force = false) {
@@ -574,7 +584,7 @@
                     });
                     const resData = await res.json();
                     if (resData && resData.ok) {
-                        console.log('[DropPool Data] Skorlar bota eşitlendi:', resData);
+                        console.log('[DropPool Data] Skorlar bota eşitlendi.');
                         return true;
                     }
                 } catch (e) {
